@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Chefão — Prensadão</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Rajdhani', sans-serif; background: #0a0a0a; min-height: 100vh; color: #f0f0f0; letter-spacing: 0.02em; }
+
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1a0a00 0%, #0a0a0a 100%);
+    }
+    .login-box {
+      background: #111; border-radius: 4px; padding: 40px 32px; width: 90%; max-width: 380px;
+      box-shadow: 0 0 40px #f9a82544; border: 1px solid #f9a82533;
+    }
+    .login-box h1 { font-size: 2.2rem; color: #f9a825; text-align: center; margin-bottom: 6px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 4px; }
+    .login-box p { font-size: 0.82rem; color: #888; text-align: center; margin-bottom: 28px; }
+    .login-box input { width: 100%; padding: 12px 16px; border: 2px solid #333; border-radius: 4px; background: #1a1a1a; color: #f0f0f0; font-size: 1rem; margin-bottom: 14px; outline: none; }
+    .login-box input:focus { border-color: #f9a825; box-shadow: 0 0 8px #f9a82544; }
+    .login-box button { width: 100%; padding: 14px; background: #f9a825; color: #000; border: none; border-radius: 4px; font-size: 1.2rem; font-weight: 700; cursor: pointer; font-family: 'Bebas Neue', sans-serif; letter-spacing: 3px; }
+    .login-box button:hover { background: #ffca28; }
+    #login-erro { color: #b71c1c; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none; }
+
+    #app { display: none; }
+    .topbar { background: #111; color: #f9a825; padding: 12px 16px; border-bottom: 2px solid #f9a82544; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar h1 { font-size: 1rem; font-weight: 700; }
+    .topbar span { font-size: 0.78rem; opacity: 0.75; }
+    .topbar button { background: #1a1a1a; border: 1px solid #333; color: #f9a825; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.82rem; }
+
+    .tabs { display: flex; background: #111; border-bottom: 2px solid #222; overflow-x: auto; }
+    .tab { padding: 12px 14px; font-size: 0.82rem; font-weight: 700; color: #555; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; letter-spacing: 1px; }
+    .tab.active { color: #f9a825; border-bottom-color: #f9a825; }
+
+    .screen { display: none; padding: 16px; max-width: 800px; margin: 0 auto; }
+    .screen.active { display: block; }
+
+    .card { background: #111; border-radius: 4px; padding: 16px; margin-bottom: 12px; border: 1px solid #222; }
+    .card h3 { font-size: 1rem; color: #f9a825; margin-bottom: 12px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+    .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+    .btn-gold { background: #f9a825; color: #000; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 1.1rem; }
+    .btn-green { background: #2e7d32; color: #fff; }
+    .btn-blue { background: #1565c0; color: #fff; }
+    .btn-gray { background: #1a1a1a; color: #888; border: 1px solid #333; }
+    .btn-red { background: #b71c1c; color: #fff; }
+
+    input, select { width: 100%; padding: 10px 12px; border: 2px solid #333; border-radius: 4px; font-size: 0.95rem; margin-bottom: 10px; outline: none; background: #1a1a1a; color: #f0f0f0; }
+    input:focus, select:focus { border-color: #f9a825; box-shadow: 0 0 6px #f9a82533; }
+    label { font-size: 0.82rem; font-weight: 700; color: #f9a825; display: block; margin-bottom: 4px; letter-spacing: 1px; }
+
+    .unidade-header { padding: 10px 14px; border-radius: 10px; color: #fff; font-weight: 700; margin: 12px 0 8px; font-size: 0.92rem; }
+    .unidade-cd { background: #607d8b; }
+    .unidade-centro { background: #1565c0; }
+    .unidade-delivery { background: #b71c1c; }
+
+    .prod-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-radius: 4px; margin-bottom: 4px; background: #161616; border-left: 4px solid #333; }
+    .prod-row.ok { border-left-color: #2e7d32; }
+    .prod-row.zerado { border-left-color: #b71c1c; }
+    .prod-row.baixo { border-left-color: #ff9800; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-card { background: #161616; border-radius: 4px; padding: 12px; text-align: center; border: 1px solid #222; cursor: pointer; }
+    .stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+    .stat-num { font-size: 1.3rem; font-weight: 700; }
+    .stat-label { font-size: 0.72rem; color: #888; margin-top: 2px; }
+
+    #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 0.88rem; opacity: 0; transition: opacity 0.3s; z-index: 9999; pointer-events: none; max-width: 90%; }
+    #toast.show { opacity: 1; }
+    #toast.success { background: #2e7d32; }
+    #toast.error { background: #b71c1c; }
+
+    /* Modal editar */
+    #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 1000; align-items: flex-end; justify-content: center; }
+    .modal-box { background: #fff; border-radius: 20px 20px 0 0; padding: 24px 20px 36px; width: 100%; max-width: 480px; }
+  </style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>👑 Chefão</h1>
+    <p>O chefão tá de olho em tudo 👑</p>
+    <label>Usuário</label>
+    <input type="text" id="login-usuario" placeholder="Quem é você, rei?" />
+    <label>Senha</label>
+    <input type="password" id="login-senha" placeholder="Senha, meu rei" />
+    <button onclick="fazerLogin()">👑 BORA, CHEFÃO</button>
+    <div id="login-erro">❌ Errou feio, rei! Tenta de novo.</div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div>
+      <h1>👑 Chefão — Prensadão</h1>
+      <span id="topbar-usuario"></span>
+    </div>
+    <button onclick="sair()">Saí fora</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('estoque')">📦 TRAMPO GERAL</div>
+    <div class="tab" onclick="showTab('entradas')">📥 ENTRADAS</div>
+    <div class="tab" onclick="showTab('contagens')">📊 CONTAGENS</div>
+    <div class="tab" onclick="showTab('pedidos')">🛒 PRECISÃO</div>
+    <div class="tab" onclick="showTab('minimos')">⚙️ MÍNIMOS</div>
+  </div>
+
+  <!-- ESTOQUE -->
+  <div class="screen active" id="tab-estoque">
+    <div class="stat-grid">
+      <div class="stat-card" onclick="filtrarUnidade('cd')">
+        <div class="stat-num" id="stat-cd" style="color:#607d8b;">—</div>
+        <div class="stat-label">🏭 CD</div>
+      </div>
+      <div class="stat-card" onclick="filtrarUnidade('centro')">
+        <div class="stat-num" id="stat-centro" style="color:#1565c0;">—</div>
+        <div class="stat-label">🏪 Centro</div>
+      </div>
+      <div class="stat-card" onclick="filtrarUnidade('delivery')">
+        <div class="stat-num" id="stat-delivery" style="color:#b71c1c;">—</div>
+        <div class="stat-label">🚗 Delivery</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <select id="filtro-unidade" onchange="renderEstoque()" style="margin:0;flex:1;">
+        <option value="">Todas unidades</option>
+        <option value="cd">🏭 CD</option>
+        <option value="centro">🏪 Centro</option>
+        <option value="delivery">🚗 Delivery</option>
+      </select>
+      <select id="filtro-cat" onchange="renderEstoque()" style="margin:0;flex:1;">
+        <option value="">Todas cats.</option>
+        <option>Bruto</option>
+        <option>Processado</option>
+      </select>
+    </div>
+    <input type="text" id="busca-estoque" placeholder="🔍 Buscar produto..." oninput="renderEstoque()" style="margin-bottom:8px;" />
+    <button class="btn btn-gold" onclick="carregarTudo()">🔄 ATUALIZA AÍ</button>
+    <div id="lista-estoque"></div>
+  </div>
+
+  <!-- ENTRADAS -->
+  <div class="screen" id="tab-entradas">
+    <div class="card">
+      <h3>📥 Entradas por Unidade</h3>
+      <input type="date" id="ent-data" onchange="carregarEntradas()" />
+      <div style="display:flex;gap:8px;">
+        <select id="ent-unidade" onchange="renderEntradas()" style="margin:0;flex:1;">
+          <option value="">Todas unidades</option>
+          <option value="cd">🏭 CD</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+        </select>
+        <input type="text" id="busca-entradas" placeholder="🔍 Buscar..." oninput="renderEntradas()" style="margin:0;flex:1;" />
+      </div>
+    </div>
+    <div id="lista-entradas"><p style="color:#888;text-align:center;padding:20px;">Qual data você quer ver, mano?</p></div>
+  </div>
+
+  <!-- CONTAGENS -->
+  <div class="screen" id="tab-contagens">
+    <div class="card">
+      <h3>📊 Contagens por Unidade</h3>
+      <input type="date" id="cont-data" onchange="carregarContagens()" />
+      <div style="display:flex;gap:8px;">
+        <select id="cont-unidade" onchange="renderContagens()" style="margin:0;flex:1;">
+          <option value="">Todas unidades</option>
+          <option value="cd">🏭 CD</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+        </select>
+        <input type="text" id="busca-contagens" placeholder="🔍 Buscar..." oninput="renderContagens()" style="margin:0;flex:1;" />
+      </div>
+    </div>
+    <div id="lista-contagens"><p style="color:#888;text-align:center;padding:20px;">Qual data você quer ver, mano?</p></div>
+  </div>
+
+  <!-- PEDIDOS -->
+  <div class="screen" id="tab-pedidos">
+    <div class="card">
+      <h3>🛒 Lista de Compras</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Produtos abaixo do mínimo definido por unidade</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <select id="ped-unidade" onchange="renderPedidos()" style="margin:0;flex:1;">
+          <option value="">Todas unidades</option>
+          <option value="cd">🏭 CD</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+        </select>
+        <input type="text" id="busca-pedidos" placeholder="🔍 Buscar..." oninput="renderPedidos()" style="margin:0;flex:1;" />
+      </div>
+      <button class="btn btn-gold" onclick="carregarPedidos()">🔄 ATUALIZA AÍ</button>
+    </div>
+    <div id="lista-pedidos"></div>
+  </div>
+
+  <!-- MÍNIMOS -->
+  <div class="screen" id="tab-minimos">
+    <div class="card">
+      <h3>⚙️ Definir Estoque Mínimo</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Define quanto cada unidade precisa ter de cada produto</p>
+      <div style="display:flex;gap:8px;">
+        <select id="min-unidade" onchange="renderMinimos()" style="margin:0;flex:1;">
+          <option value="cd">🏭 CD</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+        </select>
+        <input type="text" id="busca-minimos" placeholder="🔍 Buscar..." oninput="renderMinimos()" style="margin:0;flex:1;" />
+      </div>
+    </div>
+    <div id="lista-minimos"></div>
+  </div>
+</div>
+
+<!-- MODAL CORRIGIR ESTOQUE -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;align-items:flex-end;justify-content:center;">
+  <div class="modal-box">
+    <h2 id="modal-nome" style="color:#e65100;font-size:1.1rem;margin-bottom:4px;"></h2>
+    <p id="modal-info" style="font-size:0.8rem;color:#888;margin-bottom:12px;"></p>
+    <label>Corrigir estoque para:</label>
+    <input type="number" id="modal-qtd" placeholder="Ex: 5" step="0.001" min="0" style="font-size:1.4rem;text-align:center;" />
+    <button class="btn btn-gold" onclick="confirmarCorrecao()" style="margin-top:10px;">✅ Confirmar correção</button>
+    <button class="btn btn-gray" onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
+const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
+const UNIDADES = ['cd', 'centro', 'delivery'];
+const UNIDADE_LABEL = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery' };
+const UNIDADE_COR = { cd: 'unidade-cd', centro: 'unidade-centro', delivery: 'unidade-delivery' };
+
+let todosEstoques = [];
+let modalCodigo = null;
+let modalUnidade = null;
+
+function showToast(msg, tipo='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + tipo;
+  t.onclick = () => { t.className = ''; };
+  t.style.cursor = 'pointer';
+  if (_toastTimer) clearTimeout(_toastTimer);
+  const duracao = tipo === 'error' ? 999999 : 3000;
+  _toastTimer = setTimeout(() => t.className = '', duracao);
+}
+let _toastTimer = null;
+
+function fmtQ(v, u) {
+  if (v === null || v === undefined) return '—';
+  return u === 'kg' ? parseFloat(v).toFixed(3) + ' kg' : parseFloat(v) + ' ' + (u||'');
+}
+
+function dataHoje() {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+async function supa(metodo, tabela, params='', body=null) {
+  const opts = {
+    method: metodo,
+    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${params}`, opts);
+  return metodo === 'GET' ? r.json() : r.ok;
+}
+
+// ── LOGIN ──
+async function fazerLogin() {
+  const usuario = document.getElementById('login-usuario').value.trim();
+  const senha = document.getElementById('login-senha').value.trim();
+  const res = await supa('GET', 'usuario', `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.matriz&select=*`);
+  if (res && res.length > 0) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('topbar-usuario').textContent = res[0].usuario;
+    const hoje = dataHoje();
+    document.getElementById('ent-data').value = hoje;
+    document.getElementById('cont-data').value = hoje;
+    carregarTudo();
+  } else {
+    document.getElementById('login-erro').style.display = 'block';
+  }
+}
+
+document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+
+function sair() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function showTab(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'entradas') carregarEntradas();
+  if (name === 'contagens') carregarContagens();
+  if (name === 'pedidos') carregarPedidos();
+  if (name === 'minimos') renderMinimos();
+}
+
+function filtrarUnidade(u) {
+  document.getElementById('filtro-unidade').value = u;
+  renderEstoque();
+}
+
+// ── ESTOQUE ──
+async function carregarTudo() {
+  showToast('Atualizando...', '');
+  todosEstoques = await supa('GET', 'produtos', 'select=*&order=nome.asc');
+  UNIDADES.forEach(u => {
+    const prods = todosEstoques.filter(p => p.unidade_loja === u);
+    const zerados = prods.filter(p => parseFloat(p.estoque)||0 === 0).length;
+    document.getElementById('stat-' + u).textContent = prods.length + ' prod.';
+  });
+  renderEstoque();
+  showToast('✅ Atualizado!', 'success');
+}
+
+function renderEstoque() {
+  const filtroU = document.getElementById('filtro-unidade').value;
+  const filtroC = document.getElementById('filtro-cat').value;
+  const busca = (document.getElementById('busca-estoque').value || '').toLowerCase();
+  const el = document.getElementById('lista-estoque');
+  const unidades = filtroU ? [filtroU] : UNIDADES;
+  let html = '';
+  unidades.forEach(u => {
+    let prods = todosEstoques.filter(p =>
+      p.unidade_loja === u &&
+      (!filtroC || p.categoria === filtroC) &&
+      (!busca || p.nome.toLowerCase().includes(busca))
+    );
+    if (!prods.length) return;
+    html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]}</div>`;
+    prods.forEach(p => {
+      const est = parseFloat(p.estoque) || 0;
+      const min = parseFloat(p.estoque_min) || 0;
+      const cls = est === 0 ? 'zerado' : (min > 0 && est <= min) ? 'baixo' : 'ok';
+      html += `<div class="prod-row ${cls}">
+        <div>
+          <div style="font-weight:600;font-size:0.88rem;">${p.nome}</div>
+          <div style="font-size:0.72rem;color:#aaa;">${p.categoria} · mín: ${min > 0 ? fmtQ(min, p.unidade) : '—'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-weight:700;color:#1a237e;text-align:right;">${fmtQ(est, p.unidade)}</div>
+          <button onclick="abrirCorrecao('${p.codigo}','${u}')" style="background:#fff3e0;border:1px solid #f9a825;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:0.8rem;">✏️</button>
+        </div>
+      </div>`;
+    });
+  });
+  el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>';
+}
+
+// ── CORRIGIR ESTOQUE ──
+function abrirCorrecao(codigo, unidade) {
+  const p = todosEstoques.find(x => x.codigo === codigo && x.unidade_loja === unidade);
+  if (!p) return;
+  modalCodigo = codigo;
+  modalUnidade = unidade;
+  document.getElementById('modal-nome').textContent = p.nome + ' — ' + UNIDADE_LABEL[unidade];
+  document.getElementById('modal-info').textContent = 'Estoque atual: ' + fmtQ(p.estoque, p.unidade);
+  document.getElementById('modal-qtd').value = p.estoque || '';
+  document.getElementById('modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('modal-qtd').focus(), 300);
+}
+
+function fecharModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+async function confirmarCorrecao() {
+  const qtd = parseFloat(document.getElementById('modal-qtd').value);
+  if (isNaN(qtd) || qtd < 0) { showToast('Informe um valor válido!', 'error'); return; }
+  const ok = await supa('PATCH', `produtos?codigo=eq.${modalCodigo}&unidade_loja=eq.${modalUnidade}`, '', { estoque: qtd });
+  if (ok) {
+    const p = todosEstoques.find(x => x.codigo === modalCodigo && x.unidade_loja === modalUnidade);
+    if (p) p.estoque = qtd;
+    renderEstoque();
+    fecharModal();
+    showToast('✅ Estoque corrigido!', 'success');
+  } else { showToast('Erro ao corrigir', 'error'); }
+}
+
+// ── ENTRADAS ──
+let _movEntradas = [];
+async function carregarEntradas() {
+  const data = document.getElementById('ent-data').value;
+  if (!data) return;
+  const el = document.getElementById('lista-entradas');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+  _movEntradas = await supa('GET', 'movimentacoes', `tipo=eq.entrada&created_at=gte.${data}T00:00:00&created_at=lte.${data}T23:59:59&order=created_at.desc&select=*`);
+  renderEntradas();
+}
+function renderEntradas() {
+  const el = document.getElementById('lista-entradas');
+  const filtroU = document.getElementById('ent-unidade').value;
+  const busca = (document.getElementById('busca-entradas').value || '').toLowerCase();
+  if (!_movEntradas.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma entrada</p>'; return; }
+  const unidades = filtroU ? [filtroU] : UNIDADES;
+  let html = '';
+  unidades.forEach(u => {
+    const lista = _movEntradas.filter(m => m.unidade_loja === u && (!busca || m.nome.toLowerCase().includes(busca)));
+    if (!lista.length) return;
+    html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} entradas</div>`;
+    lista.forEach(m => {
+      const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+      html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}</div><div style="font-size:0.72rem;color:#aaa;">por ${m.colaborador} às ${hora}</div></div><div style="font-weight:700;color:#2e7d32;">+${fmtQ(m.qtd, m.unidade)}</div></div>`;
+    });
+  });
+  el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
+}
+
+// ── CONTAGENS ──
+let _movContagens = [];
+async function carregarContagens() {
+  const data = document.getElementById('cont-data').value;
+  if (!data) return;
+  const el = document.getElementById('lista-contagens');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+  _movContagens = await supa('GET', 'movimentacoes', `tipo=eq.contagem&created_at=gte.${data}T00:00:00&created_at=lte.${data}T23:59:59&order=created_at.desc&select=*`);
+  renderContagens();
+}
+function renderContagens() {
+  const el = document.getElementById('lista-contagens');
+  const filtroU = document.getElementById('cont-unidade').value;
+  const busca = (document.getElementById('busca-contagens').value || '').toLowerCase();
+  if (!_movContagens.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma contagem</p>'; return; }
+  const unidades = filtroU ? [filtroU] : UNIDADES;
+  let html = '';
+  unidades.forEach(u => {
+    const lista = _movContagens.filter(m => m.unidade_loja === u && (!busca || m.nome.toLowerCase().includes(busca)));
+    if (!lista.length) return;
+    html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} contagens</div>`;
+    lista.forEach(m => {
+      const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+      const estAnt = m.estoque_anterior != null ? fmtQ(m.estoque_anterior, m.unidade) : '—';
+      html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}</div><div style="font-size:0.72rem;color:#aaa;">Anterior: ${estAnt} · por ${m.colaborador} às ${hora}</div></div><div style="font-weight:700;color:#1a237e;">${fmtQ(m.novo_estoque, m.unidade)}</div></div>`;
+    });
+  });
+  el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
+}
+
+// ── PEDIDOS ──
+let _todosPedidos = [];
+async function carregarPedidos() {
+  const el = document.getElementById('lista-pedidos');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+  const prods = await supa('GET', 'produtos', 'select=*&order=nome.asc');
+  _todosPedidos = prods.filter(p => p.estoque_min > 0 && (parseFloat(p.estoque)||0) < p.estoque_min);
+  renderPedidos();
+}
+function renderPedidos() {
+  const el = document.getElementById('lista-pedidos');
+  const filtroU = document.getElementById('ped-unidade').value;
+  const busca = (document.getElementById('busca-pedidos').value || '').toLowerCase();
+  const unidades = filtroU ? [filtroU] : UNIDADES;
+  if (!_todosPedidos.length) { el.innerHTML = '<p style="color:#2e7d32;text-align:center;padding:20px;font-weight:600;">✅ Tudo em dia — nenhum pedido necessário</p>'; return; }
+  let html = '';
+  unidades.forEach(u => {
+    const lista = _todosPedidos.filter(p => p.unidade_loja === u && (!busca || p.nome.toLowerCase().includes(busca)));
+    if (!lista.length) return;
+    html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} itens</div>`;
+    lista.forEach(p => {
+      const est = parseFloat(p.estoque) || 0;
+      const pedir = p.estoque_min - est;
+      html += `<div class="prod-row zerado"><div><div style="font-weight:600;font-size:0.88rem;">${p.nome}</div><div style="font-size:0.72rem;color:#aaa;">Tem: ${fmtQ(est, p.unidade)} | Precisa: ${fmtQ(p.estoque_min, p.unidade)}</div></div><div style="font-weight:700;color:#b71c1c;">🛒 ${fmtQ(pedir, p.unidade)}</div></div>`;
+    });
+  });
+  el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
+}
+
+// ── MÍNIMOS ──
+function renderMinimos() {
+  const u = document.getElementById('min-unidade').value;
+  const busca = (document.getElementById('busca-minimos').value || '').toLowerCase();
+  const prods = todosEstoques.filter(p => p.unidade_loja === u && (!busca || p.nome.toLowerCase().includes(busca))).sort((a,b) => a.nome.localeCompare(b.nome));
+  const el = document.getElementById('lista-minimos');
+  if (!prods.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregue o estoque primeiro</p>'; return; }
+
+  el.innerHTML = prods.map(p => `
+    <div class="card" style="padding:12px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div>
+          <div style="font-weight:700;font-size:0.88rem;">${p.nome}</div>
+          <div style="font-size:0.72rem;color:#aaa;">${p.categoria} · ${p.unidade}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="min_${p.codigo}" value="${p.estoque_min || ''}" placeholder="Mín" step="0.001" min="0"
+            style="width:80px;margin:0;text-align:center;font-size:0.95rem;padding:8px;" />
+          <button onclick="salvarMinimo('${p.codigo}','${u}')" style="background:#f9a825;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">💾</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function salvarMinimo(codigo, unidade) {
+  const val = parseFloat(document.getElementById('min_' + codigo).value) || 0;
+  const ok = await supa('PATCH', `produtos?codigo=eq.${codigo}&unidade_loja=eq.${unidade}`, '', { estoque_min: val });
+  if (ok) {
+    const p = todosEstoques.find(x => x.codigo === codigo && x.unidade_loja === unidade);
+    if (p) p.estoque_min = val;
+    showToast('✅ Mínimo salvo!', 'success');
+  } else { showToast('Erro ao salvar', 'error'); }
+}
+
+document.getElementById('login-usuario').focus();
+</script>
+</body>
+</html>
