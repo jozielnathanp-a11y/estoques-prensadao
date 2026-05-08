@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prensadão — Painel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: #0a0a0a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px 50px;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      color: #fff;
+      letter-spacing: 6px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .logo span { color: #ff1744; }
+
+    .sub {
+      font-size: 0.85rem;
+      color: #444;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .card {
+      border-radius: 8px;
+      overflow: hidden;
+      text-decoration: none;
+      display: block;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+    .card:active { transform: scale(0.97); }
+
+    .card-inner {
+      padding: 28px 16px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 150px;
+      position: relative;
+    }
+
+    .card-cd { background: linear-gradient(135deg, #1a1a1a 0%, #222 100%); border: 1px solid #00e5ff33; box-shadow: 0 0 20px #00e5ff22; }
+    .card-centro { background: linear-gradient(135deg, #0a1628 0%, #0d1f3c 100%); border: 1px solid #2979ff33; box-shadow: 0 0 20px #2979ff22; }
+    .card-delivery { background: linear-gradient(135deg, #1a0000 0%, #200000 100%); border: 1px solid #ff174433; box-shadow: 0 0 20px #ff174422; }
+    .card-chefao {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #1a0a00 0%, #1f1000 100%);
+      border: 1px solid #f9a82533;
+      box-shadow: 0 0 30px #f9a82522;
+    }
+
+    .card-icon { font-size: 2.8rem; margin-bottom: 8px; }
+    .card-chefao .card-icon { font-size: 3.5rem; }
+    .card-img { width: 90px; height: 90px; object-fit: contain; margin-bottom: 10px; filter: brightness(0) invert(1); opacity: 0.85; }
+    .card-chefao .card-img { width: 110px; height: 110px; filter: grayscale(30%) brightness(1.1); opacity: 0.95; border-radius: 8px; }
+    .card-cd .card-img { filter: grayscale(100%) brightness(1.8) contrast(1.2); opacity: 0.9; border-radius: 8px; }
+    .card-centro .card-img { filter: none; opacity: 1; border-radius: 8px; }
+    .card-delivery .card-img { filter: none; opacity: 1; border-radius: 8px; }
+
+    .card-titulo {
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 3px;
+      font-size: 1.3rem;
+      text-align: center;
+    }
+    .card-chefao .card-titulo { font-size: 1.8rem; }
+
+    .card-sub {
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      opacity: 0.5;
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    .card-cd .card-titulo { color: #00e5ff; }
+    .card-centro .card-titulo { color: #2979ff; }
+    .card-delivery .card-titulo { color: #ff1744; }
+    .card-chefao .card-titulo { color: #f9a825; }
+
+    .badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    .badge-cyan { background: #00e5ff; box-shadow: 0 0 8px #00e5ff; }
+    .badge-blue { background: #2979ff; box-shadow: 0 0 8px #2979ff; }
+    .badge-red { background: #ff1744; box-shadow: 0 0 8px #ff1744; }
+    .badge-gold { background: #f9a825; box-shadow: 0 0 8px #f9a825; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .linha {
+      width: 100%;
+      max-width: 480px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #333, transparent);
+      margin: 32px 0 16px;
+    }
+
+    .rodape {
+      font-size: 0.72rem;
+      color: #2a2a2a;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    body > * { position: relative; z-index: 1; }
+  </style>
+</head>
+<body>
+
+<div class="noise"></div>
+
+<div class="logo">PRENS<span>A</span>DÃO</div>
+<div class="sub">Sistema de Estoque · Seleciona sua unidade</div>
+
+<div class="grid">
+
+  <a href="cd.html" class="card card-cd">
+    <div class="badge badge-cyan"></div>
+    <div class="card-inner">
+      <img class="card-img" src="https://raw.githubusercontent.com/jozielnathanp-a11y/estoque-prensadao-cd/main/img_cd.jpg" alt="Cozinha" />
+      <div class="card-titulo">CD</div>
+      <div class="card-sub">COZINHA</div>
+    </div>
+  </a>
+
+  <a href="centro.html" class="card card-centro">
+    <div class="badge badge-blue"></div>
+    <div class="card-inner">
+      <img class="card-img" src="https://raw.githubusercontent.com/jozielnathanp-a11y/estoque-prensadao-cd/main/img_centro.jpg" alt="Centro" />
+      <div class="card-titulo">CENTRO</div>
+      <div class="card-sub">UNIDADE CENTRO</div>
+    </div>
+  </a>
+
+  <a href="delivery.html" class="card card-delivery">
+    <div class="badge badge-red"></div>
+    <div class="card-inner">
+      <img class="card-img" src="https://raw.githubusercontent.com/jozielnathanp-a11y/estoque-prensadao-cd/main/img_delivery.jpg" alt="Delivery" />
+      <div class="card-titulo">DELIVERY</div>
+      <div class="card-sub">UNIDADE DELIVERY</div>
+    </div>
+  </a>
+
+  <a href="matriz.html" class="card card-chefao">
+    <div class="badge badge-gold"></div>
+    <div class="card-inner">
+      <img class="card-img" src="https://raw.githubusercontent.com/jozielnathanp-a11y/estoque-prensadao-cd/main/img_chefao.jpg" alt="Chefão" />
+      <div class="card-titulo">CHEFÃO</div>
+      <div class="card-sub">PAINEL MATRIZ · ACESSO RESTRITO</div>
+    </div>
+  </a>
+
+</div>
+
+<div class="linha"></div>
+<div class="rodape">PRENSADÃO © 2026 · TODOS OS SISTEMAS</div>
+
+</body>
+</html>
