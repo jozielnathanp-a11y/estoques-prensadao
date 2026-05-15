@@ -131,9 +131,9 @@
     <h1>🏪 Estoques Prensadão Delivery</h1>
     <p>Acessa aí, parceiro 🔥</p>
     <label>Usuário</label>
-    <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" />
+    <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" onkeydown="if(event.key==='Enter')fazerLogin();" />
     <label>Senha</label>
-    <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" />
+    <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin();" />
     <button onclick="fazerLogin()">🔓 BORA ENTRAR</button>
     <div id="login-erro">❌ Errou feio, mano! Tenta de novo.</div>
   </div>
