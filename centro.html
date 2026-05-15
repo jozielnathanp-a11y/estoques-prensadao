@@ -244,7 +244,13 @@
       <div id="lista-lancamentos-itens" style="min-height:40px;">
         <p style="color:#555;text-align:center;font-size:0.78rem;padding:10px;">Nenhum item ainda. Confirme um lançamento acima.</p>
       </div>
-      <button class="btn btn-green" id="btn-salvar-estoque" onclick="salvarLancamentos()" style="margin-top:10px;width:100%;display:none;">💾 CONFIRMAR E ENVIAR AO ESTOQUE</button>
+      
+        <div id="nome-lancador-wrap" style="margin-bottom:8px;">
+          <input type="text" id="nome-lancador" placeholder="👤 Seu nome antes de salvar, parceiro..." 
+            style="width:100%;padding:12px;border-radius:10px;border:2px solid #e53935;background:#1a1a1a;color:#fff;font-size:1rem;box-sizing:border-box;" 
+            autocomplete="off" />
+        </div>
+        <button class="btn btn-green" id="btn-salvar-estoque" onclick="salvarLancamentos()" style="margin-top:10px;width:100%;display:none;">💾 CONFIRMAR E ENVIAR AO ESTOQUE</button>
     </div>
     </div>
   </div>
@@ -1302,6 +1308,13 @@ function renderLancamentos() {
 function limparLancamentos(){_lancamentos=[];renderLancamentos();}
 
 async function salvarLancamentos() {
+  var nomeLancEl = document.getElementById('nome-lancador');
+  var nomeLanc   = nomeLancEl ? nomeLancEl.value.trim() : '';
+  if (!nomeLanc) {
+    showToast('Coloca teu nome antes de salvar, parceiro!', 'error');
+    if (nomeLancEl) nomeLancEl.focus();
+    return;
+  }
   if (!_lancamentos.length) { showToast('Nenhum lançamento!', 'error'); return; }
   const btn = document.querySelector('#lista-lancamentos-wrap .btn-green');
   if (btn) btn.disabled = true;
@@ -1323,7 +1336,7 @@ async function salvarLancamentos() {
       await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
         method: 'POST',
         headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo: l.cod, nome: l.nome, tipo: l.tipo, qtd: l.qtd, unidade: l.unidade, colaborador: usuarioLogado.usuario, obs: l.tipo === 'contagem' ? 'Contagem' : 'Entrada', unidade_loja: UNIDADE_LOJA, estoque_anterior: est, novo_estoque: novoEst, status: 'confirmado' })
+        body: JSON.stringify({ codigo: l.cod, nome: l.nome, tipo: l.tipo, qtd: l.qtd, unidade: l.unidade, colaborador: nomeLanc || usuarioLogado.usuario, obs: l.tipo === 'contagem' ? 'Contagem' : 'Entrada', unidade_loja: UNIDADE_LOJA, estoque_anterior: est, novo_estoque: novoEst, status: 'confirmado' })
       });
 
       // Smart Desconto: SOMENTE em ENTRADA
@@ -1372,6 +1385,7 @@ async function salvarLancamentos() {
     }
   }
   renderEstoque();
+  var nl = document.getElementById('nome-lancador'); if (nl) nl.value = '';
   limparLancamentos();
   showToast('✅ ' + ok + ' lançamento(s) salvos!', 'success');
   
