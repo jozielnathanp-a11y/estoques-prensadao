@@ -2,6 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Chefão — Prensadão</title>
   <style>
@@ -62,10 +65,11 @@
     .prod-row.zerado { border-left-color: #b71c1c; }
     .prod-row.baixo { border-left-color: #ff9800; }
 
-    .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    @media (max-width: 400px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
     .stat-card { background: #161616; border-radius: 4px; padding: 12px; text-align: center; border: 1px solid #222; cursor: pointer; }
     .stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
-    .stat-num { font-size: 1.3rem; font-weight: 700; }
+    .stat-num { font-size: 1.1rem; font-weight: 700; }
     .stat-label { font-size: 0.72rem; color: #888; margin-top: 2px; }
 
     #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 0.88rem; opacity: 0; transition: opacity 0.3s; z-index: 9999; pointer-events: none; max-width: 90%; }
@@ -99,15 +103,23 @@
       <h1>👑 Chefão — Prensadão</h1>
       <span id="topbar-usuario"></span>
     </div>
-    <button onclick="sair()">Saí fora</button>
+    <div style="display:flex;gap:6px;">
+      <button onclick="abrirTutorial()" style="background:#1a1a1a;border:1px solid #b8860b;color:#f9a825;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;" title="Ajuda">❓</button>
+      <button onclick="sair()">Saí fora</button>
+    </div>
   </div>
 
   <div class="tabs">
     <div class="tab active" onclick="showTab('estoque')">📦 TRAMPO GERAL</div>
+    <div class="tab" onclick="showTab('lancar')">➕ LANÇAR</div>
     <div class="tab" onclick="showTab('entradas')">📥 ENTRADAS</div>
     <div class="tab" onclick="showTab('contagens')">📊 CONTAGENS</div>
+      <div class="tab" onclick="showTab('historico', this)">📋 Histórico</div>
     <div class="tab" onclick="showTab('pedidos')">🛒 PRECISÃO</div>
-    <div class="tab" onclick="showTab('minimos')">⚙️ MÍNIMOS</div>
+    <div class="tab" onclick="showTab('minimos')">⚙️ LIMITES</div>
+    <div class="tab" onclick="showTab('hist-cd')">📤 SAÍDAS CD</div>
+    <div class="tab" onclick="showTab('almox-chefao')">📦 ALMOXARIFADO</div>
+    <div class="tab" onclick="showTab('cadastro')">➕ CADASTRAR</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -125,23 +137,93 @@
         <div class="stat-num" id="stat-delivery" style="color:#b71c1c;">—</div>
         <div class="stat-label">🚗 Delivery</div>
       </div>
+      <div class="stat-card" onclick="filtrarUnidade('boqueiraw')">
+        <div class="stat-num" id="stat-boqueiraw" style="color:#f9a825;">—</div>
+        <div class="stat-label">🏪 Boqueirão</div>
+      </div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <select id="filtro-unidade" onchange="renderEstoque()" style="margin:0;flex:1;">
+      <select id="filtro-unidade" onchange="atualizarCats();renderEstoque()" style="margin:0;flex:1;">
         <option value="">Todas unidades</option>
         <option value="cd">🏭 CD</option>
         <option value="centro">🏪 Centro</option>
         <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
       </select>
       <select id="filtro-cat" onchange="renderEstoque()" style="margin:0;flex:1;">
         <option value="">Todas cats.</option>
-        <option>Bruto</option>
-        <option>Processado</option>
       </select>
     </div>
     <input type="text" id="busca-estoque" placeholder="🔍 Buscar produto..." oninput="renderEstoque()" style="margin-bottom:8px;" />
     <button class="btn btn-gold" onclick="carregarTudo()">🔄 ATUALIZA AÍ</button>
     <div id="lista-estoque"></div>
+  </div>
+
+
+  <!-- LANÇAMENTO CHEFÃO -->
+  <div class="screen" id="tab-lancar">
+    <!-- PENDENTES -->
+    <div class="card" id="mtz-card-pendentes" style="display:none;border:2px solid #f9a825;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h3 style="margin:0;color:#f9a825;">⏳ Pendentes <span id="mtz-badge-pendentes" style="background:#f9a825;color:#000;border-radius:10px;padding:1px 8px;font-size:0.85rem;margin-left:4px;">0</span></h3>
+        <button class="btn btn-gold" onclick="mtzConfirmarTodos()" style="margin:0;padding:8px 16px;font-size:0.9rem;">✅ CONFIRMAR TUDO</button>
+      </div>
+      <div id="mtz-lista-pendentes"></div>
+    </div>
+
+    <div class="card">
+      <h3>➕ Lançamento</h3>
+
+      <!-- Unidade -->
+      <label style="font-size:0.95rem;font-weight:700;">1️⃣ Unidade</label>
+      <select id="mtz-lanc-unidade" style="margin-bottom:16px;">
+        <option value="">-- Selecione a unidade --</option>
+        <option value="cd">🏭 CD</option>
+        <option value="centro">🏪 Centro</option>
+        <option value="delivery">🚗 Delivery</option>
+        <option value="boqueiraw">🏪 Boqueirão</option>
+      </select>
+
+      <!-- Tipo -->
+      <label style="font-size:0.95rem;font-weight:700;">2️⃣ Tipo</label>
+      <div style="display:flex;gap:8px;margin:8px 0 16px;">
+        <button id="mtz-btn-entrada" onclick="mtzSelecionarTipo('entrada')" class="btn btn-gold" style="flex:1;margin:0;padding:14px;">📥 Entrada</button>
+        <button id="mtz-btn-contagem" onclick="mtzSelecionarTipo('contagem')" class="btn btn-gray" style="flex:1;margin:0;padding:14px;">📊 Contagem</button>
+      </div>
+      <input type="hidden" id="mtz-lanc-tipo" value="entrada" />
+
+      <!-- Scan -->
+      <label style="font-size:0.95rem;font-weight:700;">3️⃣ Escaneia ou digita o código</label>
+      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
+        <input type="text" id="mtz-scan-input" placeholder="Bora! Escaneia o código, chefão..." style="margin:0;flex:1;" />
+        <button onclick="mtzBuscarPorCodigo()" style="background:#2e7d32;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">🔍</button>
+        <button onclick="mtzAbrirCamera()" style="background:#1565c0;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
+      </div>
+      <div id="mtz-camera-area" style="display:none;margin-bottom:10px;">
+        <video id="mtz-camera-video" style="width:100%;border-radius:10px;max-height:220px;" autoplay playsinline></video>
+        <button onclick="mtzFecharCamera()" class="btn btn-gray" style="margin-top:6px;">✖ Fechar câmera</button>
+      </div>
+
+      <!-- Produto não-kg: aparece só quando necessário -->
+      <div id="mtz-manual-area" style="display:none;">
+        <div id="mtz-lanc-nome" style="font-weight:700;color:#f9a825;margin-bottom:10px;font-size:1rem;"></div>
+        <!-- Multiplicador opcional -->
+        <label style="font-size:0.82rem;color:#aaa;margin-bottom:4px;">✖️ Multiplicador (opcional)</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+          <input type="number" id="mtz-lanc-pct" placeholder="Nº PCT" step="1" min="1" oninput="mtzCalcMulti()" style="margin:0;flex:1;" />
+          <span style="color:#888;font-weight:700;">×</span>
+          <input type="number" id="mtz-lanc-fator" placeholder="Un/PCT" step="0.001" min="0" oninput="mtzCalcMulti()" style="margin:0;flex:1;" />
+          <span style="color:#888;font-weight:700;">=</span>
+          <span id="mtz-lanc-total" style="font-weight:700;color:#f9a825;min-width:45px;text-align:right;">—</span>
+        </div>
+        <label style="font-size:0.9rem;font-weight:700;">Quantidade</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="mtz-lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="margin:0;flex:1;" />
+          <button class="btn btn-gold" onclick="mtzConfirmarManual()" style="margin:0;padding:12px 16px;">➕ ADD</button>
+        </div>
+      </div>
+      <input type="hidden" id="mtz-lanc-produto-cod" />
+    </div>
   </div>
 
   <!-- ENTRADAS -->
@@ -155,6 +237,7 @@
           <option value="cd">🏭 CD</option>
           <option value="centro">🏪 Centro</option>
           <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
         </select>
         <input type="text" id="busca-entradas" placeholder="🔍 Buscar..." oninput="renderEntradas()" style="margin:0;flex:1;" />
       </div>
@@ -173,6 +256,7 @@
           <option value="cd">🏭 CD</option>
           <option value="centro">🏪 Centro</option>
           <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
         </select>
         <input type="text" id="busca-contagens" placeholder="🔍 Buscar..." oninput="renderContagens()" style="margin:0;flex:1;" />
       </div>
@@ -191,6 +275,7 @@
           <option value="cd">🏭 CD</option>
           <option value="centro">🏪 Centro</option>
           <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
         </select>
         <input type="text" id="busca-pedidos" placeholder="🔍 Buscar..." oninput="renderPedidos()" style="margin:0;flex:1;" />
       </div>
@@ -200,20 +285,163 @@
   </div>
 
   <!-- MÍNIMOS -->
+
+
   <div class="screen" id="tab-minimos">
     <div class="card">
       <h3>⚙️ Definir Estoque Mínimo</h3>
       <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Define quanto cada unidade precisa ter de cada produto</p>
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <select id="min-unidade" onchange="renderMinimos()" style="margin:0;flex:1;">
           <option value="cd">🏭 CD</option>
-          <option value="centro">🏪 Centro</option>
-          <option value="delivery">🚗 Delivery</option>
+          <option value="almoxarifado">📦 Almoxarifado</option>
+          <option value="centro">🔵 Centro</option>
+          <option value="delivery">🔴 Delivery</option>
+          <option value="boqueiraw">🟡 Boqueirão</option>
+        </select>
+        <select id="min-categoria" onchange="renderMinimos()" style="margin:0;flex:1;">
+          <option value="">📦 Todas categorias</option>
+          <option value="Bebidas">🍺 Bebidas</option>
+          <option value="Embalagens">📦 Embalagens</option>
+          <option value="Embalagem">📦 Embalagem</option>
+          <option value="Processado">🥩 Processado</option>
+          <option value="Bruto">🌿 Bruto</option>
+          <option value="Limpeza">🧹 Limpeza</option>
+          <option value="Temperos">🧂 Temperos</option>
         </select>
         <input type="text" id="busca-minimos" placeholder="🔍 Buscar..." oninput="renderMinimos()" style="margin:0;flex:1;" />
       </div>
     </div>
     <div id="lista-minimos"></div>
+  </div>
+</div>
+
+  <!-- HISTÓRICO SAÍDAS CD -->
+  <!-- ALMOXARIFADO CHEFÃO -->
+  <!-- CADASTRO DE PRODUTO -->
+  <div class="screen" id="tab-cadastro">
+    <div class="card">
+      <h3>➕ Cadastrar Novo Produto</h3>
+
+      <!-- Nome -->
+      <label style="margin-top:4px;">Nome do Produto</label>
+      <input type="text" id="cad-nome" placeholder="Ex: Coca Cola 2L" style="margin-bottom:12px;" />
+
+      <!-- Código de barras -->
+      <label>Código de Barras <span style="color:#555;font-size:0.75rem;">(opcional)</span></label>
+      <input type="text" id="cad-codigo" placeholder="Escaneia ou digita o código..." style="margin-bottom:12px;" />
+
+      <!-- Unidade de medida -->
+      <label>Unidade de Medida</label>
+      <select id="cad-unidade" style="margin-bottom:12px;">
+        <option value="und">und (unidade)</option>
+        <option value="kg">kg (peso)</option>
+        <option value="L">L (litro)</option>
+        <option value="pct">pct (pacote)</option>
+      </select>
+
+      <!-- PCT -->
+      <label>Quantidade por Pacote <span style="color:#555;font-size:0.75rem;">(se vendido em caixas/fardos)</span></label>
+      <input type="number" id="cad-pct" placeholder="Ex: 6, 12, 24... (deixe 0 se não se aplica)" min="0" step="1" style="margin-bottom:16px;" />
+
+      <hr style="border-color:#222;margin-bottom:16px;" />
+
+      <!-- Onde fica o estoque central -->
+      <label style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:#b8860b;">1. ONDE FICA O ESTOQUE CENTRAL?</label>
+      <div style="display:flex;gap:8px;margin:8px 0 16px;">
+        <button id="cad-orig-cd" onclick="selecionarOrigem('cd')" class="btn btn-gold" style="flex:1;margin:0;">🏭 CD</button>
+        <button id="cad-orig-almox" onclick="selecionarOrigem('almoxarifado')" class="btn btn-gray" style="flex:1;margin:0;">📦 Almoxarifado</button>
+      </div>
+
+      <!-- Unidades que recebem -->
+      <label style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:#b8860b;">2. QUAIS UNIDADES RECEBEM ESTE ITEM?</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px;">
+        <button id="cad-u-todas" onclick="toggleUnidade('todas')" class="btn btn-gray" style="flex:1;min-width:80px;margin:0;font-size:0.78rem;">⭐ Todas</button>
+        <button id="cad-u-cd" onclick="toggleUnidade('cd')" class="btn btn-gray" style="flex:1;min-width:80px;margin:0;font-size:0.78rem;">🏭 CD</button>
+        <button id="cad-u-centro" onclick="toggleUnidade('centro')" class="btn btn-gray" style="flex:1;min-width:80px;margin:0;font-size:0.78rem;">🔵 Centro</button>
+        <button id="cad-u-delivery" onclick="toggleUnidade('delivery')" class="btn btn-gray" style="flex:1;min-width:80px;margin:0;font-size:0.78rem;">🔴 Delivery</button>
+        <button id="cad-u-boqueiraw" onclick="toggleUnidade('boqueiraw')" class="btn btn-gray" style="flex:1;min-width:80px;margin:0;font-size:0.78rem;">🟡 Boqueirão</button>
+      </div>
+
+      <!-- Categoria -->
+      <label style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:#b8860b;">3. QUAL CATEGORIA?</label>
+      <div id="cad-cats" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px;"></div>
+
+      <!-- Resumo -->
+      <div id="cad-resumo" style="display:none;background:#0d0d0d;border:1px solid #333;border-radius:10px;padding:14px;margin-bottom:12px;font-size:0.84rem;line-height:1.8;"></div>
+
+      <button class="btn btn-green" onclick="cadastrarProduto()" style="width:100%;font-size:1rem;">✅ CADASTRAR PRODUTO</button>
+    </div>
+  </div>
+
+  <div class="screen" id="tab-almox-chefao">
+    <div class="card">
+      <h3>📦 Almoxarifado de Embalagens</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <button onclick="filtrarAlmoxChefao('todos')" id="abtn-todos" class="btn btn-gold" style="flex:1;margin:0;font-size:0.78rem;">📦 Todos</button>
+        <button onclick="filtrarAlmoxChefao('ok')" id="abtn-ok" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">✅ OK</button>
+        <button onclick="filtrarAlmoxChefao('comprar')" id="abtn-comprar" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🛒 Comprar</button>
+        <button onclick="filtrarAlmoxChefao('zerado')" id="abtn-zerado" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🔴 Zerado</button>
+      </div>
+      <input type="text" id="almox-chefao-busca" placeholder="🔍 Buscar embalagem..." oninput="renderAlmoxChefao()" style="margin:0;" />
+    </div>
+    <div id="almox-chefao-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;"></div>
+    <div id="almox-chefao-lista"></div>
+  </div>
+
+  <div class="screen" id="tab-hist-cd">
+    <div class="card">
+      <h3>📤 Saídas do CD para Unidades</h3>
+      <label>Data</label>
+      <input type="date" id="hist-cd-data" onchange="carregarHistCD()" />
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        <button onclick="filtrarHistCD('todos')" id="hcd-btn-todos" class="btn btn-gold" style="flex:1;margin:0;font-size:0.78rem;">📦 Todos</button>
+        <button onclick="filtrarHistCD('centro')" id="hcd-btn-centro" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🔵 Centro</button>
+        <button onclick="filtrarHistCD('delivery')" id="hcd-btn-delivery" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🔴 Delivery</button>
+        <button onclick="filtrarHistCD('boqueiraw')" id="hcd-btn-boqueiraw" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🟡 Boqueirão</button>
+      </div>
+    </div>
+    <div id="lista-hist-cd"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data</p></div>
+  </div>
+
+</div>
+
+<!-- MODAL EDITAR PRODUTO -->
+<div id="modal-edit-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1001;align-items:flex-end;justify-content:center;">
+  <div class="modal-box" style="max-height:85vh;overflow-y:auto;">
+    <h2 style="color:#1565c0;font-size:1.1rem;margin-bottom:4px;">🖊️ Editar Produto</h2>
+    <p id="modal-edit-info" style="font-size:0.78rem;color:#888;margin-bottom:12px;"></p>
+    <label>Nome</label>
+    <input type="text" id="modal-edit-nome" style="margin-bottom:8px;" />
+    <label>Código de Barras <span style="color:#555;font-size:0.75rem;">(base, sem sufixo da unidade)</span></label>
+    <input type="text" id="modal-edit-codigo" style="margin-bottom:8px;" />
+    <label>Categoria</label>
+    <select id="modal-edit-cat" style="margin-bottom:8px;">
+      <option value="Bebidas">🥤 Bebidas</option>
+      <option value="Bruto">🥩 Bruto</option>
+      <option value="Embalagens">📦 Embalagens</option>
+      <option value="Limpeza">🧹 Limpeza</option>
+      <option value="Processado">🍗 Processado</option>
+    </select>
+    <label>Unidade de Medida</label>
+    <select id="modal-edit-unidade" style="margin-bottom:8px;">
+      <option value="und">und</option>
+      <option value="kg">kg</option>
+      <option value="L">L</option>
+      <option value="pct">pct</option>
+    </select>
+    <label>Qtd por Pacote</label>
+    <input type="number" id="modal-edit-pct" min="0" step="1" style="margin-bottom:12px;" />
+    <div style="background:#0d0d0d;border:1px solid #1565c0;border-radius:10px;padding:12px;margin-bottom:12px;">
+      <label style="color:#1565c0;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">REPLICAR EM TODAS AS UNIDADES?</label>
+      <p style="font-size:0.75rem;color:#888;margin:4px 0 10px;">Salva nome, categoria, unidade e PCT em todas as unidades que têm este produto.</p>
+      <div style="display:flex;gap:8px;">
+        <button id="edit-rep-sim" onclick="setReplicar(true)" class="btn btn-gold" style="flex:1;margin:0;font-size:0.82rem;">✅ Sim, replicar</button>
+        <button id="edit-rep-nao" onclick="setReplicar(false)" class="btn btn-gray" style="flex:1;margin:0;font-size:0.82rem;">❌ Só esta unidade</button>
+      </div>
+    </div>
+    <button class="btn btn-gold" onclick="confirmarEdicao()" style="margin-bottom:8px;">💾 Salvar</button>
+    <button class="btn btn-gray" onclick="fecharEdicao()">Cancelar</button>
   </div>
 </div>
 
@@ -234,9 +462,9 @@
 <script>
 const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
 const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
-const UNIDADES = ['cd', 'centro', 'delivery'];
-const UNIDADE_LABEL = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery' };
-const UNIDADE_COR = { cd: 'unidade-cd', centro: 'unidade-centro', delivery: 'unidade-delivery' };
+const UNIDADES = ['cd', 'centro', 'delivery', 'boqueiraw'];
+const UNIDADE_LABEL = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery', boqueiraw: '🏪 Boqueirão' };
+const UNIDADE_COR = { cd: 'unidade-cd', centro: 'unidade-centro', delivery: 'unidade-delivery', boqueiraw: 'unidade-centro' };
 
 let todosEstoques = [];
 let modalCodigo = null;
@@ -285,7 +513,7 @@ async function fazerLogin() {
     const hoje = dataHoje();
     document.getElementById('ent-data').value = hoje;
     document.getElementById('cont-data').value = hoje;
-    carregarTudo();
+    carregarTudo(); atualizarCats();
   } else {
     document.getElementById('login-erro').style.display = 'block';
   }
@@ -298,6 +526,351 @@ function sair() {
   document.getElementById('app').style.display = 'none';
 }
 
+let _histCdMovs = [];
+let _almoxChefaoFiltro = 'todos';
+
+// ── CADASTRO ──
+let _cadOrigem = 'cd';
+let _cadUnidades = new Set();
+let _cadCategoria = '';
+
+const CATEGORIAS_DISPONIVEIS = [
+  { id: 'Bebidas',    icon: '🥤' },
+  { id: 'Bruto',      icon: '🥩' },
+  { id: 'Embalagens', icon: '📦' },
+  { id: 'Limpeza',    icon: '🧹' },
+  { id: 'Processado', icon: '🍗' },
+];
+
+function initCadastro() {
+  // Renderizar botões de categoria
+  const el = document.getElementById('cad-cats');
+  el.innerHTML = CATEGORIAS_DISPONIVEIS.map(c =>
+    `<button id="cad-cat-${c.id}" onclick="selecionarCategoria('${c.id}')" class="btn btn-gray" style="flex:1;min-width:100px;margin:0;font-size:0.78rem;">${c.icon} ${c.id}</button>`
+  ).join('');
+  // Reset
+  _cadOrigem = 'cd';
+  _cadUnidades = new Set();
+  _cadCategoria = '';
+  document.getElementById('cad-nome').value = '';
+  document.getElementById('cad-codigo').value = '';
+  document.getElementById('cad-pct').value = '';
+  document.getElementById('cad-unidade').value = 'und';
+  document.getElementById('cad-resumo').style.display = 'none';
+  document.querySelectorAll('[id^="cad-u-"]').forEach(b => b.className = 'btn btn-gray');
+  document.querySelectorAll('[id^="cad-cat-"]').forEach(b => b.className = 'btn btn-gray');
+  selecionarOrigem('cd');
+}
+
+function selecionarOrigem(origem) {
+  _cadOrigem = origem;
+  document.getElementById('cad-orig-cd').className = origem === 'cd' ? 'btn btn-gold' : 'btn btn-gray';
+  document.getElementById('cad-orig-almox').className = origem === 'almoxarifado' ? 'btn btn-gold' : 'btn btn-gray';
+  atualizarResumoCad();
+}
+
+function toggleUnidade(u) {
+  if (u === 'todas') {
+    if (_cadUnidades.has('todas')) {
+      _cadUnidades.clear();
+      document.querySelectorAll('[id^="cad-u-"]').forEach(b => b.className = 'btn btn-gray');
+    } else {
+      _cadUnidades = new Set(['todas', 'cd', 'centro', 'delivery', 'boqueiraw']);
+      document.querySelectorAll('[id^="cad-u-"]').forEach(b => b.className = 'btn btn-gold');
+    }
+  } else {
+    _cadUnidades.delete('todas');
+    document.getElementById('cad-u-todas').className = 'btn btn-gray';
+    if (_cadUnidades.has(u)) {
+      _cadUnidades.delete(u);
+      document.getElementById('cad-u-' + u).className = 'btn btn-gray';
+    } else {
+      _cadUnidades.add(u);
+      document.getElementById('cad-u-' + u).className = 'btn btn-gold';
+      // Se todas selecionadas manualmente
+      if (['cd','centro','delivery','boqueiraw'].every(x => _cadUnidades.has(x))) {
+        _cadUnidades.add('todas');
+        document.getElementById('cad-u-todas').className = 'btn btn-gold';
+      }
+    }
+  }
+  atualizarResumoCad();
+}
+
+function selecionarCategoria(cat) {
+  _cadCategoria = cat;
+  document.querySelectorAll('[id^="cad-cat-"]').forEach(b => b.className = 'btn btn-gray');
+  document.getElementById('cad-cat-' + cat).className = 'btn btn-gold';
+  atualizarResumoCad();
+}
+
+function atualizarResumoCad() {
+  const nome = document.getElementById('cad-nome').value.trim();
+  const el = document.getElementById('cad-resumo');
+  const unidSel = [..._cadUnidades].filter(u => u !== 'todas');
+  if (!nome && !_cadCategoria && !unidSel.length) { el.style.display = 'none'; return; }
+  const origemLabel = _cadOrigem === 'cd' ? '🏭 CD' : '📦 Almoxarifado';
+  const unidLabel = unidSel.length ? unidSel.map(u => u === 'boqueiraw' ? 'Boqueirão' : u.charAt(0).toUpperCase()+u.slice(1)).join(', ') : '—';
+  el.style.display = 'block';
+  el.innerHTML = `<strong>📋 RESUMO</strong><br>
+    <b>Nome:</b> ${nome || '—'}<br>
+    <b>Estoque central:</b> ${origemLabel}<br>
+    <b>Unidades:</b> ${unidLabel}<br>
+    <b>Categoria:</b> ${_cadCategoria || '—'}`;
+}
+
+async function cadastrarProduto() {
+  const nome = document.getElementById('cad-nome').value.trim();
+  const codigoBase = document.getElementById('cad-codigo').value.trim();
+  const unidade = document.getElementById('cad-unidade').value;
+  const pct = parseFloat(document.getElementById('cad-pct').value) || 0;
+  const unidSel = [..._cadUnidades].filter(u => u !== 'todas');
+
+  if (!nome) { showToast('Coloca o nome do produto! 😤', 'error'); return; }
+  if (!unidSel.length) { showToast('Seleciona pelo menos uma unidade! 😤', 'error'); return; }
+  if (!_cadCategoria) { showToast('Seleciona a categoria! 😤', 'error'); return; }
+
+  // Gerar código base único se não informado
+  const codBase = codigoBase || ('PROD' + Date.now().toString().slice(-6));
+
+  // Definir quais unidades criar (+ a de origem do estoque central se não estiver)
+  const todasUnidades = new Set(unidSel);
+  if (_cadOrigem === 'almoxarifado' && _cadCategoria === 'Embalagens') {
+    todasUnidades.add('almoxarifado'); // garantir criação no almoxarifado
+  } else {
+    todasUnidades.add(_cadOrigem); // garantir criação no CD
+  }
+
+  let criados = 0;
+  for (const u of todasUnidades) {
+    const prod = {
+      codigo: codBase + '_' + u,
+      nome,
+      categoria: _cadCategoria,
+      unidade,
+      estoque: 0,
+      estoque_min: 0,
+      estoque_max: 0,
+      qtd_por_pct: pct,
+      unidade_loja: u
+    };
+    const ok = await supa('POST', 'produtos', '', prod);
+    if (ok !== false) criados++;
+  }
+
+  if (criados > 0) {
+    showToast(`✅ "${nome}" cadastrado em ${criados} unidade(s)! 💪`, 'success');
+    // Recarregar todosEstoques
+    todosEstoques = await supa('GET', 'produtos', 'select=*&order=nome.asc');
+    initCadastro();
+  } else {
+    showToast('Erro ao cadastrar. Tenta de novo!', 'error');
+  }
+}
+
+async function carregarAlmoxChefao() {
+  const res = await supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
+  if (Array.isArray(res)) {
+    // Atualiza todosEstoques com almoxarifado
+    todosEstoques = todosEstoques.filter(p => p.unidade_loja !== 'almoxarifado').concat(res);
+  }
+  renderAlmoxChefao();
+}
+
+function filtrarAlmoxChefao(filtro) {
+  _almoxChefaoFiltro = filtro;
+  document.querySelectorAll('[id^="abtn-"]').forEach(b => b.className = 'btn btn-gray');
+  document.getElementById('abtn-' + filtro).className = 'btn btn-gold';
+  renderAlmoxChefao();
+}
+
+function renderAlmoxChefao() {
+  const busca = (document.getElementById('almox-chefao-busca').value || '').toLowerCase();
+  const prods = todosEstoques.filter(p => p.unidade_loja === 'almoxarifado');
+
+  // Stats
+  const total = prods.length;
+  const zerados = prods.filter(p => (parseFloat(p.estoque)||0) === 0).length;
+  const comprar = prods.filter(p => {
+    const est = parseFloat(p.estoque)||0;
+    const min = parseFloat(p.estoque_min)||0;
+    return min > 0 && est <= min;
+  }).length;
+  const ok = total - zerados - comprar;
+
+  document.getElementById('almox-chefao-stats').innerHTML = `
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#f9a825;">${total}</div>
+      <div style="font-size:0.7rem;color:#888;">TOTAL</div>
+    </div>
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#2e7d32;">${ok}</div>
+      <div style="font-size:0.7rem;color:#888;">OK</div>
+    </div>
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#ff9800;">${comprar}</div>
+      <div style="font-size:0.7rem;color:#888;">COMPRAR</div>
+    </div>
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#b71c1c;">${zerados}</div>
+      <div style="font-size:0.7rem;color:#888;">ZERADO</div>
+    </div>`;
+
+  let lista = prods.filter(p => {
+    const est = parseFloat(p.estoque)||0;
+    const min = parseFloat(p.estoque_min)||0;
+    const buscarOk = !busca || p.nome.toLowerCase().includes(busca);
+    if (!buscarOk) return false;
+    if (_almoxChefaoFiltro === 'zerado') return est === 0;
+    if (_almoxChefaoFiltro === 'comprar') return min > 0 && est <= min && est > 0;
+    if (_almoxChefaoFiltro === 'ok') return est > 0 && !(min > 0 && est <= min);
+    return true;
+  });
+
+  const el = document.getElementById('almox-chefao-lista');
+  if (!lista.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>'; return; }
+
+  // Ordenar: zerados primeiro, depois abaixo do min, depois ok
+  lista.sort((a,b) => {
+    const estA = parseFloat(a.estoque)||0, estB = parseFloat(b.estoque)||0;
+    const minA = parseFloat(a.estoque_min)||0, minB = parseFloat(b.estoque_min)||0;
+    const prioA = estA === 0 ? 0 : (minA > 0 && estA <= minA ? 1 : 2);
+    const prioB = estB === 0 ? 0 : (minB > 0 && estB <= minB ? 1 : 2);
+    return prioA - prioB || a.nome.localeCompare(b.nome);
+  });
+
+  el.innerHTML = lista.map(p => {
+    const est = parseFloat(p.estoque)||0;
+    const min = parseFloat(p.estoque_min)||0;
+    const max = parseFloat(p.estoque_max)||0;
+    const zerado = est === 0;
+    const abaixo = min > 0 && est <= min;
+    const cor = zerado ? '#b71c1c' : abaixo ? '#ff9800' : '#2e7d32';
+    const badge = zerado
+      ? '<span style="background:#b71c1c;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">🔴 ZERADO</span>'
+      : abaixo
+        ? '<span style="background:#ff9800;color:#000;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">🛒 COMPRAR</span>'
+        : '<span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">✅ OK</span>';
+
+    // Sugestão de compra: quanto falta para chegar no máximo (ou min*2 se não tiver max)
+    let sugestao = '';
+    if (zerado || abaixo) {
+      const meta = max > 0 ? max : (min > 0 ? min * 2 : 0);
+      if (meta > 0) {
+        const falta = meta - est;
+        sugestao = '<div style="font-size:0.72rem;color:#ff9800;margin-top:2px;">🛒 Comprar: <strong>' + fmtQ(falta, p.unidade) + '</strong></div>';
+      }
+    }
+
+    const pct = parseFloat(p.qtd_por_pct)||0;
+    return '<div style="background:#161616;border-left:4px solid ' + cor + ';border-radius:8px;padding:12px;margin-bottom:6px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-weight:700;font-size:0.9rem;margin-bottom:4px;">' + p.nome + ' ' + badge + '</div>'
+      + (pct > 1 ? '<div style="font-size:0.72rem;color:#555;">PCT: ' + pct + ' un</div>' : '')
+      + sugestao
+      + '</div>'
+      + '<div style="text-align:right;margin-left:12px;">'
+      + '<div style="font-size:1.3rem;font-weight:700;color:' + cor + ';">' + fmtQ(est, p.unidade) + '</div>'
+      + (min > 0 ? '<div style="font-size:0.68rem;color:#555;">Mín: ' + fmtQ(min, p.unidade) + '</div>' : '')
+      + (max > 0 ? '<div style="font-size:0.68rem;color:#555;">Máx: ' + fmtQ(max, p.unidade) + '</div>' : '')
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+let _histCdFiltro = 'todos';
+
+async function carregarHistCD() {
+  const data = document.getElementById('hist-cd-data').value;
+  const el = document.getElementById('lista-hist-cd');
+  if (!data) return;
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const inicio = data + 'T00:00:00';
+  const fim = data + 'T23:59:59';
+  _histCdMovs = await supa('GET', 'movimentacoes',
+    `tipo=eq.saida&unidade_loja=eq.cd&created_at=gte.${inicio}&created_at=lte.${fim}&order=created_at.desc&select=*`);
+
+  _histCdFiltro = 'todos';
+  document.querySelectorAll('[id^="hcd-btn-"]').forEach(b => b.className = 'btn btn-gray');
+  document.getElementById('hcd-btn-todos').className = 'btn btn-gold';
+  renderHistCD();
+}
+
+function filtrarHistCD(unidade) {
+  _histCdFiltro = unidade;
+  document.querySelectorAll('[id^="hcd-btn-"]').forEach(b => b.className = 'btn btn-gray');
+  document.getElementById('hcd-btn-' + unidade).className = 'btn btn-gold';
+  renderHistCD();
+}
+
+function renderHistCD() {
+  const el = document.getElementById('lista-hist-cd');
+  if (!_histCdMovs || !_histCdMovs.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma saída nesta data</p>';
+    return;
+  }
+
+  const filtrado = _histCdFiltro === 'todos' ? _histCdMovs :
+    _histCdMovs.filter(m => (m.colaborador||'').toLowerCase() === _histCdFiltro);
+
+  if (!filtrado.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma saída para esta unidade</p>';
+    return;
+  }
+
+  // Agrupar por unidade destino
+  const grupos = {};
+  filtrado.forEach(m => {
+    const dest = (m.colaborador || 'desconhecido').toUpperCase();
+    if (!grupos[dest]) grupos[dest] = [];
+    grupos[dest].push(m);
+  });
+
+  const corDest = { 'CENTRO': '#1565c0', 'DELIVERY': '#c62828', 'BOQUEIRAW': '#f57f17' };
+
+  let html = '';
+  for (const [dest, movs] of Object.entries(grupos)) {
+    const cor = corDest[dest] || '#607d8b';
+    const totalItens = movs.length;
+    html += '<div style="margin-bottom:16px;">';
+    html += '<div style="background:' + cor + ';color:#fff;font-family:\'Bebas Neue\',sans-serif;font-size:1rem;letter-spacing:1px;padding:8px 12px;border-radius:8px 8px 0 0;">→ ' + dest + ' · ' + totalItens + ' item(s)</div>';
+
+    movs.forEach(m => {
+      const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+      const negativo = (m.novo_estoque || 0) < 0;
+      html += '<div style="background:#161616;border-left:3px solid ' + cor + ';padding:10px 12px;margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;">'
+        + '<div>'
+        + '<div style="font-weight:700;font-size:0.88rem;">' + m.nome + '</div>'
+        + '<div style="font-size:0.72rem;color:#555;">' + hora + (negativo ? ' · <span style="color:#ef5350;">⚠️ CD ficou negativo</span>' : '') + '</div>'
+        + '</div>'
+        + '<div style="font-weight:700;color:#ef5350;font-size:0.95rem;">−' + fmtQ(m.qtd, m.unidade) + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Totais por produto
+  const totais = {};
+  filtrado.forEach(m => {
+    if (!totais[m.nome]) totais[m.nome] = { qtd: 0, unidade: m.unidade };
+    totais[m.nome].qtd += parseFloat(m.qtd) || 0;
+  });
+
+  html += '<div style="background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:12px;margin-top:8px;">';
+  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:0.9rem;color:#b8860b;letter-spacing:1px;margin-bottom:8px;">📊 TOTAL DO DIA</div>';
+  Object.entries(totais).sort((a,b) => a[0].localeCompare(b[0])).forEach(([nome, v]) => {
+    html += '<div style="display:flex;justify-content:space-between;font-size:0.82rem;padding:3px 0;border-bottom:1px solid #1a1a1a;">'
+      + '<span>' + nome + '</span>'
+      + '<span style="font-weight:700;color:#ef5350;">−' + fmtQ(v.qtd, v.unidade) + '</span>'
+      + '</div>';
+  });
+  html += '</div>';
+
+  el.innerHTML = html;
+}
+
 function showTab(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -306,7 +879,19 @@ function showTab(name) {
   if (name === 'entradas') carregarEntradas();
   if (name === 'contagens') carregarContagens();
   if (name === 'pedidos') carregarPedidos();
-  if (name === 'minimos') renderMinimos();
+  if (name === 'minimos') {
+    const temAlmox = todosEstoques.some(p => p.unidade_loja === 'almoxarifado');
+    if (!temAlmox) {
+      supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc').then(res => {
+        if (Array.isArray(res)) todosEstoques = todosEstoques.concat(res);
+        renderMinimos();
+      });
+    } else {
+      renderMinimos();
+    }
+  }
+  if (name === 'almox-chefao') carregarAlmoxChefao();
+  if (name === 'cadastro') initCadastro();
 }
 
 function filtrarUnidade(u) {
@@ -323,8 +908,36 @@ async function carregarTudo() {
     const zerados = prods.filter(p => parseFloat(p.estoque)||0 === 0).length;
     document.getElementById('stat-' + u).textContent = prods.length + ' prod.';
   });
+  atualizarCats();
   renderEstoque();
   showToast('✅ Atualizado!', 'success');
+}
+
+function atualizarCats() {
+  const filtroU = document.getElementById('filtro-unidade').value;
+  const sel = document.getElementById('filtro-cat');
+  const atual = sel.value;
+
+  // Pegar categorias da unidade selecionada com contagem e estoque total
+  const prods = filtroU
+    ? todosEstoques.filter(p => p.unidade_loja === filtroU)
+    : todosEstoques;
+
+  const cats = {};
+  prods.forEach(p => {
+    if (!cats[p.categoria]) cats[p.categoria] = { total: 0, zerados: 0 };
+    cats[p.categoria].total++;
+    if ((parseFloat(p.estoque) || 0) === 0) cats[p.categoria].zerados++;
+  });
+
+  const emojis = { 'Bebidas': '🍺', 'Embalagens': '📦', 'Embalagem': '📦', 'Processado': '🥩', 'Bruto': '🌿', 'Limpeza': '🧹', 'Temperos': '🧂' };
+
+  sel.innerHTML = '<option value="">📦 Todas (' + prods.length + ' produtos)</option>' +
+    Object.entries(cats).sort((a,b) => a[0].localeCompare(b[0])).map(([c, info]) => {
+      const emoji = emojis[c] || '📁';
+      const alerta = info.zerados > 0 ? ' ⚠️' + info.zerados + ' zerados' : '';
+      return `<option value="${c}" ${atual === c ? 'selected' : ''}>${emoji} ${c} (${info.total}${alerta})</option>`;
+    }).join('');
 }
 
 function renderEstoque() {
@@ -345,20 +958,104 @@ function renderEstoque() {
     prods.forEach(p => {
       const est = parseFloat(p.estoque) || 0;
       const min = parseFloat(p.estoque_min) || 0;
+      const max = parseFloat(p.estoque_max) || 0;
       const cls = est === 0 ? 'zerado' : (min > 0 && est <= min) ? 'baixo' : 'ok';
       html += `<div class="prod-row ${cls}">
         <div>
           <div style="font-weight:600;font-size:0.88rem;">${p.nome}</div>
-          <div style="font-size:0.72rem;color:#aaa;">${p.categoria} · mín: ${min > 0 ? fmtQ(min, p.unidade) : '—'}</div>
+          <div style="font-size:0.72rem;color:#aaa;display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;">
+          <span>${p.categoria}</span>
+          ${min > 0 ? `<span>média: ${fmtQ(min, p.unidade)}</span>` : ''}
+          ${max > 0 ? `<span>máximo: ${fmtQ(max, p.unidade)}</span>` : ''}
+          ${min > 0 && est <= min ? '<span style="background:#ff1744;color:#fff;padding:1px 6px;border-radius:8px;font-weight:700;">🔴 ABAIXO DA MÉDIA</span>' : ''}
+          ${max > 0 && est >= max ? '<span style="background:#ff9800;color:#000;padding:1px 6px;border-radius:8px;font-weight:700;">🟠 ESTOQUE MÁXIMO</span>' : ''}
+        </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <div style="font-weight:700;color:#1a237e;text-align:right;">${fmtQ(est, p.unidade)}</div>
           <button onclick="abrirCorrecao('${p.codigo}','${u}')" style="background:#fff3e0;border:1px solid #f9a825;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:0.8rem;">✏️</button>
+          <button onclick="abrirEdicao('${p.codigo}','${u}')" style="background:#e3f2fd;border:1px solid #1565c0;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:0.8rem;">🖊️</button>
         </div>
       </div>`;
     });
   });
   el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>';
+}
+
+// ── EDITAR PRODUTO ──
+let _editCodigo = '';
+let _editUnidade = '';
+let _editReplicar = true;
+
+function abrirEdicao(codigo, unidade) {
+  const p = todosEstoques.find(x => x.codigo === codigo && x.unidade_loja === unidade);
+  if (!p) return;
+  _editCodigo = codigo;
+  _editUnidade = unidade;
+  _editReplicar = true;
+  document.getElementById('modal-edit-nome').value = p.nome;
+  const codBase = codigo.replace('_' + unidade, '');
+  document.getElementById('modal-edit-codigo').value = codBase;
+  document.getElementById('modal-edit-cat').value = p.categoria;
+  document.getElementById('modal-edit-unidade').value = p.unidade || 'und';
+  document.getElementById('modal-edit-pct').value = p.qtd_por_pct || 0;
+  // Quantas unidades têm este produto (pelo nome base do código)
+  const codBase2 = codigo.replace('_' + unidade, '');
+  const outras = todosEstoques.filter(x => x.nome === p.nome && x.unidade_loja !== unidade);
+  document.getElementById('modal-edit-info').textContent = `${p.nome} — ${UNIDADE_LABEL[unidade] || unidade}${outras.length ? ' · encontrado em mais ' + outras.length + ' unidade(s)' : ' · só nesta unidade'}`;
+  setReplicar(outras.length > 0);
+  document.getElementById('modal-edit-overlay').style.display = 'flex';
+}
+
+function setReplicar(val) {
+  _editReplicar = val;
+  document.getElementById('edit-rep-sim').className = val ? 'btn btn-gold' : 'btn btn-gray';
+  document.getElementById('edit-rep-nao').className = !val ? 'btn btn-gold' : 'btn btn-gray';
+}
+
+function fecharEdicao() { document.getElementById('modal-edit-overlay').style.display = 'none'; }
+
+async function confirmarEdicao() {
+  const nome = document.getElementById('modal-edit-nome').value.trim();
+  const novoCodBase = document.getElementById('modal-edit-codigo').value.trim();
+  const categoria = document.getElementById('modal-edit-cat').value;
+  const unidade = document.getElementById('modal-edit-unidade').value;
+  const pct = parseFloat(document.getElementById('modal-edit-pct').value) || 0;
+  if (!nome) { showToast('Nome não pode ser vazio!', 'error'); return; }
+  if (!novoCodBase) { showToast('Código não pode ser vazio!', 'error'); return; }
+
+  const codBaseAtual = _editCodigo.replace('_' + _editUnidade, '');
+  const codMudou = novoCodBase !== codBaseAtual;
+
+  // Buscar todas as unidades que têm este produto pelo nome original
+  const nomeOriginal = todosEstoques.find(x => x.codigo === _editCodigo && x.unidade_loja === _editUnidade)?.nome;
+  let alvos = [{ codigo: _editCodigo, unidade_loja: _editUnidade }];
+  if (_editReplicar && nomeOriginal) {
+    const outrasUnidades = todosEstoques.filter(x => x.nome === nomeOriginal && x.unidade_loja !== _editUnidade);
+    outrasUnidades.forEach(x => alvos.push({ codigo: x.codigo, unidade_loja: x.unidade_loja }));
+  }
+
+  let ok = true;
+  for (const alvo of alvos) {
+    const payload = { nome, categoria, unidade, qtd_por_pct: pct };
+    // Se o código mudou, atualizar também o código com sufixo da unidade
+    if (codMudou) {
+      payload.codigo = novoCodBase + '_' + alvo.unidade_loja;
+    }
+    const r = await supa('PATCH', 'produtos', `codigo=eq.${alvo.codigo}&unidade_loja=eq.${alvo.unidade_loja}`, payload);
+    if (!r) ok = false;
+    // Atualizar cache local
+    const p = todosEstoques.find(x => x.codigo === alvo.codigo && x.unidade_loja === alvo.unidade_loja);
+    if (p) Object.assign(p, payload);
+  }
+
+  fecharEdicao();
+  // Recarregar tudo se mudou o código
+  if (codMudou) todosEstoques = await supa('GET', 'produtos', 'select=*&order=nome.asc');
+  renderEstoque();
+  showToast(ok
+    ? `✅ "${nome}" atualizado em ${alvos.length} unidade(s)!${codMudou ? ' Código atualizado.' : ''}`
+    : '⚠️ Salvo com erros', ok ? 'success' : 'error');
 }
 
 // ── CORRIGIR ESTOQUE ──
@@ -389,14 +1086,115 @@ async function confirmarCorrecao() {
   } else { showToast('Erro ao corrigir', 'error'); }
 }
 
+
+// ── AUDITORIA ──
+const ACAO_LABEL = {
+  LOGIN: '🔑 Login',
+  LOGOUT: '🚪 Logout',
+  LANCAMENTO: '📝 Lançamento',
+  CONFIRMACAO: '✅ Confirmação',
+  REJEICAO: '❌ Rejeição',
+  CADASTRO_PRODUTO: '📦 Cadastro Produto',
+  ZERAR_ESTOQUE: '🗑️ Zerar Estoque',
+  CONFIRMACAO_TODOS: '✅ Confirmação em Lote',
+};
+const ACAO_COR = {
+  LOGIN: '#2e7d32', LOGOUT: '#555', LANCAMENTO: '#1565c0',
+  CONFIRMACAO: '#2e7d32', REJEICAO: '#b71c1c',
+  CADASTRO_PRODUTO: '#e65100', ZERAR_ESTOQUE: '#b71c1c',
+  CONFIRMACAO_TODOS: '#1b5e20',
+};
+
+let _auditoriaData = [];
+
+async function carregarAuditoria() {
+  const data = document.getElementById('aud-data').value;
+  if (!data) return;
+  const el = document.getElementById('lista-auditoria');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+  const unidade = document.getElementById('aud-unidade').value;
+  const filtroU = unidade ? `&unidade_loja=eq.${unidade}` : '';
+  _auditoriaData = await supa('GET', 'auditoria',
+    `created_at=gte.${data}T00:00:00&created_at=lte.${data}T23:59:59${filtroU}&order=created_at.desc&limit=200`);
+  renderAuditoria();
+}
+
+function renderAuditoria() {
+  const el = document.getElementById('lista-auditoria');
+  const filtroA = document.getElementById('aud-acao').value;
+  const lista = filtroA ? _auditoriaData.filter(r => r.acao === filtroA) : _auditoriaData;
+  if (!lista.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum registro encontrado</p>'; return; }
+
+  // Resumo por usuário
+  const resumo = {};
+  lista.forEach(r => {
+    const k = r.usuario + '|' + r.unidade_loja;
+    if (!resumo[k]) resumo[k] = { usuario: r.usuario, perfil: r.perfil, unidade: r.unidade_loja, total: 0, acoes: {} };
+    resumo[k].total++;
+    resumo[k].acoes[r.acao] = (resumo[k].acoes[r.acao] || 0) + 1;
+  });
+
+  let html = `<div style="background:#1a237e;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;">
+    📋 ${lista.length} registros encontrados
+  </div>`;
+
+  // Cards de resumo por usuário
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">';
+  Object.values(resumo).forEach(r => {
+    const unLabel = UNIDADE_LABEL[r.unidade] || r.unidade;
+    const badge = r.perfil === 'adm' ? '👑 ADM' : '👷 Operador';
+    html += `<div style="background:#fff;border-radius:10px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,0.1);">
+      <div style="font-weight:800;font-size:0.9rem;">${r.usuario}</div>
+      <div style="font-size:0.7rem;color:#777;margin-bottom:4px;">${badge} · ${unLabel}</div>
+      <div style="font-size:1.2rem;font-weight:900;color:#1a237e;">${r.total} <span style="font-size:0.7rem;font-weight:600;color:#888;">ações</span></div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // Timeline detalhada
+  lista.forEach(r => {
+    const hora = new Date(r.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    const cor = ACAO_COR[r.acao] || '#333';
+    const label = ACAO_LABEL[r.acao] || r.acao;
+    const unLabel = UNIDADE_LABEL[r.unidade_loja] || r.unidade_loja;
+    html += `<div style="background:#fff;border-left:4px solid ${cor};border-radius:8px;padding:10px 12px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,0.07);">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <span style="background:${cor};color:#fff;font-size:0.7rem;padding:2px 8px;border-radius:8px;font-weight:700;">${label}</span>
+          <span style="font-size:0.7rem;color:#888;margin-left:6px;">${unLabel}</span>
+        </div>
+        <div style="font-size:0.72rem;color:#aaa;">${hora}</div>
+      </div>
+      <div style="margin-top:6px;font-size:0.85rem;font-weight:600;color:#222;">${r.usuario} <span style="font-size:0.7rem;color:#999;font-weight:400;">· ${r.perfil === 'adm' ? '👑 ADM' : '👷 Operador'}</span></div>
+      <div style="font-size:0.78rem;color:#555;margin-top:2px;">${r.descricao}</div>
+    </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
 // ── ENTRADAS ──
 let _movEntradas = [];
+
+// Buscar perfis dos colaboradores e enriquecer movimentações
+let _perfilCache = {};
+async function enriquecerPerfis(movs) {
+  const nomes = [...new Set(movs.map(m => m.colaborador).filter(Boolean))];
+  for (const nome of nomes) {
+    if (_perfilCache[nome] !== undefined) continue;
+    const res = await supa('GET', 'usuario', `usuario=eq.${encodeURIComponent(nome)}&select=perfil`);
+    _perfilCache[nome] = (res && res[0]) ? res[0].perfil : 'operador';
+  }
+  movs.forEach(m => { m.perfil_colaborador = _perfilCache[m.colaborador] || 'operador'; });
+}
+
 async function carregarEntradas() {
   const data = document.getElementById('ent-data').value;
   if (!data) return;
   const el = document.getElementById('lista-entradas');
   el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
   _movEntradas = await supa('GET', 'movimentacoes', `tipo=eq.entrada&created_at=gte.${data}T00:00:00&created_at=lte.${data}T23:59:59&order=created_at.desc&select=*`);
+  await enriquecerPerfis(_movEntradas);
   renderEntradas();
 }
 function renderEntradas() {
@@ -412,7 +1210,8 @@ function renderEntradas() {
     html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} entradas</div>`;
     lista.forEach(m => {
       const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
-      html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}</div><div style="font-size:0.72rem;color:#aaa;">por ${m.colaborador} às ${hora}</div></div><div style="font-weight:700;color:#2e7d32;">+${fmtQ(m.qtd, m.unidade)}</div></div>`;
+      const perfilBadge = m.perfil_colaborador === 'adm' ? '<span style="background:#1565c0;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:8px;margin-left:4px;">👑 ADM</span>' : '<span style="background:#444;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:8px;margin-left:4px;">👷 Operador</span>';
+      html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}${perfilBadge}</div><div style="font-size:0.72rem;color:#aaa;">${hora}</div></div><div style="font-weight:700;color:#2e7d32;">+${fmtQ(m.qtd, m.unidade)}</div></div>`;
     });
   });
   el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
@@ -426,6 +1225,7 @@ async function carregarContagens() {
   const el = document.getElementById('lista-contagens');
   el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
   _movContagens = await supa('GET', 'movimentacoes', `tipo=eq.contagem&created_at=gte.${data}T00:00:00&created_at=lte.${data}T23:59:59&order=created_at.desc&select=*`);
+  await enriquecerPerfis(_movContagens);
   renderContagens();
 }
 function renderContagens() {
@@ -442,7 +1242,8 @@ function renderContagens() {
     lista.forEach(m => {
       const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
       const estAnt = m.estoque_anterior != null ? fmtQ(m.estoque_anterior, m.unidade) : '—';
-      html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}</div><div style="font-size:0.72rem;color:#aaa;">Anterior: ${estAnt} · por ${m.colaborador} às ${hora}</div></div><div style="font-weight:700;color:#1a237e;">${fmtQ(m.novo_estoque, m.unidade)}</div></div>`;
+      const perfilBadgeC = m.perfil_colaborador === 'adm' ? '<span style="background:#1565c0;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:8px;margin-left:4px;">👑 ADM</span>' : '<span style="background:#444;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:8px;margin-left:4px;">👷 Operador</span>';
+      html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}${perfilBadgeC}</div><div style="font-size:0.72rem;color:#aaa;">Anterior: ${estAnt} · ${hora}</div></div><div style="font-weight:700;color:#1a237e;">${fmtQ(m.novo_estoque, m.unidade)}</div></div>`;
     });
   });
   el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
@@ -481,37 +1282,741 @@ function renderPedidos() {
 function renderMinimos() {
   const u = document.getElementById('min-unidade').value;
   const busca = (document.getElementById('busca-minimos').value || '').toLowerCase();
-  const prods = todosEstoques.filter(p => p.unidade_loja === u && (!busca || p.nome.toLowerCase().includes(busca))).sort((a,b) => a.nome.localeCompare(b.nome));
+  const cat = document.getElementById('min-categoria').value;
+  const prods = todosEstoques.filter(p => p.unidade_loja === u && (!busca || p.nome.toLowerCase().includes(busca)) && (!cat || p.categoria === cat)).sort((a,b) => a.nome.localeCompare(b.nome));
   const el = document.getElementById('lista-minimos');
   if (!prods.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregue o estoque primeiro</p>'; return; }
 
-  el.innerHTML = prods.map(p => `
+  el.innerHTML = prods.map(p => {
+    const est = parseFloat(p.estoque) || 0;
+    const min = parseFloat(p.estoque_min) || 0;
+    const max = parseFloat(p.estoque_max) || 0;
+    let alerta = '';
+    if (min > 0 && est <= min)
+      alerta = '<span style="background:#ff1744;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:700;">🔴 ABAIXO DA MÉDIA</span>';
+    else if (max > 0 && est >= max)
+      alerta = '<span style="background:#ff9800;color:#000;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:700;">🟠 ESTOQUE MÁXIMO</span>';
+    return `
     <div class="card" style="padding:12px;margin-bottom:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <div>
-          <div style="font-weight:700;font-size:0.88rem;">${p.nome}</div>
-          <div style="font-size:0.72rem;color:#aaa;">${p.categoria} · ${p.unidade}</div>
+          <div style="font-weight:700;font-size:0.88rem;">${p.nome} ${alerta}</div>
+          <div style="font-size:0.72rem;color:#aaa;">${p.categoria} · Estoque atual: ${fmtQ(est, p.unidade)}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <input type="number" id="min_${p.codigo}" value="${p.estoque_min || ''}" placeholder="Mín" step="0.001" min="0"
-            style="width:80px;margin:0;text-align:center;font-size:0.95rem;padding:8px;" />
-          <button onclick="salvarMinimo('${p.codigo}','${u}')" style="background:#f9a825;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">💾</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <span style="font-size:0.72rem;color:#aaa;">Média</span>
+            <input type="number" id="min_${p.codigo}" value="${p.estoque_min || ''}" placeholder="0" step="0.001" min="0"
+              style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <span style="font-size:0.72rem;color:#aaa;">Máximo</span>
+            <input type="number" id="max_${p.codigo}" value="${p.estoque_max || ''}" placeholder="0" step="0.001" min="0"
+              style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />
+          </div>
+          <button onclick="salvarLimites('${p.codigo}','${u}')" style="background:#f9a825;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">💾</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-async function salvarMinimo(codigo, unidade) {
-  const val = parseFloat(document.getElementById('min_' + codigo).value) || 0;
-  const ok = await supa('PATCH', `produtos?codigo=eq.${codigo}&unidade_loja=eq.${unidade}`, '', { estoque_min: val });
+async function salvarMinimo(codigo, unidade) { await salvarLimites(codigo, unidade); }
+
+async function salvarLimites(codigo, unidade) {
+  const min = parseFloat(document.getElementById('min_' + codigo).value) || 0;
+  const max = parseFloat(document.getElementById('max_' + codigo).value) || 0;
+  if (max > 0 && min > 0 && max < min) {
+    showToast('❌ Máximo não pode ser menor que a média!', 'error'); return;
+  }
+  const ok = await supa('PATCH', 'produtos', `codigo=eq.${codigo}&unidade_loja=eq.${unidade}`, { estoque_min: min, estoque_max: max });
   if (ok) {
     const p = todosEstoques.find(x => x.codigo === codigo && x.unidade_loja === unidade);
-    if (p) p.estoque_min = val;
-    showToast('✅ Mínimo salvo!', 'success');
+    if (p) { p.estoque_min = min; p.estoque_max = max; }
+    showToast('✅ Média e Máximo salvos!', 'success');
+    renderMinimos();
   } else { showToast('Erro ao salvar', 'error'); }
 }
 
 document.getElementById('login-usuario').focus();
+
+// Listeners do lançamento Matriz (após DOM carregado)
+document.addEventListener('DOMContentLoaded', function() {
+  const selUnidade = document.getElementById('mtz-lanc-unidade');
+  if (selUnidade) selUnidade.addEventListener('change', mtzCarregarProdutos);
+  const scanInput = document.getElementById('mtz-scan-input');
+  if (scanInput) scanInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') mtzBuscarPorCodigo(); });
+});
+
+// ── LANÇAMENTO MATRIZ ──
+let mtzPendentes = [];
+let mtzProdutosCache = {};
+let mtzCameraStream = null;
+let mtzScanLoop = null;
+let mtzBarcodeDetector = null;
+
+async function mtzCarregarProdutos() {
+  const u = document.getElementById('mtz-lanc-unidade').value;
+  const sel = document.getElementById('mtz-lanc-produto');
+  if (!u) { sel.innerHTML = '<option value="">-- Selecione a unidade primeiro --</option>'; return; }
+  const lista = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*&order=nome.asc');
+  mtzProdutosCache = {};
+  if (Array.isArray(lista)) lista.forEach(p => mtzProdutosCache[p.codigo] = p);
+  sel.innerHTML = '<option value="">-- Selecione o produto --</option>' +
+    lista.map(p => '<option value="' + p.codigo + '">' + p.nome + ' (' + fmtQ(p.estoque, p.unidade) + ')</option>').join('');
+  sel.onchange = () => {
+    const p = mtzProdutosCache[sel.value];
+    const info = document.getElementById('mtz-lanc-info');
+    if (p && p.unidade === 'kg' && p.qtd_por_pct > 0) {
+      info.textContent = '1 PCT = ' + p.qtd_por_pct + ' kg';
+      info.style.display = 'block';
+    } else { info.style.display = 'none'; }
+  };
+}
+
+function mtzSelecionarTipo(tipo) {
+  document.getElementById('mtz-lanc-tipo').value = tipo;
+  document.getElementById('mtz-btn-entrada').className = 'btn ' + (tipo === 'entrada' ? 'btn-gold' : 'btn-gray');
+  document.getElementById('mtz-btn-contagem').className = 'btn ' + (tipo === 'contagem' ? 'btn-gold' : 'btn-gray');
+}
+
+function mtzPendentes_push(p, tipo, qtd, u) {
+  const idx = mtzPendentes.findIndex(x => x.codigo === p.codigo && x.tipo === tipo && x.unidade_loja === u);
+  if (idx >= 0) {
+    mtzPendentes[idx].qtd = parseFloat((mtzPendentes[idx].qtd + qtd).toFixed(3));
+    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(mtzPendentes[idx].qtd, p.unidade), 'success');
+  } else {
+    mtzPendentes.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade, unidade_loja: u });
+    showToast('➕ ' + p.nome + ' — ' + fmtQ(qtd, p.unidade), 'success');
+  }
+  document.getElementById('mtz-lanc-qtd').value = '';
+  document.getElementById('mtz-scan-input').value = '';
+  mtzRenderPendentes();
+}
+
+function mtzAdicionarPendente() {
+  const u = document.getElementById('mtz-lanc-unidade').value;
+  const cod = document.getElementById('mtz-lanc-produto').value;
+  const tipo = document.getElementById('mtz-lanc-tipo').value;
+  const qtd = parseFloat(document.getElementById('mtz-lanc-qtd').value);
+  if (!u) { showToast('Selecione a unidade!', 'error'); return; }
+  if (!cod) { showToast('Selecione o produto!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
+  const p = mtzProdutosCache[cod];
+  mtzPendentes_push(p, tipo, qtd, u);
+}
+
+function mtzRenderPendentes() {
+  const el = document.getElementById('mtz-lista-pendentes');
+  const card = document.getElementById('mtz-card-pendentes');
+  const badge = document.getElementById('mtz-badge-pendentes');
+  badge.textContent = mtzPendentes.length;
+  card.style.display = mtzPendentes.length > 0 ? 'block' : 'none';
+  if (!mtzPendentes.length) { el.innerHTML = ''; return; }
+  const labels = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery', boqueiraw: '🏪 Boqueirão' };
+  el.innerHTML = mtzPendentes.map((item, i) => {
+    const icone = item.tipo === 'contagem' ? '📊' : '📥';
+    const cor = item.tipo === 'contagem' ? '#1565c0' : '#2e7d32';
+    return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-weight:700;font-size:0.88rem;">' + icone + ' ' + item.nome + '</div>'
+      + '<div style="font-size:0.75rem;color:#aaa;">' + (labels[item.unidade_loja]||item.unidade_loja) + ' · ' + (item.tipo==='contagem'?'Contagem':'Entrada') + ' · ' + fmtQ(item.qtd, item.unidade) + '</div>'
+      + '</div>'
+      + '<input type="number" value="' + item.qtd + '" step="0.001" min="0.001" onchange="mtzEditarPendente(' + i + ', this.value)" style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
+      + '<button onclick="mtzRemoverPendente(' + i + ')" style="background:#b71c1c;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;">🗑️</button>'
+      + '</div>';
+  }).join('');
+}
+
+function mtzEditarPendente(i, val) {
+  const qtd = parseFloat(val);
+  if (qtd > 0) { mtzPendentes[i].qtd = qtd; }
+}
+
+function mtzRemoverPendente(i) {
+  const nome = mtzPendentes[i].nome;
+  mtzPendentes.splice(i, 1);
+  mtzRenderPendentes();
+  showToast('🗑️ ' + nome + ' removido', 'error');
+}
+
+async function mtzConfirmarTodos() {
+  if (!mtzPendentes.length) return;
+  const btn = document.querySelector('[onclick="mtzConfirmarTodos()"]');
+  btn.textContent = '⏳ Salvando...';
+  btn.disabled = true;
+  for (const item of mtzPendentes) {
+    const lista = await supa('GET', 'produtos', null, 'codigo=eq.' + item.codigo + '&unidade_loja=eq.' + item.unidade_loja + '&select=estoque');
+    if (!lista || !lista.length) continue;
+    const est = parseFloat(lista[0].estoque) || 0;
+    const novoEst = item.tipo === 'contagem' ? item.qtd : est + item.qtd;
+    const opts = {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ estoque: novoEst })
+    };
+    await fetch(SUPA_URL + '/rest/v1/produtos?codigo=eq.' + item.codigo + '&unidade_loja=eq.' + item.unidade_loja, opts);
+    await supa('POST', 'movimentacoes', {
+      codigo: item.codigo, nome: item.nome, tipo: item.tipo,
+      qtd: item.qtd, unidade: item.unidade,
+      colaborador: usuarioLogado.usuario,
+      obs: item.tipo === 'contagem' ? 'Contagem Chefão' : 'Entrada Chefão',
+      unidade_loja: item.unidade_loja,
+      estoque_anterior: est, novo_estoque: novoEst
+    });
+  }
+  mtzPendentes = [];
+  mtzRenderPendentes();
+  todosEstoques = await supa('GET', 'produtos', 'select=*&order=nome.asc');
+  renderEstoque();
+  showToast('✅ Todos confirmados!', 'success');
+  btn.textContent = '✅ CONFIRMAR TUDO';
+  btn.disabled = false;
+}
+
+async function mtzBuscarPorCodigo() {
+  const cod = document.getElementById('mtz-scan-input').value.trim();
+  if (!cod) return;
+  const u = document.getElementById('mtz-lanc-unidade').value;
+  if (!u) { showToast('Selecione a unidade primeiro!', 'error'); return; }
+
+  // Carregar cache se vazio
+  if (!Object.keys(mtzProdutosCache).length) await mtzCarregarProdutos();
+
+  const tipo = document.getElementById('mtz-lanc-tipo').value;
+  let produto = null;
+  let pesoKg = null;
+
+  if (cod.length === 13 && cod[0] === '2') {
+    // EAN-13 peso variavel: pos 1-6 = produto, pos 7-11 = peso
+    const prefixo = cod.substring(1, 7);
+    pesoKg = parseInt(cod.substring(7, 12), 10) / 1000;
+    produto = Object.values(mtzProdutosCache).find(p =>
+      p.codigo.replace('_' + u, '').substring(0, 6) === prefixo);
+    if (!produto) {
+      const res = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*');
+      if (Array.isArray(res)) {
+        produto = res.find(p => p.codigo.replace('_' + u, '').substring(0, 6) === prefixo);
+        if (produto) mtzProdutosCache[produto.codigo] = produto;
+      }
+    }
+  } else {
+    produto = mtzProdutosCache[cod] || mtzProdutosCache[cod + '_' + u]
+      || Object.values(mtzProdutosCache).find(p => p.codigo.replace('_' + u, '') === cod);
+    if (!produto) {
+      const res = await supa('GET', 'produtos', null, 'codigo=eq.' + cod + '_' + u + '&select=*');
+      if (Array.isArray(res) && res.length) { produto = res[0]; mtzProdutosCache[produto.codigo] = produto; }
+    }
+  }
+
+  document.getElementById('mtz-scan-input').value = '';
+
+  if (produto) {
+    beep();
+    if (pesoKg && produto.unidade === 'kg') {
+      // Kg com peso no código: lança direto
+      mtzPendentes_push(produto, tipo, pesoKg, u);
+    } else if (produto.unidade !== 'kg') {
+      // Unidade (bebidas, embalagens): lança direto com qtd_por_pct
+      const pctPadrao = parseFloat(produto.qtd_por_pct) || 1;
+      mtzPendentes_push(produto, tipo, pctPadrao, u);
+    } else {
+      // Kg sem peso no código: abre campo para digitar
+      document.getElementById('mtz-lanc-produto-cod').value = produto.codigo;
+      document.getElementById('mtz-lanc-nome').textContent = '⚖️ ' + produto.nome + ' (kg)';
+      document.getElementById('mtz-lanc-qtd').value = '';
+      document.getElementById('mtz-lanc-pct').value = '';
+      document.getElementById('mtz-lanc-fator').value = '';
+      document.getElementById('mtz-lanc-total').textContent = '—';
+      document.getElementById('mtz-manual-area').style.display = 'block';
+      setTimeout(() => document.getElementById('mtz-lanc-qtd').focus(), 100);
+      showToast('⚖️ ' + produto.nome + ' — informe o peso', '');
+    }
+  } else {
+    showToast('Produto não encontrado nessa unidade! Verifica o cadastro 😤', 'error');
+  }
+}
+
+function mtzCalcMulti() {
+  const pct = parseFloat(document.getElementById('mtz-lanc-pct').value) || 0;
+  const fator = parseFloat(document.getElementById('mtz-lanc-fator').value) || 0;
+  const total = document.getElementById('mtz-lanc-total');
+  if (pct > 0 && fator > 0) {
+    const result = pct * fator;
+    total.textContent = result % 1 === 0 ? result : result.toFixed(3);
+    document.getElementById('mtz-lanc-qtd').value = result.toFixed(3);
+  } else {
+    total.textContent = '—';
+  }
+}
+
+function mtzConfirmarManual() {
+  const cod = document.getElementById('mtz-lanc-produto-cod').value;
+  const qtd = parseFloat(document.getElementById('mtz-lanc-qtd').value);
+  const u = document.getElementById('mtz-lanc-unidade').value;
+  const tipo = document.getElementById('mtz-lanc-tipo').value;
+  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
+  const p = mtzProdutosCache[cod];
+  mtzPendentes_push(p, tipo, qtd, u);
+  document.getElementById('mtz-manual-area').style.display = 'none';
+  document.getElementById('mtz-lanc-qtd').value = '';
+  document.getElementById('mtz-lanc-pct').value = '';
+  document.getElementById('mtz-lanc-fator').value = '';
+  document.getElementById('mtz-lanc-total').textContent = '—';
+}
+
+async function mtzAbrirCamera() {
+  if (!('BarcodeDetector' in window)) { showToast('Câmera não suportada. Use o campo de texto.', 'error'); return; }
+  try {
+    mtzCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const video = document.getElementById('mtz-camera-video');
+    video.srcObject = mtzCameraStream;
+    document.getElementById('mtz-camera-area').style.display = 'block';
+    mtzBarcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code'] });
+    mtzScanLoop = setInterval(async () => {
+      try {
+        const barcodes = await mtzBarcodeDetector.detect(video);
+        if (barcodes.length > 0) {
+          const cod = barcodes[0].rawValue;
+          mtzFecharCamera();
+          document.getElementById('mtz-scan-input').value = cod;
+          mtzBuscarPorCodigo();
+        }
+      } catch(e) {}
+    }, 500);
+  } catch(e) { showToast('Erro ao acessar câmera', 'error'); }
+}
+
+function mtzFecharCamera() {
+  if (mtzScanLoop) { clearInterval(mtzScanLoop); mtzScanLoop = null; }
+  if (mtzCameraStream) { mtzCameraStream.getTracks().forEach(t => t.stop()); mtzCameraStream = null; }
+  document.getElementById('mtz-camera-area').style.display = 'none';
+}
+// ── PEDIDOS DE COMPRA (CHEFÃO) ──
+async function gerarPedidos() {
+  const el = document.getElementById('lista-pedidos');
+  if (!el) return;
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Calculando...</p>';
+
+  const unidades = ['centro','delivery','boqueiraw'];
+  var resumo = {};
+
+  for (var i = 0; i < unidades.length; i++) {
+    var uni = unidades[i];
+    const prods = await supa('GET','produtos',null,'unidade_loja=eq.'+uni+'&select=codigo,nome,unidade,estoque,estoque_min,estoque_max,categoria');
+    for (var j = 0; j < (prods||[]).length; j++) {
+      var p = prods[j];
+      var base = p.codigo.replace(/_[a-z]+$/,'');
+      if (!resumo[base]) resumo[base] = { nome: p.nome, unidade: p.unidade, min: parseFloat(p.estoque_min)||0, max: parseFloat(p.estoque_max)||0, estoques: {}, categoria: p.categoria };
+      resumo[base].estoques[uni] = parseFloat(p.estoque)||0;
+    }
+  }
+
+  var precisam = Object.entries(resumo).filter(function(entry) {
+    var p = entry[1];
+    var total = Object.values(p.estoques).reduce(function(a,b){return a+b;},0);
+    return p.min > 0 && total < p.min;
+  });
+
+  if (!precisam.length) {
+    el.innerHTML = '<p style="color:#4caf50;text-align:center;padding:20px;">Tudo OK! Nenhum produto abaixo do mínimo.</p>';
+    return;
+  }
+
+  var html = '';
+  for (var k = 0; k < precisam.length; k++) {
+    var base = precisam[k][0];
+    var p = precisam[k][1];
+    var total = Object.values(p.estoques).reduce(function(a,b){return a+b;},0);
+    var falta = Math.max(0, (p.max > 0 ? p.max : p.min) - total);
+    var estoqStr = Object.entries(p.estoques).map(function(e){return e[0]+': '+e[1];}).join(' | ');
+    html += '<div class="card" style="margin:0 0 8px;padding:12px;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">';
+    html += '<div><div style="font-weight:700;font-size:0.92rem;">'+p.nome+'</div>';
+    html += '<div style="font-size:0.72rem;color:#888;">'+estoqStr+'</div>';
+    html += '<div style="font-size:0.72rem;color:#888;">Mín: '+p.min+' | Máx: '+(p.max>0?p.max:'—')+' '+p.unidade+'</div></div>';
+    html += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">';
+    html += '<div style="background:#fde8e8;color:#b71c1c;padding:4px 10px;border-radius:8px;font-weight:700;font-size:0.85rem;">Pedir: '+falta+' '+p.unidade+'</div>';
+    html += '<button onclick="criarPedidoCompra(\''+base+'\',\''+p.nome.replace(/'/g,"\\'")+'\',' +'\''+p.unidade+'\','+falta+')" style="background:#1565c0;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:0.78rem;font-weight:700;cursor:pointer;">📋 Gerar Pedido</button>';
+    html += '</div></div></div>';
+  }
+  el.innerHTML = html;
+}
+
+async function criarPedidoCompra(base, nome, unidade, qtd) {
+  if (!confirm('Gerar pedido de ' + qtd + ' ' + unidade + ' de ' + nome + '?')) return;
+  await supa('POST','movimentacoes',{
+    codigo: base, nome: nome, tipo: 'pedido_compra',
+    qtd: qtd, unidade: unidade,
+    colaborador: usuarioLogado ? usuarioLogado.usuario : 'Chefão',
+    obs: 'Pedido de compra gerado automaticamente',
+    unidade_loja: 'matriz', status: 'pendente',
+    estoque_anterior: 0, novo_estoque: 0
+  });
+  showToast('Pedido gerado! CD foi notificado.', 'success');
+  gerarPedidos();
+}
+// ── FIM PEDIDOS CHEFÃO ──
+
 </script>
+
+<div id="tut-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0d0d0d;border:2px solid #b8860b;border-radius:18px;width:100%;max-width:420px;padding:24px 20px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#b8860b;letter-spacing:2px;">👑 COMO USAR — CHEFÃO</span>
+      <button onclick="fecharTut()" style="background:none;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
+    </div>
+    <div id="tut-dots" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+    <div id="tut-tit" style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#fff;margin-bottom:10px;letter-spacing:1px;"></div>
+    <div id="tut-txt" style="font-size:0.88rem;color:#bbb;line-height:1.75;min-height:110px;"></div>
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button id="tut-prev" onclick="tutPrev()" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.85rem;">← VOLTAR</button>
+      <button id="tut-next" onclick="tutNext()" style="flex:2;background:#b8860b;border:none;color:#000;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.88rem;">PRÓXIMO →</button>
+    </div>
+    <a href="https://wa.me/5542988819420?text=Oi,%20preciso%20de%20ajuda%20no%20sistema%20do%20Chefão!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Preciso de ajuda</a>
+  </div>
+</div>
+<script>
+var _TUT_CHEFAO=[["\ud83d\udce6 TRAMPO GERAL", "Aqui voc\u00ea v\u00ea o estoque de TODAS as unidades de uma vez.<br><br>Filtra por unidade (Centro, Delivery, Boqueir\u00e3o, CD) ou por categoria.<br>\ud83d\udd34 Vermelho = zerado \u00b7 \ud83d\udfe1 Amarelo = abaixo do m\u00ednimo<br><br>Toca no \u270f\ufe0f pra corrigir estoque de qualquer unidade."], ["\u2795 LAN\u00c7AR", "Aqui o Chef\u00e3o pode lan\u00e7ar entradas e contagens em qualquer unidade diretamente.<br><br>Escolhe a unidade \u2192 o tipo \u2192 o produto \u2192 quantidade \u2192 CONFIRMAR.<br><br>\u26a0\ufe0f Isso substitui o lan\u00e7amento do operador \u2014 use s\u00f3 quando necess\u00e1rio."], ["\ud83d\udce5 ENTRADAS & \ud83d\udcca CONTAGENS", "Hist\u00f3rico de entradas e contagens de todas as unidades.<br><br>Seleciona a data e v\u00ea tudo que foi movimentado no dia.<br>\u00datil pra auditoria e confer\u00eancia de operadores."], ["\ud83d\uded2 PRECIS\u00c3O", "Sistema de pedido inteligente!<br><br>Calcula automaticamente o que precisa comprar com base no estoque m\u00ednimo de cada unidade.<br>Voc\u00ea ajusta as quantidades e exporta pro WhatsApp pra fazer o pedido."], ["\u2699\ufe0f LIMITES", "Define o estoque M\u00ednimo e M\u00e1ximo de cada produto em cada unidade.<br><br>Seleciona a unidade e a categoria \u2192 define os valores \u2192 \ud83d\udcbe Salvar.<br><br>\u26a0\ufe0f Importante: sem m\u00ednimo definido, o sistema n\u00e3o consegue alertar quando t\u00e1 baixo."], ["\ud83d\udce6 ALMOXARIFADO", "Estoque central de embalagens \u2014 separado do CD.<br><br>Mostra o que tem dispon\u00edvel, o que precisa comprar e o que t\u00e1 zerado.<br>Filtra por: \u2705 OK \u00b7 \ud83d\uded2 Comprar \u00b7 \ud83d\udd34 Zerado<br><br>A sugest\u00e3o de compra aparece automaticamente quando est\u00e1 abaixo do m\u00ednimo."], ["\ud83d\udce4 SA\u00cdDAS CD", "Hist\u00f3rico de tudo que o CD enviou para as unidades.<br><br>Seleciona a data e filtra por unidade (Centro, Delivery, Boqueir\u00e3o).<br>Mostra os totais do dia por produto."], ["\u2795 CADASTRAR", "Cadastra produtos novos no sistema para uma ou mais unidades de uma vez.<br><br>1\ufe0f\u20e3 Nome + c\u00f3digo de barras + unidade de medida + PCT<br>2\ufe0f\u20e3 Onde fica o estoque central (CD ou Almoxarifado)<br>3\ufe0f\u20e3 Quais unidades recebem esse item<br>4\ufe0f\u20e3 Categoria<br>5\ufe0f\u20e3 CADASTRAR PRODUTO"], ["\ud83d\udd25 DICAS FINAIS", "Voc\u00ea tem controle total do sistema \u2014 use com cuidado!<br><br>\u2705 Configure os limites (m\u00edn/m\u00e1x) antes de cobrar alertas dos operadores<br>\ud83d\udcca Use Entradas e Contagens pra auditar os operadores<br>\ud83d\uded2 Use a Precis\u00e3o toda semana pra montar o pedido<br>\ud83d\udce6 Confira o Almoxarifado antes de pedir embalagens<br>\u2753 Algo errado? Fala com a Zapia!"]];
+var _tStep=0;
+function abrirTutorial(){_tStep=0;document.getElementById('tut-ov').style.display='flex';_rTut();}
+function fecharTut(){document.getElementById('tut-ov').style.display='none';localStorage.setItem('tut_ok_chefao','1');}
+function tutNext(){if(_tStep<_TUT_CHEFAO.length-1){_tStep++;_rTut();}else fecharTut();}
+function tutPrev(){if(_tStep>0){_tStep--;_rTut();}}
+function _rTut(){
+  var p=_TUT_CHEFAO[_tStep];
+  document.getElementById('tut-tit').textContent=p[0];
+  document.getElementById('tut-txt').innerHTML=p[1];
+  document.getElementById('tut-dots').innerHTML=_TUT_CHEFAO.map(function(_,i){return '<div style="width:9px;height:9px;border-radius:50%;background:'+(i===_tStep?'#b8860b':'#2a2a2a')+';border:1px solid '+(i===_tStep?'#b8860b':'#444')+'"></div>';}).join('');
+  document.getElementById('tut-prev').style.opacity=_tStep===0?'0.25':'1';
+  document.getElementById('tut-next').textContent=_tStep===_TUT_CHEFAO.length-1?'✅ ENTENDIDO!':'PRÓXIMO →';
+}
+document.addEventListener('DOMContentLoaded',function(){if(!localStorage.getItem('tut_ok_chefao')){setTimeout(abrirTutorial,1200);}});
+</script>
+<div id="chat-btn" onclick="toggleChat()" style="position:fixed;bottom:20px;right:20px;width:54px;height:54px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;z-index:8000;box-shadow:0 4px 16px rgba(0,0,0,0.4);">💬</div>
+
+<div id="chat-box" style="display:none;position:fixed;bottom:84px;right:16px;width:calc(100% - 32px);max-width:360px;background:#111;border:1px solid #333;border-radius:16px;z-index:8000;box-shadow:0 8px 32px rgba(0,0,0,0.6);overflow:hidden;">
+  <!-- Header -->
+  <div style="background:#1a1a1a;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #222;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">🤖</div>
+      <div>
+        <div style="font-weight:700;font-size:0.88rem;color:#fff;">Assistente Prensadão</div>
+        <div style="font-size:0.7rem;color:#4caf50;">● Online</div>
+      </div>
+    </div>
+    <button onclick="toggleChat()" style="background:none;border:none;color:#555;font-size:1.3rem;cursor:pointer;">✕</button>
+  </div>
+  <!-- Mensagens -->
+  <div id="chat-msgs" style="padding:12px;height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+    <div class="chat-bot-msg">Salve! 👋 Tô aqui pra tirar suas dúvidas sobre o sistema.<br><br>Digita o que você precisa ou escolhe uma opção abaixo 👇</div>
+    <div id="chat-sugestoes" style="display:flex;flex-direction:column;gap:6px;"></div>
+  </div>
+  <!-- Input -->
+  <div style="padding:10px 12px;border-top:1px solid #222;display:flex;gap:8px;">
+    <input id="chat-input" type="text" placeholder="Digita sua dúvida..." style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:8px 12px;font-size:0.85rem;" onkeydown="if(event.key==='Enter') enviarChat()" />
+    <button onclick="enviarChat()" style="background:#25d366;border:none;color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:1rem;">➤</button>
+  </div>
+</div>
+
+<style>
+.chat-bot-msg { background:#1a1a1a;border:1px solid #2a2a2a;color:#ccc;padding:10px 12px;border-radius:12px 12px 12px 4px;font-size:0.83rem;line-height:1.6;max-width:92%;align-self:flex-start; }
+.chat-user-msg { background:#1565c0;color:#fff;padding:10px 12px;border-radius:12px 12px 4px 12px;font-size:0.83rem;line-height:1.6;max-width:80%;align-self:flex-end; }
+.chat-sug { background:#1a1a1a;border:1px solid #333;color:#aaa;padding:8px 12px;border-radius:10px;font-size:0.8rem;cursor:pointer;text-align:left;transition:all 0.15s; }
+.chat-sug:hover { background:#252525;color:#fff; }
+</style>
+
+<script>
+var _RESPOSTAS = [{"q": "Como faço uma entrada?", "tags": ["entrada", "entrar", "chegou", "produto chegou", "como lancar", "lançar entrada"], "r": "📥 <b>Como fazer uma ENTRADA:</b><br><br>1️⃣ Vai na aba <b>➕ LANÇAR</b><br>2️⃣ Seleciona <b>ENTRADA</b><br>3️⃣ Escaneia o código de barras ou digita o nome<br>4️⃣ Digita a quantidade em <b>PCT (pacotes)</b><br>5️⃣ Clica <b>ADICIONAR</b><br>6️⃣ Confere a lista de pendentes e clica <b>CONFIRMAR TUDO</b><br><br>⚠️ Não feche o app antes de confirmar!"}, {"q": "O que é contagem?", "tags": ["contagem", "contar", "o que é contagem", "diferença entrada contagem"], "r": "📊 <b>O que é CONTAGEM:</b><br><br>Contagem é quando você <b>confere o que tem fisicamente</b> no estoque e registra no sistema.<br><br>• <b>ENTRADA</b> = chegou produto novo do CD<br>• <b>CONTAGEM</b> = você tá verificando o que tem agora<br><br>Na contagem você digita o total real que existe — não o que chegou. Ex: tem 3kg de frango no freezer → digita 3."}, {"q": "O que é PCT?", "tags": ["pct", "pacote", "o que é pct", "quantidade pct", "o que significa pct"], "r": "📦 <b>O que é PCT (Pacote):</b><br><br>PCT é a unidade de compra do produto.<br><br>Exemplos:<br>• Coca Cola vem em caixa de <b>6 und</b> → 1 PCT = 6<br>• Frango vem em pacote de <b>3kg</b> → 1 PCT = 3kg<br>• Pão vem em pacote de <b>4 und</b> → 1 PCT = 4<br><br>Na entrada você digita <b>quantos pacotes chegaram</b> — o sistema multiplica automaticamente! 😊"}, {"q": "Como funciona a multiplicação?", "tags": ["multiplicação", "multiplicar", "calculo", "cálculo", "conta", "como calcula"], "r": "✖️ <b>Como funciona a multiplicação:</b><br><br>Quando você digita a quantidade na entrada, o sistema multiplica automaticamente pelo PCT do produto.<br><br>Exemplo:<br>• Chegaram <b>2 caixas</b> de Coca Cola (PCT = 6)<br>• Você digita: <b>2</b><br>• O sistema lança: <b>12 unidades</b> no estoque<br><br>Você só precisa contar os pacotes — o sistema faz o resto! 🧮"}, {"q": "Por que preciso colocar quantidade?", "tags": ["porque quantidade", "por que quantidade", "pra que quantidade", "quantidade obrigatorio"], "r": "🔢 <b>Por que informar a quantidade:</b><br><br>A quantidade é essencial pra o sistema saber quanto tem em estoque.<br><br>Sem ela, não dá pra:<br>• Saber quando tá acabando 🔴<br>• Gerar pedido automático 🛒<br>• Controlar o que saiu do CD 📤<br><br>É o coração do sistema — cada lançamento conta!"}, {"q": "Como tiro um relatório?", "tags": ["relatorio", "relatório", "extrato", "historico", "histórico", "como ver", "ver lançamentos"], "r": "📊 <b>Como tirar relatório:</b><br><br><b>Operador:</b><br>→ Aba <b>📋 ROLO</b> — vê tudo que foi lançado no dia. Muda a data pra ver outros dias.<br><br><b>ADM:</b><br>→ Aba <b>📊 EXTRATO</b> — relatório completo com totais por produto. Dá pra exportar pro WhatsApp.<br><br>Filtra por data e tipo (entrada ou contagem)."}, {"q": "O que significa o mínimo e máximo?", "tags": ["minimo", "mínimo", "maximo", "máximo", "min", "max", "limite", "o que é min", "o que é max"], "r": "📏 <b>O que são Mínimo e Máximo:</b><br><br>• <b>Mínimo</b> = quantidade mínima que deve ter em estoque. Abaixo disso fica amarelo ⚠️ no sistema.<br>• <b>Máximo</b> = capacidade máxima de armazenamento.<br><br>Quem define esses valores é o <b>ADM ou o Chefão</b> no sistema.<br><br>Se estiver vermelho 🔴 = zerou. Se estiver amarelo 🟡 = tá no limite e precisa pedir mais!"}, {"q": "Como sei meu mínimo e máximo?", "tags": ["como ver min", "como ver max", "ver minimo", "ver maximo", "onde fica minimo"], "r": "📏 <b>Como ver o Mínimo e Máximo:</b><br><br>Na aba <b>📦 TRAMPO GERAL</b>, cada produto mostra:<br>• O estoque atual<br>• A cor indica se está OK, no limite ou zerado<br><br>Os valores de mín/máx são configurados pelo ADM.<br><br>Se quiser saber os valores exatos, <b>chama o Josiel</b> pelo botão abaixo! 👇"}, {"q": "Produto não aparece ou código errado", "tags": ["produto não aparece", "nao aparece", "código errado", "codigo errado", "produto errado", "não acha", "nao acha", "produto sumiu"], "r": "🔍 <b>Produto não aparece / código errado:</b><br><br>Isso pode acontecer quando:<br>• O produto ainda não foi cadastrado no sistema<br>• O código de barras foi alterado pelo fornecedor<br>• O produto foi cadastrado com nome diferente<br><br>✅ Tenta buscar pelo <b>nome</b> em vez do código.<br><br>Se não achar mesmo assim, <b>chama o Josiel</b> pelo botão abaixo pra cadastrar! 👇"}, {"q": "Esqueci a senha", "tags": ["senha", "esqueci senha", "nao lembro senha", "não lembro senha", "senha errada", "não consigo entrar"], "r": "🔑 <b>Esqueceu a senha:</b><br><br>Senhas são gerenciadas pelo Josiel.<br><br>Manda mensagem pra ele pelo botão abaixo que ele resolve rapidinho! 👇"}, {"q": "O que significa vermelho ou amarelo?", "tags": ["vermelho", "amarelo", "verde", "cor", "cores", "o que significa cor", "por que vermelho", "por que amarelo"], "r": "🎨 <b>O que significam as cores:</b><br><br>🔴 <b>Vermelho</b> = estoque ZERADO. Precisa fazer entrada urgente!<br>🟡 <b>Amarelo</b> = estoque abaixo do mínimo. Tá acabando, faz o pedido!<br>🟢 <b>Verde</b> = tá suave, estoque OK.<br><br>Essas cores aparecem na aba <b>📦 TRAMPO GERAL</b>."}, {"q": "Como escanear o código?", "tags": ["escanear", "scanner", "câmera", "camera", "como escanear", "codigo barras", "código de barras"], "r": "📷 <b>Como escanear o código de barras:</b><br><br>1️⃣ Na aba <b>➕ LANÇAR</b>, clica no campo de código<br>2️⃣ Se o celular tiver câmera disponível, aparece opção de escanear<br>3️⃣ Aponta pro código de barras do produto<br>4️⃣ O sistema preenche automaticamente!<br><br>💡 Dica: deixa o código bem iluminado pra leitura ser mais rápida."}, {"q": "Como sei o que vai chegar de produto?", "tags": ["vai chegar", "o que vai chegar", "produto vai chegar", "pedido", "precisao", "precisão", "o que pedir", "o que precisa", "falta produto", "o que falta"], "r": "🛒 <b>Como saber o que vai chegar:</b><br><br>O sistema tem a aba <b>🛒 PRECISÃO</b> (só no Chefão e ADM) que mostra automaticamente o que precisa ser pedido.<br><br>Ela calcula com base no estoque mínimo de cada produto:<br>• Se tiver abaixo do mínimo → aparece na lista de pedido<br>• Mostra a quantidade sugerida pra pedir<br><br>Pra operadores: quando um produto ficar <b>🔴 vermelho ou 🟡 amarelo</b> na aba TRAMPO GERAL, é sinal que tá chegando pedido em breve — fala com o Josiel ou ADM!"}];
+var _chatAberto = false;
+
+var _SUGESTOES = [
+  "O que é entrada?",
+  "O que é contagem?",
+  "O que é PCT?",
+  "Como funciona a multiplicação?",
+  "Como tiro um relatório?",
+  "O que significa mínimo e máximo?",
+  "Como sei o que vai chegar de produto?",
+  "Produto não aparece",
+  "O que significa vermelho ou amarelo?",
+];
+
+function toggleChat() {
+  _chatAberto = !_chatAberto;
+  document.getElementById('chat-box').style.display = _chatAberto ? 'flex' : 'none';
+  document.getElementById('chat-box').style.flexDirection = 'column';
+  if (_chatAberto) {
+    renderSugestoes();
+    setTimeout(function() { document.getElementById('chat-input').focus(); }, 200);
+  }
+}
+
+function renderSugestoes() {
+  var el = document.getElementById('chat-sugestoes');
+  el.innerHTML = _SUGESTOES.map(function(s) {
+    return '<button class="chat-sug" onclick="responderSugestao(' + JSON.stringify(s) + ')">' + s + '</button>';
+  }).join('');
+}
+
+function adicionarMsg(texto, tipo) {
+  var msgs = document.getElementById('chat-msgs');
+  var div = document.createElement('div');
+  div.className = tipo === 'user' ? 'chat-user-msg' : 'chat-bot-msg';
+  div.innerHTML = texto;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function responderSugestao(pergunta) {
+  document.getElementById('chat-sugestoes').innerHTML = '';
+  adicionarMsg(pergunta, 'user');
+  setTimeout(function() { buscarResposta(pergunta); }, 300);
+}
+
+function enviarChat() {
+  var input = document.getElementById('chat-input');
+  var texto = input.value.trim();
+  if (!texto) return;
+  input.value = '';
+  document.getElementById('chat-sugestoes').innerHTML = '';
+  adicionarMsg(texto, 'user');
+  setTimeout(function() { buscarResposta(texto); }, 300);
+}
+
+function buscarResposta(pergunta) {
+  var p = pergunta.toLowerCase();
+  var melhor = null;
+  var melhorScore = 0;
+
+  for (var i = 0; i < _RESPOSTAS.length; i++) {
+    var r = _RESPOSTAS[i];
+    var score = 0;
+    for (var j = 0; j < r.tags.length; j++) {
+      if (p.includes(r.tags[j])) {
+        score += r.tags[j].length; // prioriza tags mais longas/específicas
+      }
+    }
+    if (score > melhorScore) {
+      melhorScore = score;
+      melhor = r;
+    }
+  }
+
+  if (melhor && melhorScore > 0) {
+    adicionarMsg(melhor.r, 'bot');
+    // Oferecer mais opções
+    setTimeout(function() {
+      adicionarMsg('Isso ajudou? Tem mais alguma dúvida? 😊<br><br><button class="chat-sug" onclick="mostrarTodasOpcoes()" style="margin-top:4px;">Ver outras dúvidas</button>', 'bot');
+    }, 600);
+  } else {
+    // Não encontrou resposta
+    var msgWpp = 'Oi Josiel, tenho uma duvida: ' + pergunta;
+    var wppUrl = 'https://wa.me/5542988819420?text=' + encodeURIComponent(msgWpp);
+    adicionarMsg(
+      'Hmm, essa eu não sei responder não, mano! 🤔<br><br>Mas o Josiel resolve — clica aí pra chamar ele diretamente:<br><br><a href="' + wppUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:8px;padding:8px 12px;text-decoration:none;font-size:0.82rem;font-weight:700;margin-top:4px;">💬 Chamar Josiel no WhatsApp</a>',
+      'bot'
+    );
+  }
+}
+
+function mostrarTodasOpcoes() {
+  adicionarMsg('Escolhe aí o que você quer saber:', 'bot');
+  var msgs = document.getElementById('chat-msgs');
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;flex-direction:column;gap:6px;align-self:stretch;';
+  div.innerHTML = _SUGESTOES.map(function(s) {
+    return '<button class="chat-sug" onclick="responderSugestao(' + JSON.stringify(s) + ')">' + s + '</button>';
+  }).join('');
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+</script>
+
+<!-- FEEDBACK BTN -->
+<div id="feedback-btn" onclick="toggleFeedback()" style="position:fixed;bottom:84px;right:20px;width:44px;height:44px;border-radius:50%;background:#1a1a2e;border:2px solid #7c4dff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;z-index:7999;box-shadow:0 4px 16px rgba(0,0,0,0.4);" title="Feedback">💡</div>
+
+<!-- FEEDBACK PANEL -->
+<div id="feedback-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:8500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0d0d0d;border:2px solid #7c4dff;border-radius:18px;width:100%;max-width:400px;padding:24px 20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#7c4dff;letter-spacing:2px;">💡 FEEDBACK</span>
+      <button onclick="toggleFeedback()" style="background:none;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
+    </div>
+    <p style="font-size:0.78rem;color:#555;margin-bottom:16px;">Encontrou um erro ou tem uma sugestão? Manda aqui — vai direto pro Josiel!</p>
+
+    <!-- Tipo -->
+    <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;">TIPO</label>
+    <div style="display:flex;gap:8px;margin:8px 0 16px;">
+      <button id="fb-tipo-erro" onclick="setFbTipo('erro')" style="flex:1;background:#2a0a0a;border:2px solid #b71c1c;color:#ef5350;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">🐛 Erro</button>
+      <button id="fb-tipo-sugestao" onclick="setFbTipo('sugestao')" style="flex:1;background:#0a2a0a;border:1px solid #333;color:#888;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">💡 Sugestão</button>
+      <button id="fb-tipo-elogio" onclick="setFbTipo('elogio')" style="flex:1;background:#1a1200;border:1px solid #333;color:#888;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">⭐ Elogio</button>
+    </div>
+
+    <!-- Mensagem -->
+    <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;">MENSAGEM</label>
+    <textarea id="fb-texto" placeholder="Descreve aqui o que aconteceu ou a sua ideia..." style="width:100%;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:12px;font-size:0.88rem;line-height:1.5;resize:none;height:110px;margin-top:8px;box-sizing:border-box;"></textarea>
+
+    <!-- Quem é -->
+    <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;margin-top:12px;display:block;">SEU NOME <span style="color:#444;font-weight:400;">(opcional)</span></label>
+    <input id="fb-nome" type="text" placeholder="Ex: Gabriel, Ruan..." style="width:100%;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:10px 12px;font-size:0.85rem;margin-top:8px;box-sizing:border-box;" />
+
+    <button onclick="enviarFeedback()" style="width:100%;margin-top:16px;background:#7c4dff;border:none;color:#fff;border-radius:12px;padding:13px;font-weight:700;font-size:0.95rem;cursor:pointer;letter-spacing:1px;">📤 ENVIAR FEEDBACK</button>
+    <div id="fb-status" style="text-align:center;font-size:0.8rem;color:#4caf50;margin-top:8px;min-height:18px;"></div>
+  </div>
+</div>
+
+<script>
+var _fbTipo = 'erro';
+
+function toggleFeedback() {
+  var p = document.getElementById('feedback-panel');
+  p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+  p.style.alignItems = 'center';
+  p.style.justifyContent = 'center';
+  if (p.style.display === 'flex') setFbTipo('erro');
+}
+
+function setFbTipo(tipo) {
+  _fbTipo = tipo;
+  var estilos = {
+    'erro':     { bg: '#2a0a0a', border: '2px solid #b71c1c', color: '#ef5350' },
+    'sugestao': { bg: '#0a1a2a', border: '2px solid #1565c0', color: '#42a5f5' },
+    'elogio':   { bg: '#1a1200', border: '2px solid #f9a825', color: '#f9a825' },
+  };
+  ['erro','sugestao','elogio'].forEach(function(t) {
+    var btn = document.getElementById('fb-tipo-' + t);
+    var s = estilos[t];
+    if (t === tipo) {
+      btn.style.background = s.bg;
+      btn.style.border = s.border;
+      btn.style.color = s.color;
+    } else {
+      btn.style.background = '#111';
+      btn.style.border = '1px solid #333';
+      btn.style.color = '#555';
+    }
+  });
+}
+
+function enviarFeedback() {
+  var texto = document.getElementById('fb-texto').value.trim();
+  var nome = document.getElementById('fb-nome').value.trim() || 'Anônimo';
+  var status = document.getElementById('fb-status');
+
+  if (!texto) {
+    status.style.color = '#ef5350';
+    status.textContent = '⚠️ Escreve a mensagem primeiro!';
+    return;
+  }
+
+  var tipoLabel = _fbTipo === 'erro' ? '🐛 ERRO' : _fbTipo === 'sugestao' ? '💡 SUGESTÃO' : '⭐ ELOGIO';
+  var msg = tipoLabel + ' — Sistema Centro\n\nDe: ' + nome + '\n\n' + texto;
+  var url = 'https://wa.me/5542988819420?text=' + encodeURIComponent(msg);
+
+  window.open(url, '_blank');
+
+  status.style.color = '#4caf50';
+  status.textContent = '✅ Abrindo WhatsApp...';
+  document.getElementById('fb-texto').value = '';
+  document.getElementById('fb-nome').value = '';
+
+  setTimeout(function() {
+    toggleFeedback();
+    status.textContent = '';
+  }, 2000);
+}
+
+// HISTORICO GERAL CHEFAO
+async function carregarHistorico() {
+  var el   = document.getElementById('hist-resultado');
+  var data = document.getElementById('hist-data').value;
+  var uni  = document.getElementById('hist-unidade').value;
+  var tipo = document.getElementById('hist-tipo').value;
+  if (!data) { showToast('Selecione uma data!','error'); return; }
+  if (el) el.innerHTML = '<p style="text-align:center;color:#888;padding:20px;">Carregando...</p>';
+
+  var query = 'select=*&order=created_at.desc';
+  query += '&created_at=gte.' + data + 'T00:00:00';
+  query += '&created_at=lte.' + data + 'T23:59:59';
+  if (uni)  query += '&unidade_loja=eq.' + uni;
+  if (tipo) query += '&tipo=eq.' + tipo;
+
+  var movs = await supa('GET','movimentacoes',null,query);
+  if (!movs || !movs.length) {
+    if (el) el.innerHTML = '<div class="card" style="text-align:center;color:#888;padding:20px;">Nenhuma movimentacao encontrada.</div>';
+    return;
+  }
+
+  // Agrupar por unidade
+  var grupos = {};
+  for (var i=0; i<movs.length; i++) {
+    var m = movs[i];
+    var u = m.unidade_loja || 'desconhecido';
+    if (!grupos[u]) grupos[u] = [];
+    grupos[u].push(m);
+  }
+
+  var NOMES_UNI = { cd:'CD', almoxarifado:'Almoxarifado', centro:'Centro', delivery:'Delivery', boqueiraw:'Boqueirao' };
+  var TIPO_COR  = { entrada:'#388e3c', contagem:'#1565c0', saida:'#c62828', saída:'#c62828' };
+  var TIPO_IC   = { entrada:'📥', contagem:'📊', saida:'📤', saída:'📤' };
+
+  var html = '<div class="card" style="background:#222;padding:10px;margin-bottom:8px;text-align:center;">'
+    +'<span style="font-size:1.1rem;font-weight:700;">'+movs.length+' movimentaçoes em '+data+'</span></div>';
+
+  var unidades = Object.keys(grupos).sort();
+  for (var j=0; j<unidades.length; j++) {
+    var u = unidades[j];
+    var items = grupos[u];
+    html += '<div class="card" style="padding:0;overflow:hidden;margin-bottom:12px;">'
+      +'<div style="background:#333;padding:10px 14px;font-weight:700;font-size:0.9rem;">'
+      +(NOMES_UNI[u]||u)+' <span style="font-size:0.75rem;color:#aaa;font-weight:400;">('+items.length+' registros)</span>'
+      +'</div>';
+    for (var k=0; k<items.length; k++) {
+      var mov = items[k];
+      var cor = TIPO_COR[mov.tipo] || '#888';
+      var ic  = TIPO_IC[mov.tipo]  || '📌';
+      var hora = mov.created_at ? mov.created_at.substring(11,16) : '--:--';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-top:1px solid #1a1a1a;">'
+        +'<div>'
+        +'<div style="font-size:0.85rem;font-weight:700;">'+ic+' '+mov.nome+'</div>'
+        +'<div style="font-size:0.7rem;color:#888;">'+mov.colaborador+' · '+hora+'</div>'
+        +'</div>'
+        +'<div style="font-size:1rem;font-weight:700;color:'+cor+';">'+mov.qtd+' '+mov.unidade+'</div>'
+        +'</div>';
+    }
+    html += '</div>';
+  }
+  if (el) el.innerHTML = html;
+}
+// FIM HISTORICO GERAL
+
+</script>
+
+  <div class="screen" id="tab-historico">
+    <div class="card">
+      <h3>📋 Histórico Geral</h3>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">Todas as movimentações de todas as unidades</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <input type="date" id="hist-data" style="flex:1;margin:0;" />
+        <select id="hist-unidade" style="flex:1;margin:0;">
+          <option value="">Todas unidades</option>
+          <option value="cd">CD</option>
+          <option value="almoxarifado">Almoxarifado</option>
+          <option value="centro">Centro</option>
+          <option value="delivery">Delivery</option>
+          <option value="boqueiraw">Boqueirao</option>
+        </select>
+        <select id="hist-tipo" style="flex:1;margin:0;">
+          <option value="">Todos os tipos</option>
+          <option value="entrada">Entradas</option>
+          <option value="contagem">Contagens</option>
+          <option value="saida">Saidas</option>
+        </select>
+      </div>
+      <button class="btn btn-red" onclick="carregarHistorico()" style="width:100%;margin:0;">🔍 Buscar</button>
+    </div>
+    <div id="hist-resultado"></div>
+  </div>
 </body>
 </html>
