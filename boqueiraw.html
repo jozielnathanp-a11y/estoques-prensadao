@@ -1198,7 +1198,20 @@ var _lancamentos = [];
 function adicionarAoLote() {
   var cod  = document.getElementById('lanc-produto').value;
   var tipo = document.getElementById('lanc-tipo').value;
+  // Recalcular total antes de pegar o valor (garante pct×fator + aberto)
+  calcTotal();
   var qtd  = parseFloat(document.getElementById('lanc-qtd').value);
+  // Se lanc-qtd ainda vazio, tentar pegar direto do aberto e multiplicar pelo fator
+  if (!qtd || qtd <= 0) {
+    var pct    = parseFloat(document.getElementById('lanc-pct').value) || 0;
+    var fator  = parseFloat(document.getElementById('lanc-fator').value) || 0;
+    var aberto = parseFloat((document.getElementById('lanc-aberto') || {value:'0'}).value) || 0;
+    var p2 = getProduto(cod);
+    var fat2 = p2 && p2.qtd_por_pct > 1 ? parseFloat(p2.qtd_por_pct) : 1;
+    if (pct > 0) qtd = pct * (fator || fat2);
+    else if (aberto > 0 && tipo !== 'contagem') qtd = aberto * fat2;
+    else if (aberto > 0) qtd = aberto;
+  }
   if (!cod)             { showToast('Seleciona o produto!', 'error'); return; }
   if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
   if (_lancamentos.length >= 15) { showToast('Limite de 15 itens!', 'error'); return; }
