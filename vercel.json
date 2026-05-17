@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/cd",
+      "destination": "/cd.html"
+    },
+    {
+      "source": "/centro",
+      "destination": "/centro.html"
+    },
+    {
+      "source": "/delivery",
+      "destination": "/delivery.html"
+    },
+    {
+      "source": "/matriz",
+      "destination": "/matriz.html"
+    },
+    {
+      "source": "/boqueiraw",
+      "destination": "/boqueiraw.html"
+    }
+  ]
+}
