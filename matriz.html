@@ -669,10 +669,10 @@ async function cadastrarProduto() {
 }
 
 async function carregarAlmoxChefao() {
-  const res = await supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
+  const res = await supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado_cd&select=*&order=nome.asc');
   if (Array.isArray(res)) {
     // Atualiza todosEstoques com almoxarifado
-    todosEstoques = todosEstoques.filter(p => p.unidade_loja !== 'almoxarifado').concat(res);
+    todosEstoques = todosEstoques.filter(p => p.unidade_loja !== 'almoxarifado_cd').concat(res);
   }
   renderAlmoxChefao();
 }
@@ -686,7 +686,7 @@ function filtrarAlmoxChefao(filtro) {
 
 function renderAlmoxChefao() {
   const busca = (document.getElementById('almox-chefao-busca').value || '').toLowerCase();
-  const prods = todosEstoques.filter(p => p.unidade_loja === 'almoxarifado');
+  const prods = todosEstoques.filter(p => p.unidade_loja === 'almoxarifado_cd');
 
   // Stats
   const total = prods.length;
@@ -880,9 +880,9 @@ function showTab(name) {
   if (name === 'contagens') carregarContagens();
   if (name === 'pedidos') carregarPedidos();
   if (name === 'minimos') {
-    const temAlmox = todosEstoques.some(p => p.unidade_loja === 'almoxarifado');
+    const temAlmox = todosEstoques.some(p => p.unidade_loja === 'almoxarifado_cd');
     if (!temAlmox) {
-      supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc').then(res => {
+      supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado_cd&select=*&order=nome.asc').then(res => {
         if (Array.isArray(res)) todosEstoques = todosEstoques.concat(res);
         renderMinimos();
       });
