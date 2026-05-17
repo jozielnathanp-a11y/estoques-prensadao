@@ -360,7 +360,11 @@
   </div>
 </div>
 
-<div id="toast"></div>
+<div style="position:fixed;bottom:80px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:900;">
+    <button onclick="abrirRelEmb()" style="background:#1565c0;border:none;border-radius:50px;color:#fff;padding:10px 16px;cursor:pointer;font-size:0.82rem;box-shadow:0 2px 8px rgba(0,0,0,0.4);">📦 Embalagens</button>
+    <button onclick="abrirRelBeb()" style="background:#6a1b9a;border:none;border-radius:50px;color:#fff;padding:10px 16px;cursor:pointer;font-size:0.82rem;box-shadow:0 2px 8px rgba(0,0,0,0.4);">🍺 Bebidas</button>
+  </div>
+  <div id="toast"></div>
 
 <script>
 const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
@@ -1705,6 +1709,145 @@ function tutRender() {{
 }}
 // FIM TUTORIAL
 
+
+// -- REL EMBALAGENS & BEBIDAS --
+var _mreItens=null, _mreData=null, _mreFilter='todos';
+var _mrbItens=null, _mrbData=null, _mrbFilter='todos';
+
+function abrirRelEmb() {
+  document.getElementById("mre").style.display="block";
+  document.getElementById("mre-data").value=dataHoje();
+  _mreFilter='todos';
+  gerarRelEmb();
+}
+function abrirRelBeb() {
+  document.getElementById("mrb").style.display="block";
+  document.getElementById("mrb-data").value=dataHoje();
+  _mrbFilter='todos';
+  gerarRelBeb();
+}
+function filtrarRelEmb(f) { _mreFilter=f; renderRelEmb(); }
+function filtrarRelBeb(f) { _mrbFilter=f; renderRelBeb(); }
+
+async function gerarRelEmb() {
+  var data=document.getElementById("mre-data").value;
+  if(!data) return;
+  document.getElementById("mre-resultado").innerHTML="<p style='color:#888;text-align:center;padding:20px;'>Carregando...</p>";
+  _mreData=data;
+  _mreItens = await _buscarItensRel(data, "Embalagens");
+  renderRelEmb();
+}
+async function gerarRelBeb() {
+  var data=document.getElementById("mrb-data").value;
+  if(!data) return;
+  document.getElementById("mrb-resultado").innerHTML="<p style='color:#888;text-align:center;padding:20px;'>Carregando...</p>";
+  _mrbData=data;
+  _mrbItens = await _buscarItensRel(data, "Bebidas");
+  renderRelBeb();
+}
+
+async function _buscarItensRel(data, categoria) {
+  var prods = await supa("GET","produtos",null,"unidade_loja=eq."+UNIDADE_LOJA+"&categoria=eq."+encodeURIComponent(categoria)+"&select=*&order=nome.asc");
+  if(!prods||!prods.length) return [];
+
+  var dtI=new Date(data+"T00:00:00-03:00"), dtF=new Date(data+"T23:59:59-03:00");
+  var ini=dtI.toISOString().replace("Z",""), fim=dtF.toISOString().replace("Z","");
+  var dtAI=new Date(data+"T00:00:00-03:00"); dtAI.setDate(dtAI.getDate()-1);
+  var dtAF=new Date(data+"T00:00:00-03:00"); dtAF.setMilliseconds(dtAF.getMilliseconds()-1);
+  var iniA=dtAI.toISOString().replace("Z",""), fimA=dtAF.toISOString().replace("Z","");
+
+  var movsH=await supa("GET","movimentacoes",null,"unidade_loja=eq."+UNIDADE_LOJA+"&created_at=gte."+ini+"&created_at=lte."+fim+"&status=eq.confirmado&select=*");
+  var movsA=await supa("GET","movimentacoes",null,"unidade_loja=eq."+UNIDADE_LOJA+"&created_at=gte."+iniA+"&created_at=lte."+fimA+"&status=eq.confirmado&select=*");
+
+  var res={};
+  prods.forEach(function(p){ res[p.codigo]={nome:p.nome,unidade:p.unidade,est:parseFloat(p.estoque)||0,min:parseFloat(p.estoque_min)||0,entA:0,ent:0,cont:null}; });
+  if(Array.isArray(movsA)) movsA.forEach(function(m){ if(res[m.codigo]&&m.tipo==="entrada") res[m.codigo].entA+=parseFloat(m.qtd)||0; });
+  if(Array.isArray(movsH)) movsH.forEach(function(m){
+    if(!res[m.codigo]) return;
+    if(m.tipo==="entrada") res[m.codigo].ent+=parseFloat(m.qtd)||0;
+    else if(m.tipo==="contagem") res[m.codigo].cont=parseFloat(m.novo_estoque);
+  });
+  return Object.values(res).sort(function(a,b){return a.nome.localeCompare(b.nome);});
+}
+
+function _renderItens(itens, filter, elId, titulo) {
+  var el=document.getElementById(elId);
+  if(!itens||!itens.length){el.innerHTML="<p style='color:#888;text-align:center;padding:20px;'>Nenhum produto.</p>";return;}
+  var lista = filter==='pedido' ? itens.filter(function(p){return p.min>0&&p.est<=p.min;}) : itens;
+  if(!lista.length){el.innerHTML="<p style='color:#4caf50;text-align:center;padding:20px;'>&#10003; Tudo em dia!</p>";return;}
+  var out="";
+  lista.forEach(function(p){
+    var cor=p.est===0?"#f44336":p.min>0&&p.est<=p.min?"#ff9800":"#4caf50";
+    var contLabel=p.cont===null?"**":fmtQ(p.cont,p.unidade);
+    var pedido=p.min>0&&p.est<p.min?fmtQ(p.min-p.est,p.unidade):null;
+    out+="<div style='background:#1e1e1e;border-left:4px solid "+cor+";border-radius:8px;padding:10px 14px;margin-bottom:8px;'>";
+    out+="<div style='font-weight:700;font-size:0.92rem;color:#f0f0f0;'>"+p.nome+"</div>";
+    out+="<div style='font-size:0.8rem;margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;'>";
+    out+="<span style='background:#0d2a3a;padding:3px 8px;border-radius:6px;color:#90caf9;'>&#128230; Ent.ant.: <b>"+(p.entA>0?fmtQ(p.entA,p.unidade):"&mdash;")+"</b></span>";
+    out+="<span style='background:#0d2a0d;padding:3px 8px;border-radius:6px;color:#a5d6a7;'>&#128229; Entrada: <b>"+(p.ent>0?fmtQ(p.ent,p.unidade):"&mdash;")+"</b></span>";
+    out+="<span style='background:#2a0d3a;padding:3px 8px;border-radius:6px;color:#ce93d8;'>&#128202; Contagem: <b style='color:"+cor+"'>"+contLabel+"</b></span>";
+    out+="<span style='background:#1a1a2a;padding:3px 8px;border-radius:6px;color:#90caf9;'>&#128230; Estoque: <b style='color:#fff'>"+fmtQ(p.est,p.unidade)+"</b></span>";
+    if(pedido) out+="<span style='background:#2a0d0d;padding:3px 8px;border-radius:6px;color:#ef9a9a;'>&#128722; Pedir: <b>"+pedido+"</b></span>";
+    out+="</div></div>";
+  });
+  el.innerHTML=out;
+}
+
+function renderRelEmb() { _renderItens(_mreItens,_mreFilter,"mre-resultado","Embalagens"); }
+function renderRelBeb() { _renderItens(_mrbItens,_mrbFilter,"mrb-resultado","Bebidas"); }
+
+function _textoWpp(itens, titulo, data, filter) {
+  var lista=filter==='pedido'?itens.filter(function(p){return p.min>0&&p.est<=p.min;}):itens;
+  var p2=data.split("-");
+  var txt="*Relatório "+titulo+" — Prensadão*\n&#128197; "+p2[2]+"/"+p2[1]+"/"+p2[0]+"\n";
+  if(filter==='pedido') txt+="*🛒 APENAS O QUE PRECISA REPOR*\n";
+  txt+="\n";
+  lista.forEach(function(p){
+    txt+="▪️ *"+p.nome+"*\n";
+    if(p.entA>0) txt+="   Ent.ant.: "+fmtQ(p.entA,p.unidade)+"\n";
+    if(p.ent>0)  txt+="   Entrada: +"+fmtQ(p.ent,p.unidade)+"\n";
+    txt+="   Estoque: "+fmtQ(p.est,p.unidade)+"\n";
+    if(p.min>0&&p.est<=p.min) txt+="   🛒 Pedir: "+fmtQ(Math.max(0,p.min-p.est),p.unidade)+"\n";
+  });
+  txt+="\n_Gerado por Estoques Prensadão_";
+  return txt;
+}
+
+function compartilharRelEmb() {
+  if(!_mreItens) { showToast("Gere o relatório primeiro!","error"); return; }
+  window.open("https://wa.me/?text="+encodeURIComponent(_textoWpp(_mreItens,"Embalagens",_mreData,_mreFilter)),"_blank");
+}
+function compartilharRelBeb() {
+  if(!_mrbItens) { showToast("Gere o relatório primeiro!","error"); return; }
+  window.open("https://wa.me/?text="+encodeURIComponent(_textoWpp(_mrbItens,"Bebidas",_mrbData,_mrbFilter)),"_blank");
+}
+
+function _csvRel(itens, data) {
+  var p2=data.split("-");
+  var csv="Produto;Unidade;Ent.Ant;Entrada;Contagem;Estoque;Pedido\n";
+  itens.forEach(function(p){
+    var ped=p.min>0&&p.est<p.min?Math.max(0,p.min-p.est):0;
+    csv+='"'+p.nome+'";'+p.unidade+";"+p.entA+";"+p.ent+";"+(p.cont!==null?p.cont:"")+";"+p.est+";"+ped+"\n";
+  });
+  return csv;
+}
+function exportarRelEmbCSV() {
+  if(!_mreItens) { showToast("Gere o relatório primeiro!","error"); return; }
+  var p2=_mreData.split("-");
+  var blob=new Blob(["\uFEFF"+_csvRel(_mreItens,_mreData)],{type:"text/csv;charset=utf-8;"});
+  var link=document.createElement("a"); link.href=URL.createObjectURL(blob);
+  link.download="embalagens_"+p2[2]+"-"+p2[1]+"-"+p2[0]+".csv"; link.click();
+  showToast("Planilha baixada!","success");
+}
+function exportarRelBebCSV() {
+  if(!_mrbItens) { showToast("Gere o relatório primeiro!","error"); return; }
+  var p2=_mrbData.split("-");
+  var blob=new Blob(["\uFEFF"+_csvRel(_mrbItens,_mrbData)],{type:"text/csv;charset=utf-8;"});
+  var link=document.createElement("a"); link.href=URL.createObjectURL(blob);
+  link.download="bebidas_"+p2[2]+"-"+p2[1]+"-"+p2[0]+".csv"; link.click();
+  showToast("Planilha baixada!","success");
+}
+
 </script>
 
 <!-- TUTORIAL OVERLAY -->
@@ -1730,5 +1873,47 @@ function tutRender() {{
 </div>
 <!-- FIM TUTORIAL -->
 
+
+  <!-- MODAL EMBALAGENS -->
+  <div id="mre" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;overflow-y:auto;padding:16px;box-sizing:border-box;">
+    <div style="background:#111;border-radius:14px;max-width:600px;margin:0 auto;padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;color:#fff;">&#128230; Relatório Embalagens</h3>
+        <button onclick="document.getElementById('mre').style.display='none'" style="background:none;border:none;color:#aaa;font-size:1.4rem;cursor:pointer;">&#x2716;</button>
+      </div>
+      <input type="date" id="mre-data" style="width:100%;margin-bottom:10px;" onchange="gerarRelEmb()" />
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="btn btn-blue" onclick="gerarRelEmb()" style="flex:1;margin:0;background:#1565c0;">&#128202; Gerar</button>
+        <button class="btn btn-green" onclick="compartilharRelEmb()" style="flex:1;margin:0;">&#128241; WhatsApp</button>
+        <button class="btn btn-gray" onclick="exportarRelEmbCSV()" style="flex:1;margin:0;">&#128196; Planilha</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button onclick="filtrarRelEmb('todos')" id="fre-todos" style="flex:1;background:#333;border:none;border-radius:8px;color:#fff;padding:8px;cursor:pointer;font-size:0.8rem;">Todos</button>
+        <button onclick="filtrarRelEmb('pedido')" id="fre-pedido" style="flex:1;background:#b71c1c;border:none;border-radius:8px;color:#fff;padding:8px;cursor:pointer;font-size:0.8rem;">🛒 Só Pedido</button>
+      </div>
+      <div id="mre-resultado"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data.</p></div>
+    </div>
+  </div>
+
+  <!-- MODAL BEBIDAS -->
+  <div id="mrb" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;overflow-y:auto;padding:16px;box-sizing:border-box;">
+    <div style="background:#111;border-radius:14px;max-width:600px;margin:0 auto;padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;color:#fff;">&#127866; Relatório Bebidas</h3>
+        <button onclick="document.getElementById('mrb').style.display='none'" style="background:none;border:none;color:#aaa;font-size:1.4rem;cursor:pointer;">&#x2716;</button>
+      </div>
+      <input type="date" id="mrb-data" style="width:100%;margin-bottom:10px;" onchange="gerarRelBeb()" />
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="btn btn-blue" onclick="gerarRelBeb()" style="flex:1;margin:0;background:#6a1b9a;">&#128202; Gerar</button>
+        <button class="btn btn-green" onclick="compartilharRelBeb()" style="flex:1;margin:0;">&#128241; WhatsApp</button>
+        <button class="btn btn-gray" onclick="exportarRelBebCSV()" style="flex:1;margin:0;">&#128196; Planilha</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button onclick="filtrarRelBeb('todos')" id="frb-todos" style="flex:1;background:#333;border:none;border-radius:8px;color:#fff;padding:8px;cursor:pointer;font-size:0.8rem;">Todos</button>
+        <button onclick="filtrarRelBeb('pedido')" id="frb-pedido" style="flex:1;background:#b71c1c;border:none;border-radius:8px;color:#fff;padding:8px;cursor:pointer;font-size:0.8rem;">🛒 Só Pedido</button>
+      </div>
+      <div id="mrb-resultado"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data.</p></div>
+    </div>
+  </div>
 </body>
 </html>
