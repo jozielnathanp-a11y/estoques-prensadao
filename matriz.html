@@ -2023,6 +2023,16 @@ let mtzBarcodeDetector = null;
 
 let _mtzListaCompleta = [];
 
+function popularSelectProdutos() {
+  // Atualiza o select de produtos na aba lançar com o produtosCache atual
+  const sel = document.getElementById('lanc-produto') || document.getElementById('mtz-lanc-produto');
+  if (!sel) return;
+  const lista = Object.values(produtosCache).sort((a,b) => a.nome.localeCompare(b.nome));
+  sel.innerHTML = '<option value="">-- Selecione o produto --</option>' +
+    lista.map(p => `<option value="${p.codigo}">${p.nome} (${fmtQ(p.estoque, p.unidade)})</option>`).join('');
+}
+
+
 function mtzSetUnidade(u) {
   document.getElementById('mtz-lanc-unidade').value = u;
   _mtzUnidadeAtual = u;
