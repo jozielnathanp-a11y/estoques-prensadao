@@ -167,7 +167,7 @@
 
       <!-- Unidade -->
       <label style="font-size:0.95rem;font-weight:700;">1️⃣ Unidade</label>
-      <select id="mtz-lanc-unidade" style="margin-bottom:12px;" onchange="mtzCarregarProdutos()">
+      <select id="mtz-lanc-unidade" style="margin-bottom:12px;" onchange="_mtzUnidadeAtual=this.value;mtzCarregarProdutos()">
         <option value="">-- Selecione a unidade --</option>
         <option value="cd">🏭 CD</option>
         <option value="centro">🏪 Centro</option>
@@ -1357,6 +1357,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── LANÇAMENTO MATRIZ ──
 let mtzPendentes = [];
 let mtzProdutosCache = {};
+let _mtzUnidadeAtual = '';
 let mtzCameraStream = null;
 let mtzScanLoop = null;
 let mtzBarcodeDetector = null;
@@ -1393,7 +1394,7 @@ function mtzSelecionarProdutoManual() {
   const p = mtzProdutosCache[cod];
   if (!p) return;
   const info = document.getElementById('mtz-lanc-info');
-  const u = document.getElementById('mtz-lanc-unidade').value;
+  const u = document.getElementById('mtz-lanc-unidade').value || _mtzUnidadeAtual;
   const tipo = document.getElementById('mtz-lanc-tipo').value;
   if (p.unidade !== 'kg') {
     const pctPadrao = parseFloat(p.qtd_por_pct) || 1;
@@ -1516,14 +1517,17 @@ async function mtzConfirmarTodos() {
 async function mtzBuscarPorCodigo() {
   const cod = document.getElementById('mtz-scan-input').value.trim();
   if (!cod) return;
-  const u = document.getElementById('mtz-lanc-unidade').value;
+  const u = document.getElementById('mtz-lanc-unidade').value || _mtzUnidadeAtual;
   if (!u) { showToast('Selecione a unidade primeiro!', 'error'); return; }
 
-  // Carregar cache se vazio (passa u para garantir que carrega a unidade certa)
+  // Garantir que o select mostra o valor correto
+  if (!document.getElementById('mtz-lanc-unidade').value && u) {
+    document.getElementById('mtz-lanc-unidade').value = u;
+  }
+
+  // Carregar cache se vazio
   if (!Object.keys(mtzProdutosCache).length) await mtzCarregarProdutos(u);
-  // Reler u após await para garantir consistência
-  const uFinal = document.getElementById('mtz-lanc-unidade').value;
-  if (!uFinal) { showToast('Selecione a unidade primeiro!', 'error'); return; }
+  const uFinal = u;
 
   const tipo = document.getElementById('mtz-lanc-tipo').value;
   let produto = null;
