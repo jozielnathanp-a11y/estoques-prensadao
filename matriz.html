@@ -1367,6 +1367,7 @@ async function mtzCarregarProdutos(uOverride) {
   const u = uOverride || document.getElementById('mtz-lanc-unidade').value;
   const sel = document.getElementById('mtz-lanc-produto');
   if (!u) { sel.innerHTML = '<option value="">-- Selecione a unidade primeiro --</option>'; return; }
+  _mtzUnidadeAtual = u;
   const lista = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*&order=nome.asc');
   mtzProdutosCache = {};
   _mtzListaCompleta = Array.isArray(lista) ? lista : [];
@@ -1525,8 +1526,10 @@ async function mtzBuscarPorCodigo() {
     document.getElementById('mtz-lanc-unidade').value = u;
   }
 
-  // Carregar cache se vazio
-  if (!Object.keys(mtzProdutosCache).length) await mtzCarregarProdutos(u);
+  // Sempre garantir que o cache é da unidade correta
+  const cacheKeys = Object.keys(mtzProdutosCache);
+  const cacheDeOutraUnidade = cacheKeys.length > 0 && !cacheKeys[0].endsWith('_' + u);
+  if (!cacheKeys.length || cacheDeOutraUnidade) await mtzCarregarProdutos(u);
   const uFinal = u;
 
   const tipo = document.getElementById('mtz-lanc-tipo').value;
