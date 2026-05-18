@@ -1355,8 +1355,8 @@ let mtzCameraStream = null;
 let mtzScanLoop = null;
 let mtzBarcodeDetector = null;
 
-async function mtzCarregarProdutos() {
-  const u = document.getElementById('mtz-lanc-unidade').value;
+async function mtzCarregarProdutos(uOverride) {
+  const u = uOverride || document.getElementById('mtz-lanc-unidade').value;
   const sel = document.getElementById('mtz-lanc-produto');
   if (!u) { sel.innerHTML = '<option value="">-- Selecione a unidade primeiro --</option>'; return; }
   const lista = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*&order=nome.asc');
@@ -1480,8 +1480,11 @@ async function mtzBuscarPorCodigo() {
   const u = document.getElementById('mtz-lanc-unidade').value;
   if (!u) { showToast('Selecione a unidade primeiro!', 'error'); return; }
 
-  // Carregar cache se vazio
-  if (!Object.keys(mtzProdutosCache).length) await mtzCarregarProdutos();
+  // Carregar cache se vazio (passa u para garantir que carrega a unidade certa)
+  if (!Object.keys(mtzProdutosCache).length) await mtzCarregarProdutos(u);
+  // Reler u após await para garantir consistência
+  const uFinal = document.getElementById('mtz-lanc-unidade').value;
+  if (!uFinal) { showToast('Selecione a unidade primeiro!', 'error'); return; }
 
   const tipo = document.getElementById('mtz-lanc-tipo').value;
   let produto = null;
@@ -1492,19 +1495,19 @@ async function mtzBuscarPorCodigo() {
     const prefixo = cod.substring(1, 7);
     pesoKg = parseInt(cod.substring(7, 12), 10) / 1000;
     produto = Object.values(mtzProdutosCache).find(p =>
-      p.codigo.replace('_' + u, '').substring(0, 6) === prefixo);
+      p.codigo.replace('_' + uFinal, '').substring(0, 6) === prefixo);
     if (!produto) {
-      const res = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*');
+      const res = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + uFinal + '&select=*');
       if (Array.isArray(res)) {
-        produto = res.find(p => p.codigo.replace('_' + u, '').substring(0, 6) === prefixo);
+        produto = res.find(p => p.codigo.replace('_' + uFinal, '').substring(0, 6) === prefixo);
         if (produto) mtzProdutosCache[produto.codigo] = produto;
       }
     }
   } else {
-    produto = mtzProdutosCache[cod] || mtzProdutosCache[cod + '_' + u]
-      || Object.values(mtzProdutosCache).find(p => p.codigo.replace('_' + u, '') === cod);
+    produto = mtzProdutosCache[cod] || mtzProdutosCache[cod + '_' + uFinal]
+      || Object.values(mtzProdutosCache).find(p => p.codigo.replace('_' + uFinal, '') === cod);
     if (!produto) {
-      const res = await supa('GET', 'produtos', null, 'codigo=eq.' + cod + '_' + u + '&select=*');
+      const res = await supa('GET', 'produtos', null, 'codigo=eq.' + cod + '_' + uFinal + '&select=*');
       if (Array.isArray(res) && res.length) { produto = res[0]; mtzProdutosCache[produto.codigo] = produto; }
     }
   }
@@ -1515,11 +1518,11 @@ async function mtzBuscarPorCodigo() {
     beep();
     if (pesoKg && produto.unidade === 'kg') {
       // Kg com peso no código: lança direto
-      mtzPendentes_push(produto, tipo, pesoKg, u);
+      mtzPendentes_push(produto, tipo, pesoKg, uFinal);
     } else if (produto.unidade !== 'kg') {
       // Unidade (bebidas, embalagens): lança direto com qtd_por_pct
       const pctPadrao = parseFloat(produto.qtd_por_pct) || 1;
-      mtzPendentes_push(produto, tipo, pctPadrao, u);
+      mtzPendentes_push(produto, tipo, pctPadrao, uFinal);
     } else {
       // Kg sem peso no código: abre campo para digitar
       document.getElementById('mtz-lanc-produto-cod').value = produto.codigo;
