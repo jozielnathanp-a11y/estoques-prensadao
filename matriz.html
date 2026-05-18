@@ -163,30 +163,30 @@
   <!-- LANÇAMENTO CHEFÃO -->
   <div class="screen" id="tab-lancar">
     <div class="card">
-      <h3>➕ Lançamento</h3>
+      <h3>➕ Novo Lançamento</h3>
 
       <!-- Unidade -->
-      <label style="font-size:0.95rem;font-weight:700;">1️⃣ Unidade</label>
-      <select id="mtz-lanc-unidade" style="margin-bottom:12px;" onchange="_mtzUnidadeAtual=this.value;mtzCarregarProdutos()">
-        <option value="">-- Selecione a unidade --</option>
-        <option value="cd">🏭 CD</option>
-        <option value="centro">🏪 Centro</option>
-        <option value="delivery">🚗 Delivery</option>
-        <option value="boqueiraw">🏪 Boqueirão</option>
-      </select>
+      <label style="font-size:0.95rem;font-weight:700;color:#37474f;">🏪 Unidade</label>
+      <div style="display:flex;gap:8px;margin:8px 0 16px;">
+        <button onclick="mtzSetUnidade('cd')" id="mtz-u-cd" class="btn btn-gray" style="flex:1;margin:0;padding:10px;font-size:0.85rem;">🏭 CD</button>
+        <button onclick="mtzSetUnidade('centro')" id="mtz-u-centro" class="btn btn-gray" style="flex:1;margin:0;padding:10px;font-size:0.85rem;">🏪 Centro</button>
+        <button onclick="mtzSetUnidade('delivery')" id="mtz-u-delivery" class="btn btn-gray" style="flex:1;margin:0;padding:10px;font-size:0.85rem;">🚗 Delivery</button>
+        <button onclick="mtzSetUnidade('boqueiraw')" id="mtz-u-boqueiraw" class="btn btn-gray" style="flex:1;margin:0;padding:10px;font-size:0.85rem;">🥤 Boqueirão</button>
+      </div>
+      <input type="hidden" id="mtz-lanc-unidade" value="" />
 
       <!-- Tipo -->
-      <label style="font-size:0.95rem;font-weight:700;">2️⃣ Tipo</label>
-      <div style="display:flex;gap:8px;margin:8px 0 12px;">
+      <label style="font-size:0.95rem;font-weight:700;color:#37474f;">1️⃣ Tipo de lançamento</label>
+      <div style="display:flex;gap:8px;margin:8px 0 16px;">
         <button id="mtz-btn-entrada" onclick="mtzSelecionarTipo('entrada')" class="btn btn-gold" style="flex:1;margin:0;padding:14px;">📥 Entrada</button>
         <button id="mtz-btn-contagem" onclick="mtzSelecionarTipo('contagem')" class="btn btn-gray" style="flex:1;margin:0;padding:14px;">📊 Contagem</button>
       </div>
       <input type="hidden" id="mtz-lanc-tipo" value="entrada" />
 
-      <!-- Scan -->
-      <label style="font-size:0.95rem;font-weight:700;">3️⃣ Escaneia ou busca o produto</label>
-      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:6px;">
-        <input type="text" id="mtz-scan-input" placeholder="Código de barras..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){mtzBuscarPorCodigo();}" />
+      <!-- Produto -->
+      <label style="font-size:0.95rem;font-weight:700;color:#37474f;">2️⃣ Produto</label>
+      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
+        <input type="text" id="mtz-scan-input" placeholder="Digita ou escaneia o código..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){mtzBuscarPorCodigo();}" />
         <button onclick="mtzBuscarPorCodigo()" style="background:#2e7d32;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">🔍</button>
         <button onclick="mtzAbrirCamera()" style="background:#1565c0;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
       </div>
@@ -194,39 +194,39 @@
         <video id="mtz-camera-video" style="width:100%;border-radius:10px;max-height:220px;" autoplay playsinline></video>
         <button onclick="mtzFecharCamera()" class="btn btn-gray" style="margin-top:6px;">✖ Fechar câmera</button>
       </div>
-
-      <!-- Busca por nome -->
-      <input type="text" id="mtz-busca-nome" placeholder="🔍 Ou busca pelo nome do produto..." style="margin-bottom:6px;" oninput="mtzFiltrarProdutos()" />
-      <select id="mtz-lanc-produto" style="margin-bottom:10px;" onchange="mtzSelecionarProdutoManual()">
-        <option value="">-- Selecione a unidade primeiro --</option>
+      <select id="mtz-lanc-produto" style="margin-bottom:6px;" onchange="mtzSelecionarProdutoManual()">
+        <option value="">-- Selecione a unidade --</option>
       </select>
-      <div id="mtz-lanc-info" style="display:none;font-size:0.8rem;color:#aaa;margin:-4px 0 10px;"></div>
+      <input type="text" id="mtz-busca-nome" placeholder="🔍 Buscar produto pelo nome..." style="margin-bottom:8px;" oninput="mtzFiltrarProdutos()" />
+      <div id="mtz-lanc-info" style="font-size:0.82rem;color:#607d8b;font-weight:600;margin:-4px 0 10px;display:none;"></div>
 
-      <!-- Produto kg: campo de quantidade -->
+      <!-- Quantidade -->
       <div id="mtz-manual-area" style="display:none;">
+        <label style="font-size:0.95rem;font-weight:700;color:#37474f;">3️⃣ Quantidade</label>
         <div id="mtz-lanc-nome" style="font-weight:700;color:#f9a825;margin-bottom:10px;font-size:1rem;"></div>
-        <label style="font-size:0.82rem;color:#aaa;margin-bottom:4px;">✖️ Multiplicador (opcional)</label>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
-          <input type="number" id="mtz-lanc-pct" placeholder="Nº PCT" step="1" min="1" oninput="mtzCalcMulti()" style="margin:0;flex:1;" />
-          <span style="color:#888;font-weight:700;">×</span>
-          <input type="number" id="mtz-lanc-fator" placeholder="Un/PCT" step="0.001" min="0" oninput="mtzCalcMulti()" style="margin:0;flex:1;" />
-          <span style="color:#888;font-weight:700;">=</span>
-          <span id="mtz-lanc-total" style="font-weight:700;color:#f9a825;min-width:45px;text-align:right;">—</span>
+        <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 6px;">
+          <label style="font-size:0.82rem;margin-bottom:4px;">📦 Fechados × fator (opcional)</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="number" id="mtz-lanc-pct" placeholder="Nº PCT" step="1" min="0" oninput="mtzCalcMulti()" style="margin:0;flex:1;" />
+            <span style="color:#607d8b;font-weight:700;">×</span>
+            <input type="number" id="mtz-lanc-fator" placeholder="Kg ou Und/PCT" step="0.001" min="0" oninput="mtzCalcMulti()" style="margin:0;flex:1;" />
+          </div>
         </div>
-        <label style="font-size:0.9rem;font-weight:700;">Quantidade</label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="number" id="mtz-lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="margin:0;flex:1;" />
-          <button class="btn btn-gold" onclick="mtzConfirmarManual()" style="margin:0;padding:12px 16px;">➕ ADD</button>
+        <div style="display:flex;align-items:center;gap:10px;margin:4px 0 8px;">
+          <label style="font-size:0.95rem;font-weight:700;color:#37474f;margin:0;">Total:</label>
+          <input type="number" id="mtz-lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="margin:0;flex:1;" oninput="mtzCalcMulti()" />
+          <span id="mtz-lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;">—</span>
         </div>
+        <button class="btn btn-gold" onclick="mtzConfirmarManual()" style="width:100%;">✅ Confirmar</button>
       </div>
       <input type="hidden" id="mtz-lanc-produto-cod" />
     </div>
 
-    <!-- PENDENTES em baixo igual unidades -->
+    <!-- PENDENTES -->
     <div class="card" id="mtz-card-pendentes" style="display:none;border:2px solid #f9a825;margin-top:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <h3 style="margin:0;color:#f9a825;">⏳ Pendentes <span id="mtz-badge-pendentes" style="background:#f9a825;color:#000;border-radius:10px;padding:1px 8px;font-size:0.85rem;margin-left:4px;">0</span></h3>
-        <button class="btn btn-gold" onclick="mtzConfirmarTodos()" style="margin:0;padding:8px 16px;font-size:0.9rem;">✅ CONFIRMAR TUDO</button>
+        <h4 style="margin:0;color:#f9a825;">⏳ Pendentes <span id="mtz-badge-pendentes" style="background:#f9a825;color:#000;border-radius:10px;padding:1px 8px;font-size:0.85rem;margin-left:4px;">0</span></h4>
+        <button class="btn btn-gold" onclick="mtzConfirmarTodos()" style="margin:0;padding:8px 16px;font-size:0.9rem;">💾 CONFIRMAR TUDO</button>
       </div>
       <div id="mtz-lista-pendentes"></div>
     </div>
@@ -1363,6 +1363,18 @@ let mtzScanLoop = null;
 let mtzBarcodeDetector = null;
 
 let _mtzListaCompleta = [];
+
+function mtzSetUnidade(u) {
+  document.getElementById('mtz-lanc-unidade').value = u;
+  _mtzUnidadeAtual = u;
+  // destacar botão selecionado
+  ['cd','centro','delivery','boqueiraw'].forEach(function(x) {
+    var btn = document.getElementById('mtz-u-' + x);
+    if (btn) btn.className = x === u ? 'btn btn-gold' : 'btn btn-gray';
+  });
+  mtzCarregarProdutos(u);
+  showToast('Unidade: ' + u.toUpperCase(), 'success');
+}
 async function mtzCarregarProdutos(uOverride) {
   const u = uOverride || document.getElementById('mtz-lanc-unidade').value;
   const sel = document.getElementById('mtz-lanc-produto');
@@ -1589,13 +1601,13 @@ async function mtzBuscarPorCodigo() {
 function mtzCalcMulti() {
   const pct = parseFloat(document.getElementById('mtz-lanc-pct').value) || 0;
   const fator = parseFloat(document.getElementById('mtz-lanc-fator').value) || 0;
-  const total = document.getElementById('mtz-lanc-total');
+  const totalEl = document.getElementById('mtz-lanc-total');
   if (pct > 0 && fator > 0) {
-    const result = pct * fator;
-    total.textContent = result % 1 === 0 ? result : result.toFixed(3);
-    document.getElementById('mtz-lanc-qtd').value = result.toFixed(3);
+    const result = Math.round(pct * fator * 1000) / 1000;
+    if (totalEl) totalEl.textContent = result;
+    document.getElementById('mtz-lanc-qtd').value = result;
   } else {
-    total.textContent = '—';
+    if (totalEl) totalEl.textContent = '—';
   }
 }
 
