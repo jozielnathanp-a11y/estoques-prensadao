@@ -143,7 +143,7 @@
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <select id="filtro-unidade" onchange="atualizarCats();renderEstoque()" style="margin:0;flex:1;">
+      <select id="filtro-unidade" onchange="carregarProdutos();atualizarCats();renderEstoque()" style="margin:0;flex:1;">
         <option value="">Todas unidades</option>
         <option value="cd">🏭 CD</option>
         <option value="centro">🏪 Centro</option>
@@ -455,20 +455,22 @@ function showTab(name) {
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
+  if (name === 'estoque') carregarProdutos();
 }
 
 // ── PRODUTOS ──
 async function carregarProdutos() {
   try {
-    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.centro');
+    const u = (document.getElementById('filtro-unidade') || {value:''}).value;
+    const params = u ? 'select=*&order=nome.asc&unidade_loja=eq.' + u : 'select=*&order=nome.asc';
+    const lista = await supa('GET', 'produtos', null, params);
     produtosCache = {};
+    todosEstoques = Array.isArray(lista) ? lista : [];
     if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
     renderEstoque();
     renderProdutos();
     atualizarStats();
-  } catch(e) {
-    showToast('Erro ao carregar produtos', 'error');
-  }
+  } catch(e) { showToast('Erro ao carregar produtos', 'error'); }
 }
 
 function getProduto(cod) {
@@ -488,8 +490,9 @@ function atualizarStats() {
 function renderEstoque() {
   const busca = (document.getElementById('busca-estoque').value || '').toLowerCase();
   const cat = document.getElementById('filtro-cat').value;
+  const uFiltro2 = (document.getElementById('filtro-unidade')||{value:''}).value;
   const lista = Object.values(produtosCache)
-    .filter(p => (!cat || p.categoria === cat) && (!busca || p.nome.toLowerCase().includes(busca)))
+    .filter(p => (!cat || p.categoria === cat) && (!busca || p.nome.toLowerCase().includes(busca)) && (!uFiltro2 || p.unidade_loja === uFiltro2))
     .sort((a,b) => a.nome.localeCompare(b.nome));
 
   const el = document.getElementById('lista-estoque');
@@ -3736,17 +3739,13 @@ function mtzSetUnidade(u) {
   showToast('Unidade: ' + u.toUpperCase(), 'success');
 }
 
+let _mtzProdutosLanc = {};
 async function _mtzRecarregarProdutos(u) {
   const lista = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*&order=nome.asc');
-  produtosCache = {};
-  if (Array.isArray(lista)) lista.forEach(function(p) { produtosCache[p.codigo] = p; });
-  // Também atualizar o select de produtos (se existir)
-  var sel = document.getElementById('produto-select');
-  if (sel) {
-    sel.innerHTML = '<option value="">-- Selecione --</option>' +
-      lista.map(function(p) { return '<option value="' + p.codigo + '">' + p.nome + ' (' + (p.estoque||0) + ' ' + p.unidade + ')</option>'; }).join('');
-  }
-  renderEstoque();
+  _mtzProdutosLanc = {};
+  if (Array.isArray(lista)) lista.forEach(function(p) { _mtzProdutosLanc[p.codigo] = p; });
+  produtosCache = Object.assign({}, _mtzProdutosLanc);
+  if (typeof popularSelectProdutos === 'function') popularSelectProdutos();
 }
 
 // Interceptar salvarLancamentos para usar a unidade do chefão
