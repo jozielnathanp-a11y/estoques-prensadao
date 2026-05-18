@@ -355,7 +355,7 @@
 <script>
 const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
 const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
-const UNIDADE_LOJA = 'centro';
+var UNIDADE_LOJA = 'matriz'; // será atualizado conforme unidade selecionada
 
 let usuarioLogado = null;
 let produtosCache = {};
@@ -408,7 +408,7 @@ async function fazerLogin() {
   if (!usuario || !senha) { document.getElementById('login-erro').style.display='block'; return; }
 
   try {
-    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.centro&select=*`);
+    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.matriz&select=*`);
     if (res && res.length > 0) {
       usuarioLogado = res[0];
       iniciarApp();
@@ -3726,13 +3726,12 @@ var _mtzUnidade = '';
 
 function mtzSetUnidade(u) {
   _mtzUnidade = u;
+  UNIDADE_LOJA = u; // atualiza a variável global usada pelas funções do centro
   // highlight botão
   ['cd','centro','delivery','boqueiraw'].forEach(function(x) {
     var b = document.getElementById('mtz-u-' + x);
     if (b) b.className = x === u ? 'btn btn-red' : 'btn btn-gray';
   });
-  // recarregar produtos para a unidade selecionada
-  // a variável UNIDADE_LOJA usada pelo getProduto precisa ser atualizada
   _mtzRecarregarProdutos(u);
   showToast('Unidade: ' + u.toUpperCase(), 'success');
 }
