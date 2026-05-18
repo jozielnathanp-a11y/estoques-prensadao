@@ -1356,6 +1356,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ── LANÇAMENTO MATRIZ ──
 let mtzPendentes = [];
+function beep() { try { var a=new AudioContext(); var o=a.createOscillator(); o.connect(a.destination); o.start(); o.stop(a.currentTime+0.08); } catch(e) {} }
 let mtzProdutosCache = {};
 let _mtzUnidadeAtual = '';
 let mtzCameraStream = null;
@@ -1407,8 +1408,9 @@ function mtzSelecionarProdutoManual() {
   const p = mtzProdutosCache[cod];
   if (!p) return;
   const info = document.getElementById('mtz-lanc-info');
-  const u = document.getElementById('mtz-lanc-unidade').value || _mtzUnidadeAtual;
+  const u = _mtzUnidadeAtual || document.getElementById('mtz-lanc-unidade').value;
   const tipo = document.getElementById('mtz-lanc-tipo').value;
+  if (!u) { showToast('Selecione a unidade primeiro!', 'error'); return; }
   if (p.unidade !== 'kg') {
     const pctPadrao = parseFloat(p.qtd_por_pct) || 1;
     mtzPendentes_push(p, tipo, pctPadrao, u);
