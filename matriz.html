@@ -143,7 +143,7 @@
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <select id="filtro-unidade" onchange="carregarProdutos();atualizarCats();renderEstoque()" style="margin:0;flex:1;">
+      <select id="filtro-unidade" onchange="carregarTudo();atualizarCats();renderEstoque()" style="margin:0;flex:1;">
         <option value="">Todas unidades</option>
         <option value="cd">🏭 CD</option>
         <option value="centro">🏪 Centro</option>
@@ -455,22 +455,11 @@ function showTab(name) {
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
-  if (name === 'estoque') carregarProdutos();
 }
 
 // ── PRODUTOS ──
 async function carregarProdutos() {
-  try {
-    const u = (document.getElementById('filtro-unidade') || {value:''}).value;
-    const params = u ? 'select=*&order=nome.asc&unidade_loja=eq.' + u : 'select=*&order=nome.asc';
-    const lista = await supa('GET', 'produtos', null, params);
-    produtosCache = {};
-    todosEstoques = Array.isArray(lista) ? lista : [];
-    if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
-    renderEstoque();
-    renderProdutos();
-    atualizarStats();
-  } catch(e) { showToast('Erro ao carregar produtos', 'error'); }
+  await carregarTudo();
 }
 
 function getProduto(cod) {
@@ -490,9 +479,8 @@ function atualizarStats() {
 function renderEstoque() {
   const busca = (document.getElementById('busca-estoque').value || '').toLowerCase();
   const cat = document.getElementById('filtro-cat').value;
-  const uFiltro2 = (document.getElementById('filtro-unidade')||{value:''}).value;
   const lista = Object.values(produtosCache)
-    .filter(p => (!cat || p.categoria === cat) && (!busca || p.nome.toLowerCase().includes(busca)) && (!uFiltro2 || p.unidade_loja === uFiltro2))
+    .filter(p => (!cat || p.categoria === cat) && (!busca || p.nome.toLowerCase().includes(busca)))
     .sort((a,b) => a.nome.localeCompare(b.nome));
 
   const el = document.getElementById('lista-estoque');
@@ -3744,8 +3732,13 @@ async function _mtzRecarregarProdutos(u) {
   const lista = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*&order=nome.asc');
   _mtzProdutosLanc = {};
   if (Array.isArray(lista)) lista.forEach(function(p) { _mtzProdutosLanc[p.codigo] = p; });
+  // usar cache separado para lançamento — NÃO substituir produtosCache do trampo geral
+  // O getProduto e buscarPorCodigo usam produtosCache, precisamos atualizá-lo temporariamente
+  // mas restaurar depois
   produtosCache = Object.assign({}, _mtzProdutosLanc);
+  // atualizar select na aba lançar
   if (typeof popularSelectProdutos === 'function') popularSelectProdutos();
+  // NÃO chamar renderEstoque aqui para não bagunçar o trampo geral
 }
 
 // Interceptar salvarLancamentos para usar a unidade do chefão
