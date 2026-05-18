@@ -384,22 +384,7 @@ function dataHoje() {
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
-// ── API SUPABASE ──
-async function supa(metodo, tabela, dados=null, params='') {
-  const opts = {
-    method: metodo,
-    headers: {
-      'apikey': SUPA_ANON,
-      'Authorization': 'Bearer ' + SUPA_ANON,
-      'Content-Type': 'application/json',
-      'Prefer': metodo === 'POST' ? 'return=representation' : 'return=minimal'
-    }
-  };
-  if (dados) opts.body = JSON.stringify(dados);
-  const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${params}`, opts);
-  if (metodo === 'GET') return r.json();
-  return r.ok;
-}
+// supa() definido abaixo (versão original do chefão)
 
 // ── LOGIN ──
 async function fazerLogin() {
@@ -408,7 +393,7 @@ async function fazerLogin() {
   if (!usuario || !senha) { document.getElementById('login-erro').style.display='block'; return; }
 
   try {
-    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.matriz&select=*`);
+    const res = await supa('GET', 'usuario', `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.matriz&select=*`);
     if (res && res.length > 0) {
       usuarioLogado = res[0];
       iniciarApp();
@@ -576,7 +561,7 @@ async function salvarProduto() {
     await supa('PATCH', `produtos?id=eq.${id}`, dados);
     showToast('✅ Produto atualizado!', 'success');
   } else {
-    const existe = await supa('GET', 'produtos', null, `codigo=eq.${dados.codigo}&select=id`);
+    const existe = await supa('GET', 'produtos', `codigo=eq.${dados.codigo}&select=id`);
     if (existe && existe.length > 0) {
       await supa('PATCH', `produtos?codigo=eq.${dados.codigo}`, dados);
       showToast('✅ Produto atualizado!', 'success');
@@ -668,8 +653,7 @@ async function carregarHistorico() {
 
   const inicio = data + 'T00:00:00';
   const fim = data + 'T23:59:59';
-  const movs = await supa('GET', 'movimentacoes', null,
-    `created_at=gte.${inicio}&created_at=lte.${fim}&status=eq.confirmado&order=created_at.desc&select=*`);
+  const movs = await supa('GET', 'movimentacoes', `created_at=gte.${inicio}&created_at=lte.${fim}&status=eq.confirmado&order=created_at.desc&select=*`);
 
   if (!movs || !movs.length) {
     el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nada confirmado nessa data, mano. Dia tranquilo 😎</p>';
@@ -755,12 +739,10 @@ async function gerarRelatorio() {
   const fimAnt = diaAntStr + 'T23:59:59';
 
   // Movimentações do dia selecionado
-  const movsHoje = await supa('GET', 'movimentacoes', null,
-    `created_at=gte.${inicio}&created_at=lte.${fim}&select=*&order=created_at.asc`);
+  const movsHoje = await supa('GET', 'movimentacoes', `created_at=gte.${inicio}&created_at=lte.${fim}&select=*&order=created_at.asc`);
 
   // Movimentações do dia anterior
-  const movsAnt = await supa('GET', 'movimentacoes', null,
-    `created_at=gte.${inicioAnt}&created_at=lte.${fimAnt}&select=*&order=created_at.asc`);
+  const movsAnt = await supa('GET', 'movimentacoes', `created_at=gte.${inicioAnt}&created_at=lte.${fimAnt}&select=*&order=created_at.asc`);
 
   let resultado = {};
   produtos.forEach(p => {
@@ -1053,8 +1035,7 @@ async function carregarPendentes() {
   const el = document.getElementById('lista-pendentes');
   if (!el) return;
   el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Carregando...</p>';
-  const movs = await supa('GET', 'movimentacoes', null,
-    `status=eq.pendente&unidade_loja=eq.${UNIDADE_LOJA}&order=created_at.asc&select=*`);
+  const movs = await supa('GET', 'movimentacoes', `status=eq.pendente&unidade_loja=eq.${UNIDADE_LOJA}&order=created_at.asc&select=*`);
 
   const badge = document.getElementById('badge-pendentes');
   if (badge) badge.textContent = movs && movs.length ? movs.length : '';
