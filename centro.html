@@ -959,7 +959,7 @@ function buscarPorCodigo() {
     const prefixoProduto = rawCod.substring(1, 7);
     p = Object.values(produtosCache).find(function(prod) {
       const base = prod.codigo.replace(/_[a-z]+$/, '');
-      return base === prefixoProduto || prod.codigo.includes(prefixoProduto);
+      return base === prefixoProduto || base.startsWith(prefixoProduto);
     });
   }
 
