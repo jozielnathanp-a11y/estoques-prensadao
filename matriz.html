@@ -384,7 +384,6 @@ function dataHoje() {
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
-// supa() definido abaixo (versão original do chefão)
 
 // ── LOGIN ──
 async function fazerLogin() {
@@ -2133,14 +2132,57 @@ function dataHoje() {
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
-async function supa(metodo, tabela, params='', body=null) {
+async function supa(metodo, tabela, arg3=null, arg4=null) {
+  // Suporta duas assinaturas:
+  // (A) supa(metodo, tabela, params_string)           — chefão original
+  // (B) supa(metodo, tabela, body_object, params_str) — copiado do Centro
+  // (C) supa(metodo, tabela, null, params_str)        — Centro com null
+  let params = '';
+  let body = null;
+
+  if (typeof arg3 === 'string') {
+    // Caso A: arg3 é a query string, arg4 é o body (ou null)
+    // ex: supa('GET', 'produtos', 'select=*')
+    // ex: supa('PATCH', 'produtos', 'codigo=eq.X', {estoque:1})
+    params = arg3 || '';
+    body = arg4;
+  } else if (arg3 !== null && typeof arg3 === 'object') {
+    // Caso B: arg3 é o body, arg4 é a query string (ou nulo)
+    // ex: supa('POST', 'movimentacoes', {...dados})
+    // ex: supa('PATCH', `produtos?codigo=eq.X`, {...dados})
+    body = arg3;
+    params = (typeof arg4 === 'string') ? arg4 : '';
+  } else {
+    // Caso C: arg3 é null, arg4 é a query string
+    params = (typeof arg4 === 'string') ? arg4 : '';
+    body = null;
+  }
+
+  // Se tabela contém '?', separar tabela e params inline
+  if (tabela.includes('?')) {
+    const parts = tabela.split('?');
+    tabela = parts[0];
+    params = parts[1] + (params ? '&' + params : '');
+  }
+
   const opts = {
     method: metodo,
-    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
+    headers: {
+      'apikey': SUPA_ANON,
+      'Authorization': 'Bearer ' + SUPA_ANON,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    }
   };
   if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${params}`, opts);
-  return metodo === 'GET' ? r.json() : r.ok;
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${params}`, opts);
+    if (metodo === 'GET') return r.json();
+    return r.ok;
+  } catch(e) {
+    console.error('supa erro:', metodo, tabela, e);
+    return metodo === 'GET' ? [] : false;
+  }
 }
 
 // ── LOGIN ──
