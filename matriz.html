@@ -162,21 +162,12 @@
 
   <!-- LANÇAMENTO CHEFÃO -->
   <div class="screen" id="tab-lancar">
-    <!-- PENDENTES -->
-    <div class="card" id="mtz-card-pendentes" style="display:none;border:2px solid #f9a825;margin-bottom:12px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <h3 style="margin:0;color:#f9a825;">⏳ Pendentes <span id="mtz-badge-pendentes" style="background:#f9a825;color:#000;border-radius:10px;padding:1px 8px;font-size:0.85rem;margin-left:4px;">0</span></h3>
-        <button class="btn btn-gold" onclick="mtzConfirmarTodos()" style="margin:0;padding:8px 16px;font-size:0.9rem;">✅ CONFIRMAR TUDO</button>
-      </div>
-      <div id="mtz-lista-pendentes"></div>
-    </div>
-
     <div class="card">
       <h3>➕ Lançamento</h3>
 
       <!-- Unidade -->
       <label style="font-size:0.95rem;font-weight:700;">1️⃣ Unidade</label>
-      <select id="mtz-lanc-unidade" style="margin-bottom:16px;">
+      <select id="mtz-lanc-unidade" style="margin-bottom:12px;" onchange="mtzCarregarProdutos()">
         <option value="">-- Selecione a unidade --</option>
         <option value="cd">🏭 CD</option>
         <option value="centro">🏪 Centro</option>
@@ -186,28 +177,34 @@
 
       <!-- Tipo -->
       <label style="font-size:0.95rem;font-weight:700;">2️⃣ Tipo</label>
-      <div style="display:flex;gap:8px;margin:8px 0 16px;">
+      <div style="display:flex;gap:8px;margin:8px 0 12px;">
         <button id="mtz-btn-entrada" onclick="mtzSelecionarTipo('entrada')" class="btn btn-gold" style="flex:1;margin:0;padding:14px;">📥 Entrada</button>
         <button id="mtz-btn-contagem" onclick="mtzSelecionarTipo('contagem')" class="btn btn-gray" style="flex:1;margin:0;padding:14px;">📊 Contagem</button>
       </div>
       <input type="hidden" id="mtz-lanc-tipo" value="entrada" />
 
       <!-- Scan -->
-      <label style="font-size:0.95rem;font-weight:700;">3️⃣ Escaneia ou digita o código</label>
-      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
-        <input type="text" id="mtz-scan-input" placeholder="Bora! Escaneia o código, chefão..." style="margin:0;flex:1;" />
+      <label style="font-size:0.95rem;font-weight:700;">3️⃣ Escaneia ou busca o produto</label>
+      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:6px;">
+        <input type="text" id="mtz-scan-input" placeholder="Código de barras..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){mtzBuscarPorCodigo();}" />
         <button onclick="mtzBuscarPorCodigo()" style="background:#2e7d32;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">🔍</button>
         <button onclick="mtzAbrirCamera()" style="background:#1565c0;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
       </div>
-      <div id="mtz-camera-area" style="display:none;margin-bottom:10px;">
+      <div id="mtz-camera-area" style="display:none;margin-bottom:8px;">
         <video id="mtz-camera-video" style="width:100%;border-radius:10px;max-height:220px;" autoplay playsinline></video>
         <button onclick="mtzFecharCamera()" class="btn btn-gray" style="margin-top:6px;">✖ Fechar câmera</button>
       </div>
 
-      <!-- Produto não-kg: aparece só quando necessário -->
+      <!-- Busca por nome -->
+      <input type="text" id="mtz-busca-nome" placeholder="🔍 Ou busca pelo nome do produto..." style="margin-bottom:6px;" oninput="mtzFiltrarProdutos()" />
+      <select id="mtz-lanc-produto" style="margin-bottom:10px;" onchange="mtzSelecionarProdutoManual()">
+        <option value="">-- Selecione a unidade primeiro --</option>
+      </select>
+      <div id="mtz-lanc-info" style="display:none;font-size:0.8rem;color:#aaa;margin:-4px 0 10px;"></div>
+
+      <!-- Produto kg: campo de quantidade -->
       <div id="mtz-manual-area" style="display:none;">
         <div id="mtz-lanc-nome" style="font-weight:700;color:#f9a825;margin-bottom:10px;font-size:1rem;"></div>
-        <!-- Multiplicador opcional -->
         <label style="font-size:0.82rem;color:#aaa;margin-bottom:4px;">✖️ Multiplicador (opcional)</label>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
           <input type="number" id="mtz-lanc-pct" placeholder="Nº PCT" step="1" min="1" oninput="mtzCalcMulti()" style="margin:0;flex:1;" />
@@ -223,6 +220,15 @@
         </div>
       </div>
       <input type="hidden" id="mtz-lanc-produto-cod" />
+    </div>
+
+    <!-- PENDENTES em baixo igual unidades -->
+    <div class="card" id="mtz-card-pendentes" style="display:none;border:2px solid #f9a825;margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h3 style="margin:0;color:#f9a825;">⏳ Pendentes <span id="mtz-badge-pendentes" style="background:#f9a825;color:#000;border-radius:10px;padding:1px 8px;font-size:0.85rem;margin-left:4px;">0</span></h3>
+        <button class="btn btn-gold" onclick="mtzConfirmarTodos()" style="margin:0;padding:8px 16px;font-size:0.9rem;">✅ CONFIRMAR TUDO</button>
+      </div>
+      <div id="mtz-lista-pendentes"></div>
     </div>
   </div>
 
@@ -1343,7 +1349,7 @@ document.getElementById('login-usuario').focus();
 // Listeners do lançamento Matriz (após DOM carregado)
 document.addEventListener('DOMContentLoaded', function() {
   const selUnidade = document.getElementById('mtz-lanc-unidade');
-  if (selUnidade) selUnidade.addEventListener('change', mtzCarregarProdutos);
+  // onchange definido inline no select
   const scanInput = document.getElementById('mtz-scan-input');
   if (scanInput) scanInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') mtzBuscarPorCodigo(); });
 });
@@ -1355,23 +1361,56 @@ let mtzCameraStream = null;
 let mtzScanLoop = null;
 let mtzBarcodeDetector = null;
 
+let _mtzListaCompleta = [];
 async function mtzCarregarProdutos(uOverride) {
   const u = uOverride || document.getElementById('mtz-lanc-unidade').value;
   const sel = document.getElementById('mtz-lanc-produto');
   if (!u) { sel.innerHTML = '<option value="">-- Selecione a unidade primeiro --</option>'; return; }
   const lista = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*&order=nome.asc');
   mtzProdutosCache = {};
-  if (Array.isArray(lista)) lista.forEach(p => mtzProdutosCache[p.codigo] = p);
+  _mtzListaCompleta = Array.isArray(lista) ? lista : [];
+  _mtzListaCompleta.forEach(p => mtzProdutosCache[p.codigo] = p);
+  const buscaEl = document.getElementById('mtz-busca-nome');
+  if (buscaEl) buscaEl.value = '';
+  mtzFiltrarProdutos();
+}
+
+function mtzFiltrarProdutos() {
+  const sel = document.getElementById('mtz-lanc-produto');
+  const buscaEl = document.getElementById('mtz-busca-nome');
+  const busca = buscaEl ? buscaEl.value.toLowerCase() : '';
+  const filtrados = busca
+    ? _mtzListaCompleta.filter(p => p.nome.toLowerCase().includes(busca))
+    : _mtzListaCompleta;
   sel.innerHTML = '<option value="">-- Selecione o produto --</option>' +
-    lista.map(p => '<option value="' + p.codigo + '">' + p.nome + ' (' + fmtQ(p.estoque, p.unidade) + ')</option>').join('');
-  sel.onchange = () => {
-    const p = mtzProdutosCache[sel.value];
-    const info = document.getElementById('mtz-lanc-info');
-    if (p && p.unidade === 'kg' && p.qtd_por_pct > 0) {
-      info.textContent = '1 PCT = ' + p.qtd_por_pct + ' kg';
-      info.style.display = 'block';
-    } else { info.style.display = 'none'; }
-  };
+    filtrados.map(p => '<option value="' + p.codigo + '">' + p.nome + ' (' + fmtQ(p.estoque, p.unidade) + ')</option>').join('');
+}
+
+function mtzSelecionarProdutoManual() {
+  const sel = document.getElementById('mtz-lanc-produto');
+  const cod = sel.value;
+  if (!cod) return;
+  const p = mtzProdutosCache[cod];
+  if (!p) return;
+  const info = document.getElementById('mtz-lanc-info');
+  const u = document.getElementById('mtz-lanc-unidade').value;
+  const tipo = document.getElementById('mtz-lanc-tipo').value;
+  if (p.unidade !== 'kg') {
+    const pctPadrao = parseFloat(p.qtd_por_pct) || 1;
+    mtzPendentes_push(p, tipo, pctPadrao, u);
+    sel.value = '';
+    if (info) info.style.display = 'none';
+  } else {
+    if (info && p.qtd_por_pct > 0) { info.textContent = '1 PCT = ' + p.qtd_por_pct + ' kg'; info.style.display = 'block'; }
+    document.getElementById('mtz-lanc-produto-cod').value = p.codigo;
+    document.getElementById('mtz-lanc-nome').textContent = '⚖️ ' + p.nome + ' (kg)';
+    document.getElementById('mtz-lanc-qtd').value = '';
+    document.getElementById('mtz-lanc-pct').value = '';
+    document.getElementById('mtz-lanc-fator').value = '';
+    document.getElementById('mtz-lanc-total').textContent = '—';
+    document.getElementById('mtz-manual-area').style.display = 'block';
+    setTimeout(() => document.getElementById('mtz-lanc-qtd').focus(), 100);
+  }
 }
 
 function mtzSelecionarTipo(tipo) {
