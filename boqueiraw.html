@@ -1482,7 +1482,7 @@ function buscarResposta(pergunta) {
     }, 600);
   } else {
     // Não encontrou resposta
-    var msgWpp = 'Oi Josiel, tenho uma duvida: ' + pergunta;
+    var msgWpp = '#sistema DÚVIDA: ' + pergunta;
     var wppUrl = 'https://wa.me/5542988819420?text=' + encodeURIComponent(msgWpp);
     adicionarMsg(
       'Hmm, essa eu não sei responder não, mano! 🤔<br><br>Mas o Josiel resolve — clica aí pra chamar ele diretamente:<br><br><a href="' + wppUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:8px;padding:8px 12px;text-decoration:none;font-size:0.82rem;font-weight:700;margin-top:4px;">💬 Chamar Josiel no WhatsApp</a>',
@@ -1581,7 +1581,7 @@ function enviarFeedback() {
     return;
   }
 
-  var tipoLabel = _fbTipo === 'erro' ? '🐛 ERRO' : _fbTipo === 'sugestao' ? '💡 SUGESTÃO' : '⭐ ELOGIO';
+  var tipoLabel = _fbTipo === 'erro' ? '#sistema 🐛 ERRO' : _fbTipo === 'sugestao' ? '#sistema 💡 SUGESTÃO' : '#sistema ⭐ ELOGIO';
   var msg = tipoLabel + ' — Sistema Boqueirão\n\nDe: ' + nome + '\n\n' + texto;
   var url = 'https://wa.me/5542988819420?text=' + encodeURIComponent(msg);
 
