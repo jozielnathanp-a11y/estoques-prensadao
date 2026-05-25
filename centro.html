@@ -2005,6 +2005,12 @@ document.addEventListener('click', function(e) {
 
 
 // ── CONTAGEM POR CATEGORIA ──
+// ── SCAN NA CONTAGEM EM LOTE ──
+let scanContagemStream = null;
+let scanContagemLoop = null;
+let scanContagemDetector = null;
+let scanContagemItens = {}; // { codigo: { produto, qtd } }
+
 function abrirContagemCat() {
   // Popular categorias disponíveis
   const cats = [...new Set(Object.values(produtosCache).map(p => p.categoria).filter(Boolean))].sort();
@@ -2016,11 +2022,16 @@ function abrirContagemCat() {
     opt.textContent = c;
     sel.appendChild(opt);
   });
+  // reset
+  scanContagemItens = {};
+  renderScanContagemLista();
+  document.getElementById('scan-contagem-input').value = '';
   document.getElementById('cat-contagem-lista').style.display = 'none';
   document.getElementById('modal-contagem-cat').style.display = 'block';
 }
 
 function fecharContagemCat() {
+  fecharCameraContagem();
   document.getElementById('modal-contagem-cat').style.display = 'none';
 }
 
@@ -2045,6 +2056,138 @@ function carregarProdutosContagem() {
   `).join('');
 
   document.getElementById('cat-contagem-lista').style.display = 'block';
+}
+
+// ── SCAN ──
+function scanContagemBuscarCodigo() {
+  const cod = document.getElementById('scan-contagem-input').value.trim();
+  if (!cod) return;
+  document.getElementById('scan-contagem-input').value = '';
+
+  const u = typeof UNIDADE_LOJA !== 'undefined' ? UNIDADE_LOJA : '';
+  let produto = null;
+  let pesoKg = null;
+
+  if (cod.length === 13 && cod[0] === '2') {
+    // EAN-13 peso variável
+    const prefixo = cod.substring(1, 7);
+    pesoKg = parseInt(cod.substring(7, 12), 10) / 1000;
+    produto = Object.values(produtosCache).find(p => {
+      const codSemLoja = p.codigo.replace('_' + u, '');
+      return codSemLoja.substring(0, 6) === prefixo;
+    });
+  } else {
+    produto = produtosCache[cod] || produtosCache[cod + '_' + u];
+  }
+
+  if (!produto) {
+    showToast('Produto não encontrado! Verifique o código.', 'error');
+    return;
+  }
+
+  beep();
+  const key = produto.codigo;
+
+  if (pesoKg !== null) {
+    // Produto pesável — acumula o peso lido do código
+    if (scanContagemItens[key]) {
+      scanContagemItens[key].qtd = parseFloat((scanContagemItens[key].qtd + pesoKg).toFixed(3));
+    } else {
+      scanContagemItens[key] = { produto, qtd: pesoKg };
+    }
+    showToast('➕ ' + produto.nome + ' — ' + scanContagemItens[key].qtd + ' kg', 'success');
+    renderScanContagemLista();
+  } else {
+    // Pacote fechado → soma 1 kg automaticamente
+    if (scanContagemItens[key]) {
+      scanContagemItens[key].qtd = parseFloat((scanContagemItens[key].qtd + 1).toFixed(3));
+    } else {
+      scanContagemItens[key] = { produto, qtd: 1 };
+    }
+    showToast('➕ ' + produto.nome + ' — total: ' + scanContagemItens[key].qtd + ' ' + (produto.unidade || ''), 'success');
+    renderScanContagemLista();
+  }
+}
+
+function renderScanContagemLista() {
+  const div = document.getElementById('scan-contagem-lista');
+  const itens = Object.values(scanContagemItens);
+  if (!itens.length) {
+    div.innerHTML = '<div style="text-align:center;color:#aaa;font-size:0.85rem;padding:12px;">Nenhum item escaneado ainda</div>';
+    document.getElementById('scan-contagem-confirmar').style.display = 'none';
+    return;
+  }
+  div.innerHTML = itens.map(({ produto: p, qtd }) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+      <div style="flex:1;">
+        <div style="font-size:0.88rem;font-weight:600;color:#37474f;">${p.nome}</div>
+        <div style="font-size:0.75rem;color:#888;">Atual: ${p.estoque || 0} ${p.unidade || ''}</div>
+      </div>
+      <input type="number" id="scan_cnt_${p.codigo}" value="${qtd}" step="0.001" min="0"
+        style="width:80px;margin:0;padding:6px;border-radius:8px;border:1.5px solid #5c6bc0;font-size:0.9rem;text-align:center;font-weight:700;"
+        onchange="scanContagemItens['${p.codigo}'].qtd = parseFloat(this.value)||0" />
+      <button onclick="deleteScanContagemItem('${p.codigo}')"
+        style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#e57373;">🗑️</button>
+    </div>
+  `).join('');
+  document.getElementById('scan-contagem-confirmar').style.display = 'block';
+}
+
+function deleteScanContagemItem(codigo) {
+  delete scanContagemItens[codigo];
+  renderScanContagemLista();
+}
+
+async function confirmarScanContagem() {
+  const itens = Object.values(scanContagemItens);
+  if (!itens.length) return;
+
+  // sincroniza qtd dos inputs
+  itens.forEach(({ produto: p }) => {
+    const inp = document.getElementById('scan_cnt_' + p.codigo);
+    if (inp) scanContagemItens[p.codigo].qtd = parseFloat(inp.value) || 0;
+  });
+
+  if (!confirm(`Confirmar contagem de ${itens.length} produto(s) via scanner?`)) return;
+
+  let erros = 0;
+  for (const { produto: p, qtd } of itens) {
+    const est = parseFloat(p.estoque) || 0;
+    try {
+      const opts = {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON,
+          'Content-Type': 'application/json', 'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ estoque: qtd })
+      };
+      const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${p.codigo}&unidade_loja=eq.${UNIDADE_LOJA}`, opts);
+      const res = await r.json();
+      if (!Array.isArray(res) || !res.length) { erros++; continue; }
+
+      await supa('POST', 'movimentacoes', {
+        codigo: p.codigo, nome: p.nome, tipo: 'contagem',
+        qtd: qtd, unidade: p.unidade,
+        colaborador: usuarioLogado.usuario,
+        obs: 'Contagem (scanner)',
+        unidade_loja: UNIDADE_LOJA,
+        estoque_anterior: est,
+        novo_estoque: qtd
+      });
+
+      if (produtosCache[p.codigo]) produtosCache[p.codigo].estoque = res[0].estoque;
+    } catch(e) { erros++; }
+  }
+
+  fecharContagemCat();
+  renderEstoque();
+  beep();
+  if (erros > 0) {
+    showToast('⚠️ ' + erros + ' erro(s). Resto confirmado!', 'error');
+  } else {
+    showToast('✅ Contagem via scanner salva! 📊', 'success');
+  }
 }
 
 async function confirmarContagemCat() {
@@ -2107,29 +2250,90 @@ async function confirmarContagemCat() {
   }
 }
 
+// ── CÂMERA na contagem ──
+async function abrirCameraContagem() {
+  if (!('BarcodeDetector' in window)) { showToast('Câmera não suportada neste dispositivo. Use o leitor Bluetooth.', 'error'); return; }
+  try {
+    scanContagemStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const video = document.getElementById('scan-contagem-video');
+    video.srcObject = scanContagemStream;
+    document.getElementById('scan-contagem-camera-area').style.display = 'block';
+    scanContagemDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code'] });
+    scanContagemLoop = setInterval(async () => {
+      try {
+        const barcodes = await scanContagemDetector.detect(video);
+        if (barcodes.length > 0) {
+          const cod = barcodes[0].rawValue;
+          fecharCameraContagem();
+          document.getElementById('scan-contagem-input').value = cod;
+          scanContagemBuscarCodigo();
+        }
+      } catch(e) {}
+    }, 500);
+  } catch(e) { showToast('Erro ao acessar câmera', 'error'); }
+}
+
+function fecharCameraContagem() {
+  if (scanContagemLoop) { clearInterval(scanContagemLoop); scanContagemLoop = null; }
+  if (scanContagemStream) { scanContagemStream.getTracks().forEach(t => t.stop()); scanContagemStream = null; }
+  const area = document.getElementById('scan-contagem-camera-area');
+  if (area) area.style.display = 'none';
+}
+
 </script>
 
   <!-- MODAL: Contagem por Categoria -->
   <div id="modal-contagem-cat" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;overflow-y:auto;padding:16px;">
     <div style="background:#fff;border-radius:16px;max-width:500px;margin:0 auto;padding:20px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <span style="font-size:1.1rem;font-weight:700;color:#37474f;">📋 Contagem por Categoria</span>
+        <span style="font-size:1.1rem;font-weight:700;color:#37474f;">📋 Contagem em Lote</span>
         <button onclick="fecharContagemCat()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#999;">✖</button>
       </div>
-      <div style="margin-bottom:14px;">
-        <label style="font-size:0.85rem;font-weight:700;color:#607d8b;display:block;margin-bottom:6px;">Selecione a categoria:</label>
-        <select id="cat-contagem-sel" onchange="carregarProdutosContagem()" style="width:100%;margin:0;padding:10px;border-radius:10px;border:1.5px solid #ddd;font-size:0.95rem;">
-          <option value="">-- Escolha a categoria --</option>
-        </select>
-      </div>
-      <div id="cat-contagem-lista" style="display:none;">
-        <div style="font-size:0.8rem;color:#888;margin-bottom:10px;padding:8px;background:#fff8e1;border-radius:8px;border-left:3px solid #ff9800;">
-          ⚠️ <b>Atenção:</b> produtos deixados em branco serão zerados automaticamente no estoque.
+
+      <!-- SCANNER -->
+      <div style="background:#e8f5e9;border-radius:12px;padding:14px;margin-bottom:16px;">
+        <div style="font-size:0.85rem;font-weight:700;color:#2e7d32;margin-bottom:10px;">📷 Contar por Scanner</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="scan-contagem-input" type="text" placeholder="Leia o código de barras..." inputmode="none"
+            style="flex:1;margin:0;padding:10px;border-radius:10px;border:1.5px solid #a5d6a7;font-size:0.95rem;"
+            onkeydown="if(event.key==='Enter'){scanContagemBuscarCodigo();}" />
+          <button onclick="abrirCameraContagem()"
+            style="background:#43a047;color:#fff;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;">📷</button>
         </div>
-        <div id="cat-contagem-produtos"></div>
-        <button class="btn btn-red" onclick="confirmarContagemCat()" style="width:100%;margin-top:14px;font-size:1rem;">✅ CONFIRMAR CONTAGEM</button>
-        <button onclick="fecharContagemCat()" class="btn btn-gray" style="width:100%;margin-top:8px;">Cancelar</button>
+        <div id="scan-contagem-camera-area" style="display:none;margin-bottom:8px;">
+          <video id="scan-contagem-video" autoplay playsinline style="width:100%;border-radius:10px;"></video>
+          <button onclick="fecharCameraContagem()" style="width:100%;margin-top:6px;background:#e57373;color:#fff;border:none;border-radius:8px;padding:8px;cursor:pointer;">Fechar câmera</button>
+        </div>
+        <div style="font-size:0.75rem;color:#666;margin-bottom:8px;">
+          📦 Pacote fechado = +1 kg automático &nbsp;|&nbsp; 🔓 Pacote aberto = edite a qtd na lista
+        </div>
+        <div id="scan-contagem-lista" style="max-height:220px;overflow-y:auto;">
+          <div style="text-align:center;color:#aaa;font-size:0.85rem;padding:12px;">Nenhum item escaneado ainda</div>
+        </div>
+        <button id="scan-contagem-confirmar" onclick="confirmarScanContagem()"
+          style="display:none;width:100%;margin-top:10px;background:#43a047;color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.95rem;font-weight:700;cursor:pointer;">
+          ✅ CONFIRMAR CONTAGEM (SCANNER)
+        </button>
       </div>
+
+      <!-- CONTAGEM POR CATEGORIA -->
+      <div style="border-top:2px solid #f0f0f0;padding-top:14px;">
+        <div style="font-size:0.85rem;font-weight:700;color:#5c6bc0;margin-bottom:10px;">📂 Contar por Categoria</div>
+        <div style="margin-bottom:14px;">
+          <select id="cat-contagem-sel" onchange="carregarProdutosContagem()" style="width:100%;margin:0;padding:10px;border-radius:10px;border:1.5px solid #ddd;font-size:0.95rem;">
+            <option value="">-- Escolha a categoria --</option>
+          </select>
+        </div>
+        <div id="cat-contagem-lista" style="display:none;">
+          <div style="font-size:0.8rem;color:#888;margin-bottom:10px;padding:8px;background:#fff8e1;border-radius:8px;border-left:3px solid #ff9800;">
+            ⚠️ <b>Atenção:</b> produtos deixados em branco serão zerados automaticamente no estoque.
+          </div>
+          <div id="cat-contagem-produtos"></div>
+          <button class="btn btn-red" onclick="confirmarContagemCat()" style="width:100%;margin-top:14px;font-size:1rem;">✅ CONFIRMAR CONTAGEM</button>
+          <button onclick="fecharContagemCat()" class="btn btn-gray" style="width:100%;margin-top:8px;">Cancelar</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
