@@ -222,7 +222,15 @@
       <h1>🏪 Prensadão CENTRO</h1>
       <span id="topbar-usuario"></span>
     </div>
-    <div style="display:flex;gap:6px;"><button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;">❓</button><button onclick="sair()">Saí fora</button></div></div>
+    <div style="display:flex;gap:6px;"><button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;">❓</button><button id="notif-btn" class="notif-btn" onclick="toggleNotif()">🔔<span id="notif-badge" class="notif-badge"></span></button><button onclick="sair()">Saí fora</button></div></div>
+  </div>
+  <!-- PAINEL NOTIFICAÇÕES -->
+  <div id="notif-painel" class="notif-painel">
+    <div class="notif-header">
+      🔔 Notificações
+      <span onclick="marcarTodasLidas()">Marcar todas lidas</span>
+    </div>
+    <div id="notif-lista" class="notif-lista"></div>
   </div>
 
   <div class="tabs" id="tabs-bar">
@@ -517,6 +525,7 @@ function iniciarApp() {
   }
 
   carregarProdutos();
+  iniciarNotificacoes();
   iniciarNomeOperador();
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
