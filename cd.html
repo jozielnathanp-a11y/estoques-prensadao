@@ -1473,7 +1473,7 @@ function renderTutorial() {
       <button id="tut-prev" onclick="tutPrev()" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.85rem;">← VOLTAR</button>
       <button id="tut-next" onclick="tutNext()" style="flex:2;background:#37474f;border:none;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.88rem;">PRÓXIMO →</button>
     </div>
-    <a href="https://wa.me/5542988819420?text=Oi%20Suporte,%20preciso%20de%20ajuda%20no%20sistema%20do%20CD!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Preciso de ajuda — falar com Suporte</a>
+    <a href="https://wa.me/5542988819420?text=%23sistema%20tenho%20uma%20d%C3%BAvida" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Preciso de ajuda — falar com Suporte</a>
   </div>
 </div>
 
@@ -1741,7 +1741,7 @@ function abrirTutorial(){var ov=document.getElementById('tut-ov');ov.style.displ
   var isAdm=(typeof usuarioLogado!=='undefined'&&usuarioLogado&&usuarioLogado.perfil==='adm');
   _TUT=isAdm?_TUT_ADM:_TUT_OP;
   _tutChave=isAdm?'tut_ok_cd_adm':'tut_ok_cd_operador';
-  document.getElementById('tut-wpp').href=isAdm?'https://wa.me/5542988819420?text=Oi%20Suporte,%20preciso%20de%20ajuda%20no%20sistema%20do%20CD%20(ADM)!':'https://wa.me/5542988819420?text=Oi%20Suporte,%20preciso%20de%20ajuda%20no%20sistema%20do%20CD!';
+  document.getElementById('tut-wpp').href=isAdm?'https://wa.me/5542988819420?text=%23sistema%20tenho%20uma%20d%C3%BAvida':'https://wa.me/5542988819420?text=%23sistema%20tenho%20uma%20d%C3%BAvida';
   _tStep=0;
   document.getElementById('tut-ov').style.display='flex';
   _rTut();
