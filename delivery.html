@@ -11,7 +11,7 @@
 
     /* LOGIN */
     #login-screen {
-      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 99999; overflow-y: auto;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #616161 0%, #37474f 100%);
     }
     .login-box {
@@ -221,15 +221,7 @@
       <h1>🏪 Prensadão DELIVERY</h1>
       <span id="topbar-usuario"></span>
     </div>
-    <div style="display:flex;gap:6px;"><button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;">❓</button><button id="notif-btn" class="notif-btn" onclick="toggleNotif()">🔔<span id="notif-badge" class="notif-badge"></span></button><button onclick="sair()">Saí fora</button></div></div>
-  </div>
-  <!-- PAINEL NOTIFICAÇÕES -->
-  <div id="notif-painel" class="notif-painel">
-    <div class="notif-header">
-      🔔 Notificações
-      <span onclick="marcarTodasLidas()">Marcar todas lidas</span>
-    </div>
-    <div id="notif-lista" class="notif-lista"></div>
+    <div style="display:flex;gap:6px;"><button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;">❓</button><button onclick="sair()">Saí fora</button></div></div>
   </div>
 
   <div class="tabs" id="tabs-bar">
@@ -441,23 +433,6 @@
   </div>
 </div>
 
-
-<!-- MODAL CORRIGIR ESTOQUE ADM -->
-<div id="modal-corrigir-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:2000;align-items:center;justify-content:center;">
-  <div style="background:#1a1a1a;border:2px solid #2979ff;border-radius:16px;padding:24px;width:92%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-    <h3 id="corrigir-nome" style="color:#f0f0f0;margin:0 0 4px 0;font-size:1.1rem;">Produto</h3>
-    <p id="corrigir-atual" style="color:#888;font-size:0.82rem;margin:0 0 16px 0;"></p>
-    <label style="color:#aaa;font-size:0.82rem;">Nova quantidade (valor correto):</label>
-    <input type="number" id="corrigir-qtd" step="0.001" min="0" placeholder="0"
-      style="width:100%;padding:12px;font-size:1.4rem;text-align:center;border:2px solid #2979ff;border-radius:8px;background:#111;color:#fff;margin:6px 0 14px 0;box-sizing:border-box;" />
-    <label style="color:#aaa;font-size:0.82rem;">Motivo da correção (opcional):</label>
-    <input type="text" id="corrigir-motivo" placeholder="Ex: Contagem manual, erro de lancamento..." maxlength="100"
-      style="width:100%;padding:10px;font-size:0.9rem;border:1.5px solid #444;border-radius:8px;background:#111;color:#fff;margin:6px 0 18px 0;box-sizing:border-box;" />
-    <button onclick="confirmarCorrecaoEstoque()" style="width:100%;padding:13px;background:#2979ff;color:#fff;font-weight:700;font-size:1rem;border:none;border-radius:8px;cursor:pointer;margin-bottom:8px;">Confirmar Correcao</button>
-    <button onclick="fecharCorrecaoEstoque()" style="width:100%;padding:11px;background:#333;color:#aaa;font-size:0.9rem;border:none;border-radius:8px;cursor:pointer;">Cancelar</button>
-  </div>
-</div>
-
 <div id="toast"></div>
 
 <script>
@@ -537,7 +512,6 @@ function iniciarApp() {
   }
 
   carregarProdutos();
-  iniciarNotificacoes();
   iniciarNomeOperador();
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
@@ -648,7 +622,7 @@ function renderEstoque() {
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         <div class="produto-qty">${fmtQ(est, p.unidade)}<br><small>${p.unidade}</small></div>
-        ${usuarioLogado.perfil === 'adm' ? `<button onclick="abrirCorrecaoEstoque('${p.codigo}')" style="background:#1a237e;border:1.5px solid #2979ff;border-radius:8px;padding:6px 9px;cursor:pointer;" title="Corrigir estoque">✏️</button>` : ''}
+        ${usuarioLogado.perfil === 'adm' ? `<button onclick="editarProduto('${p.codigo}')" style="background:#f5f5f5;border:1.5px solid #ddd;border-radius:8px;padding:6px 9px;cursor:pointer;">✏️</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -2300,55 +2274,6 @@ function fecharCameraContagem() {
   if (scanContagemStream) { scanContagemStream.getTracks().forEach(t => t.stop()); scanContagemStream = null; }
   const area = document.getElementById('scan-contagem-camera-area');
   if (area) area.style.display = 'none';
-}
-
-
-// CORRIGIR ESTOQUE (ADM)
-let _corrigirCod = null;
-
-function abrirCorrecaoEstoque(cod) {
-  if (!usuarioLogado || usuarioLogado.perfil !== 'adm') return;
-  const p = getProduto(cod);
-  if (!p) return;
-  _corrigirCod = cod;
-  document.getElementById('corrigir-nome').textContent = p.nome;
-  document.getElementById('corrigir-atual').textContent = 'Estoque atual: ' + fmtQ(parseFloat(p.estoque) || 0, p.unidade) + ' ' + p.unidade;
-  document.getElementById('corrigir-qtd').value = parseFloat(p.estoque) || 0;
-  document.getElementById('corrigir-motivo').value = '';
-  const ov = document.getElementById('modal-corrigir-overlay');
-  ov.style.display = 'flex';
-  setTimeout(function(){ document.getElementById('corrigir-qtd').focus(); }, 200);
-}
-
-function fecharCorrecaoEstoque() {
-  document.getElementById('modal-corrigir-overlay').style.display = 'none';
-  _corrigirCod = null;
-}
-
-async function confirmarCorrecaoEstoque() {
-  if (!_corrigirCod) return;
-  const qtd = parseFloat(document.getElementById('corrigir-qtd').value);
-  if (isNaN(qtd) || qtd < 0) { showToast('Quantidade invalida!', 'error'); return; }
-  const motivo = document.getElementById('corrigir-motivo').value.trim() || 'Correcao manual ADM';
-  const p = getProduto(_corrigirCod);
-  const anterior = parseFloat(p.estoque) || 0;
-
-  await supa('PATCH', 'produtos?codigo=eq.' + _corrigirCod, { estoque: qtd });
-
-  try {
-    await supa('POST', 'movimentacoes', {
-      produto_id: p.id,
-      tipo: 'contagem',
-      quantidade: qtd,
-      operador: usuarioLogado.usuario + ' (correcao ADM)',
-      observacao: motivo + ' | anterior: ' + anterior
-    });
-  } catch(e) {}
-
-  produtosCache[_corrigirCod].estoque = qtd;
-  fecharCorrecaoEstoque();
-  renderEstoque();
-  showToast('Estoque corrigido para ' + fmtQ(qtd, p.unidade) + ' ' + p.unidade, 'success');
 }
 
 </script>
