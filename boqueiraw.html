@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <!-- VERSAO-ZAPIA: atualizado em 05/06/2026 — contagem em lote adicionada -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Estoques Prensadão Boqueirão</title>
@@ -188,6 +189,7 @@
 }
 .notif-item.entrada { border-left-color: #4caf50; }
 .notif-item.saida   { border-left-color: #f44336; }
+.notif-item.update  { border-left-color: #ffd600; }
 .notif-item.contagem{ border-left-color: #2196f3; }
 .notif-item.nao-lida{ background: rgba(255,255,255,0.12); }
 .notif-item .notif-titulo { font-weight: 700; margin-bottom: 2px; }
@@ -203,7 +205,7 @@
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
-    <img src="logo-boqueiraw.jpg" alt="Prensadão Boqueirão" style="width:180px;border-radius:12px;margin-bottom:12px;" />
+    <img src="logo_boqueirao.jpg" alt="Prensadão Boqueirão" style="width:180px;border-radius:12px;margin-bottom:12px;" />
     <p>Acessa aí, parceiro 🔥</p>
     <label>Usuário</label>
     <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" />
@@ -285,6 +287,12 @@
         <button id="btn-tipo-entrada" onclick="selecionarTipo('entrada')" class="btn btn-red" style="flex:1;margin:0;padding:14px;">📥 Entrada</button>
         <button id="btn-tipo-contagem" onclick="selecionarTipo('contagem')" class="btn btn-gray" style="flex:1;margin:0;padding:14px;">📊 Contagem</button>
       </div>
+      <!-- CONTAGEM EM LOTE -->
+      <div style="margin-top:10px;">
+        <button class="btn" onclick="abrirContagemLote()" style="width:100%;background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;padding:14px;font-size:1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">
+          📋 Contagem em Lote
+        </button>
+      </div>
       <input type="hidden" id="lanc-tipo" value="entrada" />
       <button class="btn btn-gray" onclick="abrirContagemCat()" style="width:100%;margin:0 0 12px;padding:14px;background:#5c6bc0;color:#fff;">📋 CONTAGEM EM LOTE</button>
 
@@ -315,7 +323,7 @@
           <span id="lanc-total" style="font-weight:700;color:#e65100;min-width:50px;text-align:right;">—</span>
         </div>
       </div>
-      <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" />
+      <input type="number" id="lanc-qtd" placeholder="Ex: 5 (ou 0 pra zerar)" step="0.001" min="0" />
       <button class="btn btn-red" onclick="confirmarLancamento()">✅ Confirmar</button>
     </div>
   </div>
@@ -348,7 +356,7 @@
       <div style="display:flex;gap:8px;margin-bottom:10px;">
         <button id="btn-cat-proc" onclick="selecionarCat('Processado')" class="btn btn-red" style="flex:1;margin:0;">🥩 Processado</button>
         <button id="btn-cat-bruto" onclick="selecionarCat('Bruto')" class="btn btn-gray" style="flex:1;margin:0;">🌿 Bruto</button>
-        <button id="btn-cat-todos" onclick="selecionarCat('Todos')" class="btn btn-gray" style="flex:1;margin:0;">📦 Todos</button>
+        <button id="btn-cat-limpeza" onclick="selecionarCat('Limpeza')" class="btn btn-gray" style="flex:1;margin:0;">🧹 Limpeza</button>
       </div>
       <input type="hidden" id="rel-cat-sel" value="Processado" />
       <button class="btn btn-red" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
@@ -434,7 +442,7 @@
     <h2 id="modal-nome"></h2>
     <p id="modal-info"></p>
     <label>Quanto tem, parceiro?</label>
-    <input type="number" id="modal-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="font-size:1.4rem;text-align:center;" />
+    <input type="number" id="modal-qtd" placeholder="Ex: 5 (ou 0 pra zerar)" step="0.001" min="0" style="font-size:1.4rem;text-align:center;" />
     <div id="modal-unidade" style="font-size:0.8rem;color:#888;margin:-4px 0 10px;"></div>
     <button class="btn btn-green" onclick="confirmarModal()">✅ Confirmar</button>
     <button class="btn btn-gray" onclick="fecharModal()">Cancelar</button>
@@ -463,7 +471,7 @@
 <script>
 const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
 const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
-const UNIDADE_LOJA = 'boqueiraw';
+const UNIDADE_LOJA = 'Boqueirao';
 
 let usuarioLogado = null;
 let produtosCache = {};
@@ -500,7 +508,7 @@ async function supa(metodo, tabela, dados=null, params='') {
       'apikey': SUPA_ANON,
       'Authorization': 'Bearer ' + SUPA_ANON,
       'Content-Type': 'application/json',
-      'Prefer': metodo === 'POST' ? 'return=representation' : 'return=minimal'
+      ...(metodo !== 'GET' ? {'Prefer': metodo === 'POST' ? 'return=representation' : 'return=minimal'} : {})
     }
   };
   if (dados) opts.body = JSON.stringify(dados);
@@ -581,7 +589,7 @@ function atualizarFiltrosCat() {
 
 async function carregarProdutos() {
   try {
-    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.centro');
+    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.boqueiraw');
     produtosCache = {};
     if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
     atualizarFiltrosCat();
@@ -996,7 +1004,8 @@ async function confirmarLancamento() {
   const tipo = document.getElementById('lanc-tipo').value;
   const qtd = parseFloat(document.getElementById('lanc-qtd').value);
   if (!cod) { showToast('Selecione um produto!', 'error'); return; }
-  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
+  if (qtd < 0) { showToast('Quantidade nao pode ser negativa!', 'error'); return; }
+  if (qtd <= 0 && tipo !== 'contagem') { showToast('Informe a quantidade!', 'error'); return; }
   const p = getProduto(cod);
   adicionarPendente(p, tipo, qtd);
   document.getElementById('lanc-qtd').value = '';
@@ -1344,7 +1353,10 @@ async function gerarRelatorioBebidas() {
   if (!prods || !prods.length) { el.innerHTML = '<p style="color:#888;padding:10px;">Nenhuma bebida cadastrada</p>'; return; }
   window._ultimoBebidas = prods;
   const hoje = dataHoje();
-  let html = '<div style="background:#607d8b;color:#fff;border-radius:10px;padding:8px 14px;margin:10px 0 8px;font-weight:700;font-size:0.85rem;">🍺 Bebidas</div>';
+  let html = '<div style="background:#607d8b;color:#fff;border-radius:10px;padding:8px 14px;margin:10px 0 8px;font-weight:700;font-size:0.85rem;">🍺 Bebidas</div>
+      <button class="btn" onclick="abrirPedido()" id="btn-fazer-pedido" style="width:100%;background:linear-gradient(135deg,#e65100,#bf360c);color:#fff;padding:14px;font-size:1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;margin-top:4px;">
+        🛒 Fazer Pedido
+      </button>';
   html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
     + '<span>PRODUTO</span><span style="text-align:center;">ESTOQUE</span><span style="text-align:center;">MINIMO</span><span style="text-align:center;">STATUS</span></div>';
   prods.forEach(p => {
@@ -1615,6 +1627,32 @@ let notifUltimoAt = null;
 let notifInterval = null;
 let todasNotifs = [];
 
+// ── Notificação de versão ──
+(function() {
+  var VER_KEY = 'prensadao_notif_v2';
+  if (!localStorage.getItem(VER_KEY)) {
+    todasNotifs.push({
+      id: 'v2.0',
+      tipo: 'update',
+      nome: '🚀 Versão 2.0 disponível!',
+      colaborador: 'Sistema',
+      qtd: null,
+      unidade: '',
+      created_at: new Date().toISOString(),
+      _lida: false,
+      _detalhe: 'Contagem em Lote · Pedido Automático por Min/Máx · Extrato com tema escuro'
+    });
+    localStorage.setItem(VER_KEY, '1');
+    if (typeof atualizarBadge === 'function') {
+      atualizarBadge();
+    } else {
+      document.addEventListener('DOMContentLoaded', function() {
+        if (typeof atualizarBadge === 'function') atualizarBadge();
+      });
+    }
+  }
+})();
+
 function tipoEmoji(tipo) {
   return {entrada:'📥', saida:'📤', contagem:'📊'}[tipo] || '📋';
 }
@@ -1701,12 +1739,36 @@ async function verificarNotificacoes() {
       atualizarBadge();
       const painel = document.getElementById('notif-painel');
       if (painel.classList.contains('open')) renderNotifs();
+      // SOM
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.4);
+      } catch(se) {}
+      // PUSH
+      novas.forEach(function(n) {
+        try {
+          if (Notification && Notification.permission === 'granted') {
+            const tipo = (n.tipo||'lançamento').charAt(0).toUpperCase()+(n.tipo||'lançamento').slice(1);
+            new Notification('🔔 Novo lançamento', { body: tipo+' · '+(n.nome||'')+' · '+(n.colaborador||'-') });
+          }
+        } catch(pe) {}
+      });
     }
   } catch(e) {}
 }
 
 function iniciarNotificacoes() {
   if (!usuarioLogado || usuarioLogado.perfil !== 'adm') return;
+  // Pedir permissão push
+  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
   
   // Mostrar botão do sino
   const btn = document.getElementById('notif-btn');
@@ -1738,7 +1800,7 @@ document.addEventListener('click', function(e) {
       <button id="tut-prev" onclick="tutPrev()" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.85rem;">← VOLTAR</button>
       <button id="tut-next" onclick="tutNext()" style="flex:2;background:#f57f17;border:none;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.88rem;">PRÓXIMO →</button>
     </div>
-    <a href="https://wa.me/5542988819420?text=%23sistema%20tenho%20uma%20d%C3%BAvida" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Preciso de ajuda — falar com Suporte</a>
+    <a href="https://wa.me/5542988819420?text=oi%2C%20suporte" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Preciso de ajuda — falar com Suporte</a>
   </div>
 </div>
 
@@ -2006,7 +2068,7 @@ function abrirTutorial(){var ov=document.getElementById('tut-ov');ov.style.displ
   var isAdm=(typeof usuarioLogado!=='undefined'&&usuarioLogado&&usuarioLogado.perfil==='adm');
   _TUT=isAdm?_TUT_ADM:_TUT_OP;
   _tutChave=isAdm?'tut_ok_boqueiraw_adm':'tut_ok_boqueiraw_operador';
-  document.getElementById('tut-wpp').href=isAdm?'https://wa.me/5542988819420?text=%23sistema%20tenho%20uma%20d%C3%BAvida':'https://wa.me/5542988819420?text=%23sistema%20tenho%20uma%20d%C3%BAvida';
+  document.getElementById('tut-wpp').href=isAdm?'https://wa.me/5542988819420?text=oi%2C%20suporte':'https://wa.me/5542988819420?text=oi%2C%20suporte';
   _tStep=0;
   document.getElementById('tut-ov').style.display='flex';
   _rTut();
@@ -2353,6 +2415,225 @@ async function confirmarCorrecaoEstoque() {
   showToast('Estoque corrigido para ' + fmtQ(qtd, p.unidade) + ' ' + p.unidade, 'success');
 }
 
+
+
+// ===== CONTAGEM EM LOTE =====
+var _loteProdutos = [];
+
+async function abrirContagemLote() {
+  try {
+    var prods = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + UNIDADE_LOJA + '&select=categoria&order=categoria.asc');
+    var cats = [...new Set((prods||[]).map(function(p){ return p.categoria; }).filter(Boolean))].sort();
+    var sel = document.getElementById('lote-categoria');
+    sel.innerHTML = '<option value="">-- Selecione a categoria --</option>';
+    cats.forEach(function(c) {
+      var opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+  } catch(e) { showToast('Erro ao carregar categorias','error'); return; }
+  document.getElementById('lote-passo1').style.display = 'block';
+  document.getElementById('lote-passo2').style.display = 'none';
+  document.getElementById('modal-lote').style.display = 'block';
+}
+
+function fecharContagemLote() {
+  document.getElementById('modal-lote').style.display = 'none';
+}
+
+function voltarPasso1Lote() {
+  document.getElementById('lote-passo1').style.display = 'block';
+  document.getElementById('lote-passo2').style.display = 'none';
+}
+
+async function carregarItenslote() {
+  var nome = document.getElementById('lote-nome').value.trim();
+  var cat  = document.getElementById('lote-categoria').value;
+  if (!nome) { showToast('Digite seu nome!','error'); return; }
+  if (!cat)  { showToast('Selecione uma categoria!','error'); return; }
+  try {
+    var prods = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + UNIDADE_LOJA + '&categoria=eq.' + encodeURIComponent(cat) + '&order=nome.asc&select=codigo,nome,estoque,unidade,qtd_por_pct');
+    _loteProdutos = prods || [];
+  } catch(e) { showToast('Erro ao carregar produtos','error'); return; }
+  document.getElementById('lote-titulo').textContent = cat + ' (' + _loteProdutos.length + ' itens)';
+  var container = document.getElementById('lote-itens');
+  container.innerHTML = '';
+  _loteProdutos.forEach(function(p, i) {
+    var isKg = (p.unidade||'').toLowerCase() === 'kg';
+    var div = document.createElement('div');
+    div.style.cssText = 'background:#252540;border-radius:10px;padding:12px;';
+    div.innerHTML =
+      '<div style="color:#fff;font-weight:700;font-size:0.95rem;margin-bottom:6px;">' + p.nome + '</div>' +
+      '<div style="color:#90a4ae;font-size:0.8rem;margin-bottom:8px;">Atual: ' + (p.estoque||0) + ' ' + (p.unidade||'und') + '</div>' +
+      '<input type="text" inputmode="numeric" id="lote-qtd-' + i + '" data-idx="' + i + '" data-iskg="' + isKg + '" ' +
+        'placeholder="' + (isKg ? 'Ex: 1234 vai para 1,234 kg' : 'Quantidade') + '" ' +
+        'style="width:100%;padding:10px;border-radius:8px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:1rem;" ' +
+        'oninput="formatarKgLote(this)" />';
+    container.appendChild(div);
+  });
+  document.getElementById('lote-passo1').style.display = 'none';
+  document.getElementById('lote-passo2').style.display = 'block';
+}
+
+function formatarKgLote(input) {
+  var isKg = input.getAttribute('data-iskg') === 'true';
+  if (!isKg) return;
+  var digits = input.value.replace(/\D/g,'');
+  if (!digits) { input.value = ''; return; }
+  var num = parseInt(digits, 10);
+  input.value = (num / 1000).toFixed(3).replace('.', ',');
+}
+
+async function enviarContagemLote() {
+  var nome = document.getElementById('lote-nome').value.trim();
+  var enviados = 0, erros = 0;
+  for (var i = 0; i < _loteProdutos.length; i++) {
+    var input = document.getElementById('lote-qtd-' + i);
+    var raw = (input.value||'').replace(',','.').trim();
+    var qtd = (!raw) ? 0 : parseFloat(raw);
+    // qtd já calculado acima
+    var p = _loteProdutos[i];
+    var mov = {
+      codigo: p.codigo, nome: p.nome, tipo: 'contagem', qtd: qtd,
+      unidade: p.unidade||'und', colaborador: nome, obs: 'Contagem em lote',
+      estoque_anterior: p.estoque||0, novo_estoque: qtd,
+      unidade_loja: UNIDADE_LOJA, status: 'pendente'
+    };
+    try {
+      await supa('POST', 'movimentacoes', mov);
+      await supa('PATCH', 'produtos', {estoque: qtd}, 'codigo=eq.' + encodeURIComponent(p.codigo) + '&unidade_loja=eq.' + UNIDADE_LOJA);
+      enviados++;
+    } catch(e) { erros++; }
+  }
+  if (enviados > 0) { showToast('✅ ' + enviados + ' itens contados!','success'); fecharContagemLote(); carregarProdutos(); }
+  else showToast('Nenhum item preenchido','error');
+  if (erros > 0) showToast('⚠️ ' + erros + ' erros','error');
+}
+// ===== /CONTAGEM EM LOTE =====
+
+
+
+
+// ===== PEDIDO VIA RELATÓRIO v3 =====
+var _pedidoProdutos = [];
+
+async function abrirPedido() {
+  showToast('Verificando estoque...', 'info');
+  try {
+    var todos = await supa('GET', 'produtos', null,
+      'unidade_loja=eq.' + UNIDADE_LOJA +
+      '&categoria=in.(Processado,Bruto,Limpeza)' +
+      '&order=categoria.asc,nome.asc' +
+      '&select=codigo,nome,estoque,unidade,categoria,estoque_min,estoque_max');
+    // Filtrar só abaixo do mínimo
+    _pedidoProdutos = (todos||[]).filter(function(p) {
+      var min = parseFloat(p.estoque_min) || 0;
+      var est = parseFloat(p.estoque)     || 0;
+      return est < min;
+    });
+  } catch(e) { showToast('Erro ao carregar produtos','error'); return; }
+
+  var container = document.getElementById('pedido-itens');
+  container.innerHTML = '';
+
+  if (!_pedidoProdutos.length) {
+    container.innerHTML = '<div style="color:#81c784;text-align:center;padding:20px;font-size:1rem;">✅ Nenhum item abaixo do mínimo!</div>';
+    window._pedidoCount = 0;
+    document.getElementById('modal-pedido').style.display = 'block';
+    return;
+  }
+
+  var catAtual = '';
+  _pedidoProdutos.forEach(function(p, i) {
+    var isKg  = (p.unidade||'').toLowerCase() === 'kg';
+    var est   = parseFloat(p.estoque)     || 0;
+    var min   = parseFloat(p.estoque_min) || 0;
+    var max   = parseFloat(p.estoque_max) || 0;
+    var sugerido = max > est ? (max - est) : 0;
+    // Formatar valor sugerido
+    var sugeridoFmt = isKg
+      ? String(Math.ceil(sugerido))
+      : String(Math.ceil(sugerido));
+
+    if (p.categoria !== catAtual) {
+      catAtual = p.categoria;
+      var header = document.createElement('div');
+      header.style.cssText = 'color:#ffb300;font-weight:700;font-size:0.88rem;margin-top:10px;margin-bottom:2px;padding:4px 0;border-bottom:1px solid #333;';
+      var emoji = catAtual === 'Processado' ? '🥩' : catAtual === 'Bruto' ? '🌿' : '🧹';
+      header.textContent = emoji + ' ' + catAtual;
+      container.appendChild(header);
+    }
+
+    var div = document.createElement('div');
+    div.style.cssText = 'background:#252540;border-radius:10px;padding:12px;';
+    div.innerHTML =
+      '<div style="color:#fff;font-weight:700;font-size:0.9rem;margin-bottom:2px;">' + p.nome + '</div>' +
+      '<div style="color:#ef9a9a;font-size:0.78rem;margin-bottom:6px;">' +
+        '⚠️ Estoque: ' + est + ' ' + (p.unidade||'') + ' | Mín: ' + min + ' | Máx: ' + max +
+      '</div>' +
+      '<input type="text" inputmode="numeric" id="ped-qtd-' + i + '"' +
+        ' data-nome="' + p.nome.replace(/"/g,'') + '"' +
+        ' data-unidade="' + (p.unidade||'und') + '"' +
+        ' data-iskg="' + isKg + '"' +
+        ' value="' + sugeridoFmt + '"' +
+        ' placeholder="Quantidade"' +
+        ' style="width:100%;padding:9px;border-radius:8px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:0.95rem;"' +
+        ' oninput="formatarKgPedido(this)" />';
+    container.appendChild(div);
+  });
+
+  window._pedidoCount = _pedidoProdutos.length;
+  document.getElementById('modal-pedido').style.display = 'block';
+}
+
+function fecharPedido() {
+  document.getElementById('modal-pedido').style.display = 'none';
+}
+
+function formatarKgPedido(input) {
+  if (input.getAttribute('data-iskg') !== 'true') return;
+  var digits = input.value.replace(/\D/g,'');
+  if (!digits) { input.value = ''; return; }
+  input.value = String(parseInt(digits,10));
+}
+
+function enviarPedidoWhatsApp() {
+  var linhas = { 'Processado': [], 'Bruto': [], 'Limpeza': [] };
+
+  for (var i = 0; i < (window._pedidoCount||0); i++) {
+    var input = document.getElementById('ped-qtd-' + i);
+    if (!input) continue;
+    var raw = (input.value||'').replace(',','.').trim();
+    if (!raw) continue;
+    var qtd = parseFloat(raw);
+    if (isNaN(qtd) || qtd <= 0) continue;
+    var nome = input.getAttribute('data-nome');
+    var und  = input.getAttribute('data-unidade');
+    var cat  = (_pedidoProdutos[i]||{}).categoria || 'Outros';
+    if (!linhas[cat]) linhas[cat] = [];
+    linhas[cat].push('▪️ ' + nome + ': *' + input.value + ' ' + und + '*');
+  }
+
+  var total = Object.values(linhas).reduce(function(a,b){ return a + b.length; }, 0);
+  if (total === 0) { showToast('Nenhum item para enviar!','error'); return; }
+
+  var agora = new Date();
+  var dataFmt = String(agora.getDate()).padStart(2,'0') + '/' +
+                String(agora.getMonth()+1).padStart(2,'0') + '/' +
+                agora.getFullYear();
+
+  var texto = '🛒 *Pedido de Compras — Prensadão*\n📅 ' + dataFmt + '\n';
+  ['Processado','Bruto','Limpeza'].forEach(function(cat) {
+    if (!linhas[cat] || !linhas[cat].length) return;
+    var emoji = cat === 'Processado' ? '🥩' : cat === 'Bruto' ? '🌿' : '🧹';
+    texto += '\n' + emoji + ' *' + cat + '*\n' + linhas[cat].join('\n');
+  });
+  texto += '\n\n_Enviado pelo sistema Prensadão_';
+
+  window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+  fecharPedido();
+}
+// ===== /PEDIDO VIA RELATÓRIO v3 =====
 </script>
 
   <!-- MODAL: Contagem por Categoria -->
@@ -2410,5 +2691,57 @@ async function confirmarCorrecaoEstoque() {
     </div>
   </div>
 
+
+<!-- ══════════ MODAL CONTAGEM EM LOTE ══════════ -->
+<div id="modal-lote" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9998;overflow-y:auto;padding:16px;">
+  <div style="background:#1a1a2e;border-radius:16px;max-width:480px;margin:0 auto;padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="color:#fff;margin:0;">📋 Contagem em Lote</h3>
+      <button onclick="fecharContagemLote()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:1rem;">✖</button>
+    </div>
+
+    <!-- Passo 1: Nome e Categoria -->
+    <div id="lote-passo1">
+      <label style="color:#b0bec5;font-size:0.9rem;">👤 Seu nome</label>
+      <input id="lote-nome" type="text" placeholder="Digite seu nome..." style="width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#252540;color:#fff;margin:6px 0 14px;font-size:1rem;" />
+
+      <label style="color:#b0bec5;font-size:0.9rem;">📂 Categoria</label>
+      <select id="lote-categoria" style="width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#252540;color:#fff;margin:6px 0 14px;font-size:1rem;">
+        <option value="">-- Selecione a categoria --</option>
+      </select>
+
+      <button onclick="carregarItenslote()" style="width:100%;padding:14px;background:#1565c0;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:1rem;font-weight:700;">
+        ▶ Avançar
+      </button>
+    </div>
+
+    <!-- Passo 2: Lista de itens -->
+    <div id="lote-passo2" style="display:none;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <button onclick="voltarPasso1Lote()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;">← Voltar</button>
+        <span id="lote-titulo" style="color:#fff;font-weight:700;font-size:1rem;"></span>
+      </div>
+      <div id="lote-itens" style="display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto;padding-right:4px;"></div>
+      <button onclick="enviarContagemLote()" style="width:100%;padding:14px;background:#2e7d32;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:1rem;font-weight:700;margin-top:16px;">
+        ✅ Enviar Contagem
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL PEDIDO ══════════ -->
+<div id="modal-pedido" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9997;overflow-y:auto;padding:16px;">
+  <div style="background:#1a1a2e;border-radius:16px;max-width:480px;margin:0 auto;padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="color:#fff;margin:0;">🛒 Fazer Pedido</h3>
+      <button onclick="fecharPedido()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:1rem;">✖</button>
+    </div>
+    <p style="color:#b0bec5;font-size:0.85rem;margin-bottom:14px;">Preencha a quantidade dos itens que precisa pedir. Deixe em branco para não pedir.</p>
+    <div id="pedido-itens" style="display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto;padding-right:4px;"></div>
+    <button onclick="enviarPedidoWhatsApp()" style="width:100%;padding:14px;background:#25D366;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:1rem;font-weight:700;margin-top:16px;">
+      📱 Enviar pelo WhatsApp
+    </button>
+  </div>
+</div>
 </body>
 </html>
