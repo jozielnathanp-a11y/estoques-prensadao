@@ -1458,11 +1458,17 @@ async function salvarLancamentos() {
               { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
             ).then(function(r){ return r.json(); });
             if (almoxRes && almoxRes.length > 0) {
-              const novoAlmox = Math.max(0, parseFloat(almoxRes[0].estoque || 0) - l.qtd);
+              const almoxEstAnt = parseFloat(almoxRes[0].estoque || 0);
+              const novoAlmox = Math.max(0, almoxEstAnt - l.qtd);
               await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codAlmox}&unidade_loja=eq.almoxarifado`, {
                 method: 'PATCH',
                 headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ estoque: novoAlmox })
+              });
+              await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
+                method: 'POST',
+                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ codigo: codAlmox, nome: l.nome, tipo: 'saida', qtd: l.qtd, unidade: l.unidade, colaborador: UNIDADE_LOJA.toUpperCase(), obs: 'Saída → ' + UNIDADE_LOJA.toUpperCase(), unidade_loja: 'almoxarifado', estoque_anterior: almoxEstAnt, novo_estoque: novoAlmox, status: 'confirmado' })
               });
             }
           } else {
@@ -1473,11 +1479,17 @@ async function salvarLancamentos() {
               { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
             ).then(function(r){ return r.json(); });
             if (cdRes && cdRes.length > 0) {
-              const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - l.qtd);
+              const cdEstAnt = parseFloat(cdRes[0].estoque || 0);
+              const novoCD = Math.max(0, cdEstAnt - l.qtd);
               await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
                 method: 'PATCH',
                 headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ estoque: novoCD })
+              });
+              await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
+                method: 'POST',
+                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ codigo: codCD, nome: l.nome, tipo: 'saida', qtd: l.qtd, unidade: l.unidade, colaborador: UNIDADE_LOJA.toUpperCase(), obs: 'Saída → ' + UNIDADE_LOJA.toUpperCase(), unidade_loja: 'cd', estoque_anterior: cdEstAnt, novo_estoque: novoCD, status: 'confirmado' })
               });
             }
           }
