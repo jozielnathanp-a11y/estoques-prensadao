@@ -231,6 +231,7 @@
     <div class="tab" onclick="showTab('historico')">📋 Histórico</div>
     <div class="tab adm-only" onclick="showTab('relatorio')">📊 Relatório</div>
     <div class="tab adm-only" onclick="showTab('produtos')">⚙️ Produtos</div>
+    <div class="tab" onclick="showTab('descarte')">🗑️ DESCARTE</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -439,6 +440,40 @@
   </div>
 </div>
 
+  <!-- ABA DESCARTE -->
+  <div class="screen" id="tab-descarte">
+    <div class="card">
+      <h3>🗑️ Descarte do Dia</h3>
+      <p style="font-size:0.78rem;color:#888;margin-bottom:12px;">Registra o que foi descartado. Desconta automático do estoque.</p>
+
+      <label>Produto</label>
+      <select id="desc-produto" style="margin-bottom:10px;"></select>
+
+      <label>Quantidade Descartada</label>
+      <input type="number" id="desc-qtd" placeholder="Ex: 0.5, 1, 2..." min="0" step="0.001" style="margin-bottom:10px;" />
+
+      <label>Motivo <span style="color:#555;font-size:0.72rem;">(opcional)</span></label>
+      <select id="desc-motivo" style="margin-bottom:12px;">
+        <option value="">— Selecione —</option>
+        <option value="Vencido">📅 Vencido</option>
+        <option value="Estragado">🤢 Estragado</option>
+        <option value="Quemado">🔥 Queimado</option>
+        <option value="Erro de preparo">❌ Erro de preparo</option>
+        <option value="Contaminação">⚠️ Contaminação</option>
+        <option value="Outro">📝 Outro</option>
+      </select>
+
+      <div id="desc-resumo" style="display:none;background:#1a0a0a;border:1px solid #b71c1c44;border-radius:10px;padding:12px;margin-bottom:12px;font-size:0.84rem;"></div>
+
+      <button class="btn btn-red" onclick="confirmarDescarte()" style="width:100%;font-size:1rem;">🗑️ REGISTRAR DESCARTE</button>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <h3 style="font-size:0.92rem;">📋 Descartes de Hoje</h3>
+      <div id="desc-lista-hoje"><p style="color:#888;text-align:center;padding:12px;font-size:0.82rem;">Nenhum descarte hoje</p></div>
+    </div>
+  </div>
+
 <!-- MODAL MOVIMENTAÇÃO -->
 <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;align-items:flex-end;justify-content:center;">
   <div class="modal-box">
@@ -570,7 +605,8 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 
   if (name === 'historico') carregarHistorico();
-  if (name === 'almox') { carregarAlmox(); }
+  if (name === 'almox') { carregarAlmox();   if (name === 'descarte') popularDescarte();
+}
   if (name === 'lancar') popularSelectProdutos();
 }
 
@@ -1173,6 +1209,7 @@ async function gerarRelatorio() {
       nome: p.nome, unidade: p.unidade, categoria: p.categoria,
       entradas: 0,       // soma das entradas do dia
       contagem: null,    // ultima contagem do dia (null = nao realizado)
+      descarte: 0,       // soma dos descartes do dia
       estoque: parseFloat(p.estoque) || 0  // estoque atual no banco
     };
   });
@@ -1182,6 +1219,7 @@ async function gerarRelatorio() {
       if (!resultado[m.codigo]) return;
       if (m.tipo === 'entrada') resultado[m.codigo].entradas += m.qtd;
       if (m.tipo === 'contagem') resultado[m.codigo].contagem = m.novo_estoque;
+      if (m.tipo === 'descarte') resultado[m.codigo].descarte += m.qtd;
     });
   }
 
@@ -1200,8 +1238,8 @@ async function gerarRelatorio() {
     + '</div>';
 
   // Cabecalho tabela
-  html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
-    + '<span>PRODUTO</span><span style="text-align:center;">ENTRADAS</span><span style="text-align:center;">CONTAGEM ATUAL</span><span style="text-align:center;">ESTOQUE</span>'
+  html += '<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
+    + '<span>PRODUTO</span><span style="text-align:center;">ENTRADAS</span><span style="text-align:center;">DESCARTE</span><span style="text-align:center;">CONTAGEM</span><span style="text-align:center;">ESTOQUE</span>'
     + '</div>';
 
   itens.forEach(p => {
@@ -1209,10 +1247,12 @@ async function gerarRelatorio() {
     const cor = estoque === 0 ? '#b71c1c' : estoque <= (p.estoque_min || 0) ? '#ff9800' : '#2e7d32';
     const contagemTxt = p.contagem !== null ? fmtQ(p.contagem, p.unidade) : '<span style="color:#888;font-style:italic;font-size:0.75rem;">Nao realizado</span>';
     const entradasTxt = p.entradas > 0 ? '+' + fmtQ(p.entradas, p.unidade) : '<span style="color:#555;">-</span>';
+    const descarteTxt = p.descarte > 0 ? fmtQ(p.descarte, p.unidade) : '<span style="color:#555;">-</span>';
 
-    html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;background:#161616;border-left:3px solid ' + cor + ';padding:8px 10px;margin-bottom:2px;align-items:center;">'
+    html += '<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr 1fr 1fr;gap:4px;background:#161616;border-left:3px solid ' + cor + ';padding:8px 10px;margin-bottom:2px;align-items:center;">'
       + '<span style="font-weight:700;font-size:0.85rem;">' + p.nome + '</span>'
       + '<span style="text-align:center;font-size:0.82rem;color:#4fc3f7;">' + entradasTxt + '</span>'
+      + '<span style="text-align:center;font-size:0.82rem;color:#ef5350;">' + descarteTxt + '</span>'
       + '<span style="text-align:center;font-size:0.82rem;">' + contagemTxt + '</span>'
       + '<span style="text-align:center;font-size:0.85rem;font-weight:700;color:' + cor + ';">' + fmtQ(estoque, p.unidade) + '</span>'
       + '</div>';
@@ -1387,7 +1427,7 @@ async function gerarRelatorioEmbalagens() {
   window._ultimoEmbalagens = prods;
   const hoje = dataHoje();
   let html = '<div style="background:#607d8b;color:#fff;border-radius:10px;padding:8px 14px;margin:10px 0 8px;font-weight:700;font-size:0.85rem;">📦 Embalagens</div>';
-  html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
+  html += '<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
     + '<span>PRODUTO</span><span style="text-align:center;">ESTOQUE</span><span style="text-align:center;">MINIMO</span><span style="text-align:center;">PRECISA</span></div>';
   prods.forEach(p => {
     const est = parseFloat(p.estoque) || 0;
@@ -1395,7 +1435,7 @@ async function gerarRelatorioEmbalagens() {
     const precisa = Math.max(0, min - est);
     const cor = est === 0 ? '#b71c1c' : precisa > 0 ? '#ff9800' : '#2e7d32';
     const precisaTxt = precisa > 0 ? fmtQ(precisa, p.unidade) : '<span style="color:#2e7d32;">OK</span>';
-    html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;background:#161616;border-left:3px solid '+cor+';padding:8px 10px;margin-bottom:2px;align-items:center;">'
+    html += '<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr 1fr 1fr;gap:4px;background:#161616;border-left:3px solid '+cor+';padding:8px 10px;margin-bottom:2px;align-items:center;">'
       + '<span style="font-weight:700;font-size:0.85rem;">'+p.nome+'</span>'
       + '<span style="text-align:center;font-size:0.85rem;font-weight:700;color:'+cor+';">'+fmtQ(est,p.unidade)+'</span>'
       + '<span style="text-align:center;font-size:0.82rem;color:#888;">'+fmtQ(min,p.unidade)+'</span>'
@@ -2211,6 +2251,105 @@ async function confirmarCorrecaoEstoque() {
   renderEstoque();
   showToast('Estoque corrigido para ' + fmtQ(qtd, p.unidade) + ' ' + p.unidade, 'success');
 }
+
+
+// ── DESCARTE ──
+async function popularDescarte() {
+  var sel = document.getElementById('desc-produto');
+  if (!sel) return;
+  var lista = Object.values(produtosCache).sort(function(a,b){ return a.nome.localeCompare(b.nome); });
+  sel.innerHTML = '<option value="">-- Selecione --</option>' +
+    lista.map(function(p) {
+      return '<option value="' + p.codigo + '">' + p.nome + ' (' + fmtQ(p.estoque, p.unidade) + ')</option>';
+    }).join('');
+  sel.onchange = function() { atualizarResumoDescarte(); };
+  document.getElementById('desc-qtd').oninput = function() { atualizarResumoDescarte(); };
+  document.getElementById('desc-motivo').onchange = function() { atualizarResumoDescarte(); };
+  carregarDescartesHoje();
+}
+
+function atualizarResumoDescarte() {
+  var sel = document.getElementById('desc-produto');
+  var qtd = parseFloat(document.getElementById('desc-qtd').value) || 0;
+  var motivo = document.getElementById('desc-motivo').value;
+  var el = document.getElementById('desc-resumo');
+  if (!sel.value || qtd <= 0) { el.style.display = 'none'; return; }
+  var p = getProduto(sel.value);
+  if (!p) return;
+  var novoEst = Math.max(0, (parseFloat(p.estoque)||0) - qtd);
+  el.style.display = 'block';
+  el.innerHTML = '<div style="color:#ef5350;">🗑️ <b>' + p.nome + '</b></div>'
+    + '<div style="margin-top:4px;color:#aaa;">Atual: <b>' + fmtQ(p.estoque, p.unidade) + '</b> → Depois: <b style="color:#ef5350;">' + fmtQ(novoEst, p.unidade) + '</b></div>'
+    + (motivo ? '<div style="margin-top:2px;color:#888;">Motivo: ' + motivo + '</div>' : '');
+}
+
+async function confirmarDescarte() {
+  var cod = document.getElementById('desc-produto').value;
+  var qtd = parseFloat(document.getElementById('desc-qtd').value);
+  var motivo = document.getElementById('desc-motivo').value;
+
+  if (!cod) { showToast('Seleciona o produto!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
+
+  var p = getProduto(cod);
+  var est = parseFloat(p.estoque) || 0;
+  var novoEst = Math.max(0, est - qtd);
+
+  // Descontar do estoque
+  await supa('PATCH', 'produtos', { estoque: novoEst }, 'codigo=eq.' + encodeURIComponent(cod) + '&unidade_loja=eq.' + UNIDADE_LOJA);
+
+  // Registrar movimentação
+  await supa('POST', 'movimentacoes', {
+    codigo: cod, nome: p.nome, tipo: 'descarte',
+    qtd: qtd, unidade: p.unidade,
+    colaborador: (typeof usuarioLogado !== 'undefined' && usuarioLogado && usuarioLogado.usuario) ? usuarioLogado.usuario : (UNIDADE_LOJA || ''),
+    obs: motivo ? 'Descarte: ' + motivo : 'Descarte',
+    estoque_anterior: est,
+    novo_estoque: novoEst,
+    status: 'confirmado',
+    unidade_loja: UNIDADE_LOJA
+  });
+
+  // Atualizar cache
+  if (produtosCache[cod]) produtosCache[cod].estoque = novoEst;
+
+  document.getElementById('desc-qtd').value = '';
+  document.getElementById('desc-motivo').value = '';
+  document.getElementById('desc-resumo').style.display = 'none';
+  document.getElementById('desc-produto').value = '';
+  beep();
+  showToast('🗑️ Descarte registrado! Estoque atualizado.', 'success');
+  renderEstoque();
+  popularDescarte();
+}
+
+async function carregarDescartesHoje() {
+  var el = document.getElementById('desc-lista-hoje');
+  if (!el) return;
+  var hoje = new Date().toISOString().slice(0,10);
+  var inicio = hoje + 'T00:00:00';
+  var fim = hoje + 'T23:59:59';
+  var movs = await supa('GET', 'movimentacoes', null,
+    'tipo=eq.descarte&unidade_loja=eq.' + UNIDADE_LOJA + '&created_at=gte.' + inicio + '&created_at=lte.' + fim + '&order=created_at.desc&select=*');
+  if (!movs || !movs.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:12px;font-size:0.82rem;">Nenhum descarte hoje</p>';
+    return;
+  }
+  var total = 0;
+  el.innerHTML = movs.map(function(m) {
+    var hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    total++;
+    return '<div style="background:#1a0a0a;border-left:3px solid #b71c1c;padding:8px 10px;margin-bottom:4px;border-radius:6px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<div><span style="font-weight:700;font-size:0.85rem;color:#ef5350;">🗑️ ' + m.nome + '</span>'
+      + '<span style="font-size:0.72rem;color:#888;margin-left:6px;">' + hora + '</span></div>'
+      + '<span style="font-weight:700;color:#ef5350;font-size:0.85rem;">-' + fmtQ(m.qtd, m.unidade) + '</span>'
+      + '</div>'
+      + (m.obs ? '<div style="font-size:0.72rem;color:#666;margin-top:2px;">' + m.obs + ' · por ' + (m.colaborador||'?') + '</div>' : '')
+      + '</div>';
+  }).join('');
+}
+// ── FIM DESCARTE ──
 
 </script>
 
