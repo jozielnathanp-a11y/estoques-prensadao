@@ -1255,7 +1255,7 @@ async function confirmarPendente(id, codigo, novoEst, nome) {
 
 // ── SMART CD: descontar do CD pelo código base ──
   try {
-    const movRow = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}&select=tipo,qtd,codigo`, {
+    const movRow = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}&select=tipo,qtd,codigo,nome,unidade`, {
       headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
     }).then(r => r.json());
     const tipoMov  = movRow && movRow[0] ? movRow[0].tipo : '';
