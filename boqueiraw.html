@@ -574,9 +574,13 @@ async function fazerLogin() {
 document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
 
 function iniciarApp() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
+  // Garantir que a tela de login some PRIMEIRO, antes de qualquer outra coisa
+  const loginEl = document.getElementById('login-screen');
+  if (loginEl) loginEl.style.display = 'none';
+  const appEl = document.getElementById('app');
+  if (appEl) { appEl.style.display = 'block'; appEl.style.visibility = 'visible'; appEl.style.opacity = '1'; }
+
+  try { document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador'); } catch(e) {}
 
   // Esconder abas ADM se for operador
   if (usuarioLogado.perfil !== 'adm') {
@@ -584,11 +588,13 @@ function iniciarApp() {
   }
 
   carregarProdutos();
-  iniciarNotificacoes();
-  iniciarNomeOperador();
-  const hoje = dataHoje();
-  document.getElementById('hist-data').value = hoje;
-  document.getElementById('rel-data').value = hoje;
+  try { iniciarNotificacoes(); } catch(e) {}
+  try { iniciarNomeOperador(); } catch(e) {}
+  try {
+    const hoje = dataHoje();
+    document.getElementById('hist-data').value = hoje;
+    document.getElementById('rel-data').value = hoje;
+  } catch(e) {}
 }
 
 function sair() {
