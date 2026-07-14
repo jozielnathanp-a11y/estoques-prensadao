@@ -544,7 +544,7 @@ async function fazerLogin() {
   if (!usuario || !senha) { document.getElementById('login-erro').style.display='block'; return; }
 
   try {
-    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.centro&select=*`);
+    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.boqueiraw&select=*`);
     if (res && res.length > 0) {
       usuarioLogado = res[0];
       iniciarApp();
@@ -598,7 +598,7 @@ function showTab(name) {
 // ── PRODUTOS ──
 async function carregarProdutos() {
   try {
-    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.centro');
+    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.boqueiraw');
     produtosCache = {};
     if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
     renderEstoque();
