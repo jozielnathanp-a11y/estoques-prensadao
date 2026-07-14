@@ -562,6 +562,8 @@ async function fazerLogin() {
     const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.boqueiraw&select=*`);
     if (res && res.length > 0) {
       usuarioLogado = res[0];
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
       iniciarApp();
     } else {
       document.getElementById('login-erro').style.display = 'block';
@@ -574,12 +576,6 @@ async function fazerLogin() {
 document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
 
 function iniciarApp() {
-  // Garantir que a tela de login some PRIMEIRO, antes de qualquer outra coisa
-  const loginEl = document.getElementById('login-screen');
-  if (loginEl) loginEl.style.display = 'none';
-  const appEl = document.getElementById('app');
-  if (appEl) { appEl.style.display = 'block'; appEl.style.visibility = 'visible'; appEl.style.opacity = '1'; }
-
   try { document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador'); } catch(e) {}
 
   // Esconder abas ADM se for operador
