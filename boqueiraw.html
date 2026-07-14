@@ -205,7 +205,7 @@
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
-    <img src="logo_boqueirao.jpg" alt="Prensadão Boqueirão" style="width:180px;border-radius:12px;margin-bottom:12px;" />
+    <img src="logo-boqueiraw.jpg" alt="Prensadão Boqueirão" style="width:180px;border-radius:12px;margin-bottom:12px;" />
     <p>Acessa aí, parceiro 🔥</p>
     <label>Usuário</label>
     <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" />
@@ -217,7 +217,7 @@
 </div>
 
 <!-- APP -->
-<div id="app">
+<div id="app" style="display:none;">
   <div class="topbar">
     <div>
       <h1>🏪 Prensadão BOQUEIRÃO</h1>
@@ -1759,11 +1759,12 @@ async function verificarNotificacoes() {
   if (!usuarioLogado || usuarioLogado.perfil !== 'adm') return;
   
   try {
-    let url = 'movimentacoes?order=created_at.desc&limit=30&select=id,nome,tipo,qtd,unidade,colaborador,created_at,unidade_loja';
+    let url = 'movimentacoes';
+    let params = 'order=created_at.desc&limit=30&select=id,nome,tipo,qtd,unidade,colaborador,created_at,unidade_loja';
     if (notifUltimoAt) {
-      url += '&created_at=gt.' + encodeURIComponent(notifUltimoAt);
+      params += '&created_at=gt.' + encodeURIComponent(notifUltimoAt);
     }
-    const res = await supa('GET', url);
+    const res = await supa('GET', url, null, params);
     if (!res || !Array.isArray(res) || res.length === 0) return;
     
     // Novas notificações
