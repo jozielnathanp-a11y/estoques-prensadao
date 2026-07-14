@@ -1017,7 +1017,8 @@ async function confirmarTodosPendentes() {
             estoque_anterior: oEst,
             novo_estoque: oNovo
           });
-      }
+        }
+      } catch(eCD) { console.warn('Smart CD erro:', eCD); }
     }
     }
   }
