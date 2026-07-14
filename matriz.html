@@ -2767,6 +2767,29 @@ async function salvarLancamentosChefao() {
       obs: l.tipo === 'contagem' ? 'Contagem Chefão' : 'Entrada Chefão',
       estoque_anterior: est, novo_estoque: novoEst, status: 'confirmado'
     });
+    // ── SMART CD: descontar do CD ao registrar entrada no Chefão ──
+    if (l.tipo === 'entrada' && l.qtd > 0 && codUnidade) {
+      try {
+        var codBase = codUnidade.replace(/_centro$|_delivery$|_boqueiraw$/, '');
+        var codCD = codBase + '_cd';
+        var cdRes = await supa('GET', 'produtos', null, 'codigo=eq.' + codCD + '&unidade_loja=eq.cd&select=codigo,estoque');
+        if (Array.isArray(cdRes) && cdRes.length > 0) {
+          var cdEst = parseFloat(cdRes[0].estoque) || 0;
+          var novoCD = Math.max(0, cdEst - l.qtd);
+          await supa('PATCH', 'produtos', null, { estoque: novoCD }, 'codigo=eq.' + codCD + '&unidade_loja=eq.cd');
+          // Registrar saída no CD
+          await supa('POST', 'movimentacoes', null, {
+            codigo: codCD, nome: l.nome, tipo: 'saida', qtd: l.qtd,
+            unidade: l.unidade, unidade_loja: 'cd',
+            colaborador: _mtzUnidade.toUpperCase(),
+            obs: 'Saída → ' + _mtzUnidade.toUpperCase() + ' (Chefão)',
+            estoque_anterior: cdEst, novo_estoque: novoCD, status: 'confirmado'
+          });
+          console.log('Smart CD (Chefão): descontou ' + l.qtd + ' do CD (' + codCD + ') → novo estoque: ' + novoCD);
+        }
+      } catch(e) { console.warn('Smart CD erro (Chefão):', e); }
+    }
+    // ── FIM SMART CD ──
   }
   _lancamentos = [];
   renderLote();
