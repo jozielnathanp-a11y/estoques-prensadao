@@ -792,11 +792,26 @@ async function confirmarLancamento() {
       ).then(r => r.json());
 
       if (cdRes && cdRes.length > 0) {
-        const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - qtd);
+        const cdEstAnt = parseFloat(cdRes[0].estoque || 0);
+        const novoCD = Math.max(0, cdEstAnt - qtd);
         await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
           method: 'PATCH',
           headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
           body: JSON.stringify({ estoque: novoCD })
+        });
+        await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
+          method: 'POST',
+          headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            codigo: codCD, nome: p.nome, tipo: 'saida',
+            qtd: qtd, unidade: p.unidade,
+            colaborador: 'DELIVERY',
+            obs: 'Saída → DELIVERY',
+            unidade_loja: 'cd',
+            estoque_anterior: cdEstAnt,
+            novo_estoque: novoCD,
+            status: 'confirmado'
+          })
         });
         console.log('Smart CD: descontou ' + qtd + ' do CD (' + codCD + ') → novo estoque: ' + novoCD);
       }
