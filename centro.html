@@ -1234,11 +1234,26 @@ async function confirmarPendente(id, codigo, novoEst, nome) {
       ).then(r => r.json());
 
       if (cdRes && cdRes.length > 0) {
-        const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - qtdMov);
+        const cdEstAnt = parseFloat(cdRes[0].estoque || 0);
+        const novoCD = Math.max(0, cdEstAnt - qtdMov);
         await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
           method: 'PATCH',
           headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
           body: JSON.stringify({ estoque: novoCD })
+        });
+        await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
+          method: 'POST',
+          headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            codigo: codCD, nome: movRow[0].nome, tipo: 'saida',
+            qtd: qtdMov, unidade: movRow[0].unidade,
+            colaborador: 'CENTRO',
+            obs: 'Saída → CENTRO',
+            unidade_loja: 'cd',
+            estoque_anterior: cdEstAnt,
+            novo_estoque: novoCD,
+            status: 'confirmado'
+          })
         });
         console.log('Smart CD: descontou ' + qtdMov + ' do CD (' + codCD + ') → novo estoque: ' + novoCD);
       }
@@ -2406,5 +2421,5 @@ function enviarPedidoWhatsApp() {
   </div>
 </div>
 </body>
-<!-- v1782148029 -->
+<!-- deploy-1782147947 -->
 </html>
