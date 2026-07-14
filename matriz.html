@@ -1041,14 +1041,6 @@ function exportarRelBebCSV() {
       <option value="Bebidas">🥤 Bebidas</option>
       <option value="Bruto">🥩 Bruto</option>
       <option value="Processado">🍗 Processado</option>
-      <option value="CARNES">🥓 CARNES</option>
-      <option value="CONGELADOS">🧊 CONGELADOS</option>
-      <option value="RESFRIADOS">❄️ RESFRIADOS</option>
-      <option value="QUEIJOS">🧀 QUEIJOS</option>
-      <option value="SECOS">🥫 SECOS</option>
-      <option value="VERDURAS">🥬 VERDURAS</option>
-      <option value="Pães">🍞 Pães</option>
-      <option value="Temperos">🧂 Temperos</option>
       <option value="Embalagens">📦 Embalagens</option>
       <option value="Limpeza">🧹 Limpeza</option>
     </select>
@@ -1207,19 +1199,11 @@ let _cadUnidades = new Set();
 let _cadCategoria = '';
 
 const CATEGORIAS_DISPONIVEIS = [
-  { id: 'Bebidas',      icon: '🥤' },
-  { id: 'Bruto',        icon: '🥩' },
-  { id: 'Processado',   icon: '🍗' },
-  { id: 'CARNES',       icon: '🥓' },
-  { id: 'CONGELADOS',   icon: '🧊' },
-  { id: 'RESFRIADOS',   icon: '❄️' },
-  { id: 'QUEIJOS',      icon: '🧀' },
-  { id: 'SECOS',        icon: '🥫' },
-  { id: 'VERDURAS',     icon: '🥬' },
-  { id: 'Pães',         icon: '🍞' },
-  { id: 'Temperos',     icon: '🧂' },
-  { id: 'Embalagens',   icon: '📦' },
-  { id: 'Limpeza',      icon: '🧹' },
+  { id: 'Bebidas',    icon: '🥤' },
+  { id: 'Bruto',      icon: '🥩' },
+  { id: 'Processado', icon: '🍗' },
+  { id: 'Embalagens', icon: '📦' },
+  { id: 'Limpeza',    icon: '🧹' },
 ];
 
 function initCadastro() {
