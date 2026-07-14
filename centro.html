@@ -252,11 +252,19 @@
       <input type="text" id="busca-estoque" placeholder="🔍 Qual produto cê quer, irmão?" style="margin:0;" oninput="renderEstoque()" />
       <select id="filtro-cat" style="margin:0;width:auto;" onchange="renderEstoque()">
         <option value="">📦 Todas</option>
-        <option value="Bebidas">🍺 Bebidas</option>
-        <option value="Bruto">🌿 Bruto</option>
+        <option value="Bebidas">🥤 Bebidas</option>
+        <option value="Bruto">🥩 Bruto</option>
+        <option value="Processado">🍗 Processado</option>
+        <option value="CARNES">🥓 CARNES</option>
+        <option value="CONGELADOS">🧊 CONGELADOS</option>
+        <option value="RESFRIADOS">❄️ RESFRIADOS</option>
+        <option value="QUEIJOS">🧀 QUEIJOS</option>
+        <option value="SECOS">🥫 SECOS</option>
+        <option value="VERDURAS">🥬 VERDURAS</option>
+        <option value="Pães">🍞 Pães</option>
+        <option value="Temperos">🧂 Temperos</option>
         <option value="Embalagens">📦 Embalagens</option>
         <option value="Limpeza">🧹 Limpeza</option>
-        <option value="Processado">🥩 Processado</option>
       </select>
     </div>
     <div id="lista-estoque"></div>
@@ -393,7 +401,7 @@
         <input type="text" id="prod-nome" placeholder="Ex: Bacon" />
         <label>Categoria</label>
         <select id="prod-cat">
-          <option>Bebidas</option><option>Alimentos</option><option>Carnes</option><option>Frios</option><option>Hortifruti</option><option>Outros</option><option>Embalagens</option><option>Temperos</option><option>Limpeza</option>
+                    <option>Bebidas</option><option>Processado</option><option>Bruto</option><option>CARNES</option><option>CONGELADOS</option><option>RESFRIADOS</option><option>QUEIJOS</option><option>SECOS</option><option>VERDURAS</option><option>Pães</option><option>Temperos</option><option>Embalagens</option><option>Limpeza</option>
         </select>
         <label>Unidade</label>
         <select id="prod-unidade">
