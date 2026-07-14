@@ -573,8 +573,6 @@ async function fazerLogin() {
   }
 }
 
-document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
-
 function iniciarApp() {
   try { document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador'); } catch(e) {}
 
