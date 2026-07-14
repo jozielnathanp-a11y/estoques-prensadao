@@ -948,36 +948,39 @@ async function confirmarTodosPendentes() {
         estoque_anterior: est,
         novo_estoque: novoEst
       });
-    // Se origem CD e é entrada: descontar do CD também
+    // ── SMART CD: descontar do CD ao registrar entrada ──
     if (item.tipo === 'entrada' && item.origem === 'cd') {
-      const prefixo6 = item.codigo.replace('_' + UNIDADE_LOJA, '').substring(0, 6);
-      // Busca primeiro no almoxarifado, se não achar busca no CD
-      let origemUnidade = null;
-      let oProd = null;
-      const resAlmox = await supa('GET', 'produtos', null, 'codigo=like.' + prefixo6 + '*&unidade_loja=eq.almoxarifado&select=codigo,nome,estoque,unidade');
-      if (Array.isArray(resAlmox) && resAlmox.length) {
-        origemUnidade = 'almoxarifado';
-        oProd = resAlmox[0];
-      } else {
-        const resCD = await supa('GET', 'produtos', null, 'codigo=like.' + prefixo6 + '*&unidade_loja=eq.cd&select=codigo,nome,estoque,unidade');
-        if (Array.isArray(resCD) && resCD.length) {
-          origemUnidade = 'cd';
-          oProd = resCD[0];
+      try {
+        const codBase = item.codigo.replace(/_centro$|_delivery$|_boqueiraw$/, '');
+        const codCD   = codBase + '_cd';
+
+        // Busca primeiro no almoxarifado, se não achar busca no CD
+        let origemUnidade = null;
+        let oProd = null;
+        const resAlmox = await supa('GET', 'produtos', null, 'codigo=eq.' + codCD + '&unidade_loja=eq.almoxarifado_cd&select=codigo,nome,estoque,unidade');
+        if (Array.isArray(resAlmox) && resAlmox.length) {
+          origemUnidade = 'almoxarifado_cd';
+          oProd = resAlmox[0];
+        } else {
+          const resCD = await supa('GET', 'produtos', null, 'codigo=eq.' + codCD + '&unidade_loja=eq.cd&select=codigo,nome,estoque,unidade');
+          if (Array.isArray(resCD) && resCD.length) {
+            origemUnidade = 'cd';
+            oProd = resCD[0];
+          }
         }
-      }
-      if (oProd && origemUnidade) {
-        const oEst = parseFloat(oProd.estoque) || 0;
-        const oNovo = oEst - item.qtd;
-        await supa('PATCH', 'produtos', { estoque: oNovo }, 'codigo=eq.' + oProd.codigo + '&unidade_loja=eq.' + origemUnidade);
-        await supa('POST', 'movimentacoes', {
-          codigo: oProd.codigo, nome: item.nome, tipo: 'saida',
-          qtd: item.qtd, unidade: item.unidade,
-          colaborador: UNIDADE_LOJA.toUpperCase(),
-          obs: '📤 Saída → ' + UNIDADE_LOJA.toUpperCase() + (origemUnidade === 'almoxarifado' ? ' (Almox)' : '') + (oNovo < 0 ? ' ⚠️ NEGATIVO' : ''),
-          unidade_loja: origemUnidade,
-          estoque_anterior: oEst,
-          novo_estoque: oNovo
-        });
+        if (oProd && origemUnidade) {
+          const oEst = parseFloat(oProd.estoque) || 0;
+          const oNovo = oEst - item.qtd;
+          await supa('PATCH', 'produtos', { estoque: oNovo }, 'codigo=eq.' + oProd.codigo + '&unidade_loja=eq.' + origemUnidade);
+          await supa('POST', 'movimentacoes', {
+            codigo: oProd.codigo, nome: item.nome, tipo: 'saida',
+            qtd: item.qtd, unidade: item.unidade,
+            colaborador: UNIDADE_LOJA.toUpperCase(),
+            obs: '📤 Saída → ' + UNIDADE_LOJA.toUpperCase() + (origemUnidade === 'almoxarifado_cd' ? ' (Almox)' : '') + (oNovo < 0 ? ' ⚠️ NEGATIVO' : ''),
+            unidade_loja: origemUnidade,
+            estoque_anterior: oEst,
+            novo_estoque: oNovo
+          });
       }
     }
     }
@@ -2744,5 +2747,4 @@ function enviarPedidoWhatsApp() {
   </div>
 </div>
 </body>
-<!-- v1782148029 -->
 </html>
