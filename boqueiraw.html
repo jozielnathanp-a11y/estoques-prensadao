@@ -3,6 +3,9 @@
 <head>
   <!-- VERSAO-ZAPIA: atualizado em 05/06/2026 — contagem em lote adicionada -->
   <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Estoques Prensadão Boqueirão</title>
   <style>
@@ -12,25 +15,25 @@
 
     /* LOGIN */
     #login-screen {
-      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 99999; overflow-y: auto;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #f9a825 0%, #e65100 100%);
     }
     .login-box {
       background: #111; border-radius: 4px; padding: 40px 32px; width: 90%; max-width: 380px;
       box-shadow: 0 0 40px #f9a82544; border: 1px solid #f9a82533;
     }
-    .login-box h1 { font-size: 1.4rem; color: #f9a825; text-align: center; margin-bottom: 6px; }
+    .login-box h1 { font-size: 1.4rem; color: #e65100; text-align: center; margin-bottom: 6px; }
     .login-box p { font-size: 0.82rem; color: #888; text-align: center; margin-bottom: 28px; }
     .login-box input {
       width: 100%; padding: 12px 16px; border: 2px solid #333; border-radius: 4px; background: #1a1a1a; color: #f0f0f0;
       font-size: 1rem; margin-bottom: 14px; outline: none; transition: border 0.2s;
     }
-    .login-box input:focus { border-color: #f9a825; }
+    .login-box input:focus { border-color: #e65100; }
     .login-box button {
       width: 100%; padding: 14px; background: #f9a825; color: #000; border: none;
       border-radius: 4px; font-size: 1.2rem; font-weight: 700; cursor: pointer; font-family: 'Bebas Neue', sans-serif; letter-spacing: 3px;
     }
-    .login-box button:hover { background: #e65100; }
+    .login-box button:hover { background: #bf360c; }
     #login-erro { color: #b71c1c; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none; }
 
     /* APP */
@@ -57,7 +60,7 @@
     .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
     .btn-red { background: #f9a825; color: #000; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 1.1rem; }
     .btn-green { background: #2e7d32; color: #fff; }
-    .btn-blue { background: #e65100; color: #fff; }
+    .btn-blue { background: #7b1a00; color: #fff; }
     .btn-gray { background: #1a1a1a; color: #888; border: 1px solid #333; }
 
     input, select { width: 100%; padding: 10px 12px; border: 2px solid #333; border-radius: 4px; font-size: 0.95rem; margin-bottom: 10px; outline: none; background: #1a1a1a; color: #f0f0f0; }
@@ -99,7 +102,7 @@
     .hist-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
     .hist-item:last-child { border-bottom: none; }
     .hist-tipo { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; }
-    .hist-contagem { background: #e3f2fd; color: #e65100; }
+    .hist-contagem { background: #e3f2fd; color: #7b1a00; }
     .hist-entrada { background: #e8f5e9; color: #2e7d32; }
     .hist-saida { background: #fde8e8; color: #b71c1c; }
 
@@ -119,7 +122,8 @@
       .tabs { justify-content: center; }
       .tab { padding: 14px 24px; }
     }
-  /* ── SINO DE NOTIFICAÇÕES ── */
+  
+/* ── SINO DE NOTIFICAÇÕES ── */
 .notif-btn {
   position: relative;
   background: rgba(255,255,255,0.15);
@@ -129,7 +133,7 @@
   border-radius: 8px;
   cursor: pointer;
   font-size: 1.1rem;
-  display: none; /* só aparece para ADM */
+  display: none;
 }
 .notif-btn.adm-visible { display: inline-flex; align-items: center; }
 .notif-badge {
@@ -185,7 +189,6 @@
   padding: 10px 12px;
   font-size: 0.85rem;
   border-left: 3px solid #888;
-  transition: background 0.2s;
 }
 .notif-item.entrada { border-left-color: #4caf50; }
 .notif-item.saida   { border-left-color: #f44336; }
@@ -196,7 +199,6 @@
 .notif-item .notif-detalhe { color: #bbb; font-size: 0.8rem; }
 .notif-item .notif-hora { color: #888; font-size: 0.75rem; margin-top: 4px; }
 .notif-vazia { text-align: center; color: #666; padding: 32px 16px; font-size: 0.9rem; }
-
 
 </style>
 </head>
@@ -223,23 +225,21 @@
       <h1>🏪 Prensadão BOQUEIRÃO</h1>
       <span id="topbar-usuario"></span>
     </div>
-    <div style="display:flex;gap:6px;"><button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;">❓</button><button id="notif-btn" class="notif-btn" onclick="toggleNotif()">🔔<span id="notif-badge" class="notif-badge"></span></button><button onclick="sair()">Saí fora</button></div></div>
-  </div>
-  <!-- PAINEL NOTIFICAÇÕES -->
-  <div id="notif-painel" class="notif-painel">
-    <div class="notif-header">
-      🔔 Notificações
-      <span onclick="marcarTodasLidas()">Marcar todas lidas</span>
-    </div>
-    <div id="notif-lista" class="notif-lista"></div>
+    <button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;" title="Ajuda">❓</button>
+      <button class="notif-btn" id="notif-btn" onclick="toggleNotif()" title="Notificações">🔔<span class="notif-badge" id="notif-badge"></span></button>
+    <button onclick="sair()">Saí fora</button>
   </div>
 
   <div class="tabs" id="tabs-bar">
     <div class="tab active" onclick="showTab('estoque')">📦 TRAMPO</div>
     <div class="tab" onclick="showTab('lancar')">➕ LANÇAR</div>
-    <div class="tab" onclick="showTab('historico')">📋 ROLO</div>
+    
+    
+    <div class="tab adm-only" onclick="showTab('pedidos')">🛒 PEDIDOS</div>
     <div class="tab adm-only" onclick="showTab('relatorio')">📊 EXTRATO</div>
     <div class="tab adm-only" onclick="showTab('produtos')">⚙️ BASE</div>
+    <div class="tab adm-only" onclick="showTab('embalagens')">📦 EMB.</div>
+    <div class="tab adm-only" onclick="showTab('bebidas')">🍺 BEB.</div>
     <div class="tab" onclick="showTab('descarte')">🗑️ DESCARTE</div>
   </div>
 
@@ -265,21 +265,7 @@
 
   <!-- LANÇAR -->
   <div class="screen" id="tab-lancar">
-      <!-- NOME OPERADOR -->
-  <div class="card" id="card-nome-operador" style="display:none;border:2px solid #f9a825;">
-    <h3 style="color:#f9a825;">👤 Quem tá no corre?</h3>
-    <p style="font-size:0.82rem;color:#aaa;margin-bottom:10px;">Coloca seu nome antes de começar</p>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input type="text" id="input-nome-operador" placeholder="Seu nome aqui, mano..." style="margin:0;flex:1;min-width:0;width:100%;font-size:1rem;padding:12px;" onkeydown="if(event.key==='Enter') confirmarNomeOperador()" />
-      <button onclick="confirmarNomeOperador()" style="margin:0;padding:10px 14px;white-space:nowrap;flex-shrink:0;font-size:0.85rem;background:#f9a825;color:#000;border:none;border-radius:8px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">✅ BORA</button>
-    </div>
-  </div>
-  <div id="card-nome-confirmado" style="display:none;background:#111;border:1px solid #2e7d32;border-radius:4px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;justify-content:space-between;">
-    <span style="font-size:0.88rem;color:#2e7d32;font-weight:700;">👤 <span id="label-nome-operador"></span></span>
-    <button onclick="trocarNomeOperador()" style="background:none;border:none;color:#888;font-size:0.75rem;cursor:pointer;text-decoration:underline;">Trocar</button>
-  </div>
-
-  <div class="card">
+    <div class="card">
       <h3>➕ Novo Lançamento</h3>
 
       <!-- PASSO 1: Tipo -->
@@ -290,53 +276,76 @@
       </div>
       <!-- CONTAGEM EM LOTE -->
       <div style="margin-top:10px;">
-        <button class="btn" onclick="abrirContagemLote()" style="width:100%;background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;padding:14px;font-size:1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">
+        <button class="btn" onclick="abrirContagemLote()" style="width:100%;background:linear-gradient(135deg,#e65100,#bf360c);color:#fff;padding:14px;font-size:1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;">
           📋 Contagem em Lote
         </button>
       </div>
       <input type="hidden" id="lanc-tipo" value="entrada" />
-      <button class="btn btn-gray" onclick="abrirContagemCat()" style="width:100%;margin:0 0 12px;padding:14px;background:#5c6bc0;color:#fff;">📋 CONTAGEM EM LOTE</button>
 
       <!-- PASSO 2: Produto -->
       <label style="font-size:0.95rem;font-weight:700;color:#37474f;">2️⃣ Produto</label>
       <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
         <input type="text" id="scan-input" placeholder="Bora! Digita ou escaneia o código, mano..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){buscarPorCodigo();}" />
-        <button onclick="abrirCamera()" style="background:#f9a825;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
+        <button onclick="abrirCamera()" style="background:#e65100;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
       </div>
       <div id="camera-area" style="display:none;margin-bottom:10px;">
         <video id="camera-video" style="width:100%;border-radius:10px;max-height:220px;" autoplay playsinline></video>
         <button onclick="fecharCamera()" class="btn btn-gray" style="margin-top:6px;">✖ Fechar câmera</button>
       </div>
-      <select id="lanc-produto" style="margin-bottom:6px;">
+      <select id="lanc-produto" style="margin-bottom:6px;" onchange="atualizarLabelAberto()">
         <option value="">-- Selecione --</option>
       </select>
       <div id="lanc-info" style="font-size:0.82rem;color:#607d8b;font-weight:600;margin:-4px 0 10px;display:none;"></div>
 
-      <!-- PASSO 3: Quantidade -->
+            <!-- PASSO 3: Quantidade -->
       <label style="font-size:0.95rem;font-weight:700;color:#37474f;">3️⃣ Quantidade</label>
-      <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 10px;">
-        <label style="font-size:0.82rem;margin-bottom:4px;">✖️ Multiplicador (opcional)</label>
+
+      <!-- Fechados × fator (opcional) -->
+      <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 6px;">
+        <label style="font-size:0.82rem;margin-bottom:4px;">📦 Fechados × fator (opcional)</label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input type="number" id="lanc-pct" placeholder="Nº PCT" step="1" min="1" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
+          <input type="number" id="lanc-pct" placeholder="Nº PCT" step="1" min="0" oninput="calcTotal()" style="margin:0;flex:1;" />
           <span style="color:#607d8b;font-weight:700;">×</span>
-          <input type="number" id="lanc-fator" placeholder="Kg/PCT" step="0.001" min="0" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
-          <span style="color:#607d8b;font-weight:700;">=</span>
-          <span id="lanc-total" style="font-weight:700;color:#e65100;min-width:50px;text-align:right;">—</span>
+          <input type="number" id="lanc-fator" placeholder="Kg ou Und/PCT" step="0.001" min="0" oninput="calcTotal()" style="margin:0;flex:1;" />
         </div>
       </div>
-      <input type="number" id="lanc-qtd" placeholder="Ex: 5 (ou 0 pra zerar)" step="0.001" min="0" />
-      <button class="btn btn-red" onclick="confirmarLancamento()">✅ Confirmar</button>
+
+      <!-- Aberto (kg ou und) — aparece só na contagem -->
+      <div id="bloco-aberto" style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:10px;margin:0 0 6px;display:none;">
+        <label id="label-aberto" style="font-size:0.82rem;margin-bottom:4px;">🔓 Pacote aberto</label>
+        <input type="number" id="lanc-aberto" placeholder="0" step="0.001" min="0" oninput="calcTotal()" style="margin:0;" />
+        <div id="lanc-aberto-unit" style="font-size:0.75rem;color:#888;margin-top:2px;"></div>
+      </div>
+
+      <!-- Total calculado -->
+      <div style="display:flex;align-items:center;gap:10px;margin:4px 0 8px;">
+        <label style="font-size:0.95rem;font-weight:700;color:#37474f;margin:0;">Total:</label>
+        <input type="number" id="lanc-qtd" placeholder="Ex: 5 (ou 0 pra zerar)" step="0.001" min="0" style="margin:0;flex:1;" oninput="calcTotal()" />
+        <span id="lanc-total" style="font-weight:700;color:#7b1a00;min-width:50px;text-align:right;"></span>
+      </div>
+      <button class="btn btn-red" onclick="adicionarAoLote()">✅ Confirmar</button>
+    <!-- PENDENTES -->
+    <div class="card" style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h4 style="margin:0;font-size:0.95rem;">⏳ Pendentes (<span id="lanc-count">0</span>/15)</h4>
+        <button onclick="limparLancamentos()" style="background:none;border:none;color:#888;font-size:0.78rem;cursor:pointer;">✖ Limpar</button>
+      </div>
+      <div id="lista-lancamentos-itens" style="min-height:40px;">
+        <p style="color:#555;text-align:center;font-size:0.78rem;padding:10px;">Nenhum item ainda. Confirme um lançamento acima.</p>
+      </div>
+      
+        <div id="nome-lancador-wrap" style="margin-bottom:8px;">
+          <input type="text" id="nome-lancador" placeholder="👤 Seu nome antes de salvar, parceiro..." 
+            style="width:100%;padding:12px;border-radius:10px;border:2px solid #e53935;background:#1a1a1a;color:#fff;font-size:1rem;box-sizing:border-box;" 
+            autocomplete="off" />
+        </div>
+        <button class="btn btn-green" id="btn-salvar-estoque" onclick="salvarLancamentos()" style="margin-top:10px;width:100%;display:none;">💾 CONFIRMAR E ENVIAR AO ESTOQUE</button>
+    </div>
     </div>
   </div>
 
-  <!-- PENDENTES -->
-  <div class="card" id="card-pendentes" style="display:none;border:2px solid #f9a825;margin-bottom:12px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <h3 style="margin:0;color:#f9a825;">⏳ Pendentes <span id="badge-pendentes" style="background:#f9a825;color:#000;border-radius:10px;padding:1px 8px;font-size:0.85rem;margin-left:4px;">0</span></h3>
-      <button class="btn btn-red" onclick="confirmarTodosPendentes()" style="margin:0;padding:8px 16px;font-size:0.9rem;">✅ CONFIRMAR TUDO</button>
-    </div>
-    <div id="lista-pendentes"></div>
-  </div>
+
+  
 
   <!-- HISTÓRICO -->
   <div class="screen" id="tab-historico">
@@ -363,33 +372,13 @@
       <button class="btn btn-red" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
       <div style="display:flex;gap:8px;margin-top:4px;">
         <button class="btn btn-green" onclick="compartilharWhatsApp()" style="flex:1;">📱 WhatsApp</button>
-        <button class="btn btn-blue" onclick="gerarPedidoAlimentos()" style="flex:1;">🛒 Pedido</button>
+        <button class="btn btn-blue" onclick="exportarCSV()" style="flex:1;">📊 Planilha CSV</button>
       </div>
-      <div id="pedido-alimentos-resultado"></div>
+      <button class="btn" onclick="abrirPedido()" id="btn-fazer-pedido" style="width:100%;background:linear-gradient(135deg,#e65100,#bf360c);color:#fff;padding:14px;font-size:1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;margin-top:4px;">
+        🛒 Fazer Pedido
+      </button>
     </div>
     <div id="relatorio-resultado"></div>
-
-  <div class="card adm-only" style="margin-top:16px;">
-    <h3>🍺 BEBIDAS</h3>
-    <button class="btn btn-red" onclick="gerarRelatorioBebidas()">📊 GERAR RELATÓRIO</button>
-    <div style="display:flex;gap:8px;margin-top:6px;">
-      <button class="btn btn-green" onclick="compartilharBebidas()" style="flex:1;">📱 WhatsApp</button>
-      <button class="btn btn-blue" onclick="pedidoBebidas()" style="flex:1;">🛒 Pedido</button>
-    </div>
-    <div id="bebidas-resultado"></div>
-  </div>
-
-  <div class="card adm-only" style="margin-top:16px;">
-    <h3>📦 EMBALAGENS</h3>
-    <button class="btn btn-red" onclick="gerarRelatorioEmbalagens()">📊 GERAR RELATÓRIO</button>
-    <div style="display:flex;gap:8px;margin-top:6px;">
-      <button class="btn btn-green" onclick="compartilharEmbalagens()" style="flex:1;">📱 WhatsApp</button>
-      <button class="btn btn-blue" onclick="pedidoEmbalagens()" style="flex:1;">🛒 Pedido</button>
-    </div>
-    <div id="embalagens-resultado"></div>
-  </div>
-  </div>
-    <div id="embalagens-resultado"></div>
   </div>
 
   <!-- PRODUTOS (ADM) -->
@@ -405,7 +394,7 @@
         <input type="text" id="prod-nome" placeholder="Ex: Bacon" />
         <label>Categoria</label>
         <select id="prod-cat">
-          <option value="Bebidas">🥤 Bebidas</option><option value="Bruto">🥩 Bruto</option><option value="Processado">🍗 Processado</option><option value="Embalagens">📦 Embalagens</option><option value="Limpeza">🧹 Limpeza</option>
+                    <option>Bebidas</option><option>Bruto</option><option>Processado</option><option>Embalagens</option><option>Limpeza</option>
         </select>
         <label>Unidade</label>
         <select id="prod-unidade">
@@ -435,6 +424,19 @@
       </div>
     </div>
   </div>
+
+  
+  <!-- PEDIDOS (ADM) -->
+  <div class="screen adm-only" id="tab-pedidos">
+    <div class="card">
+      <h3>🛒 Lista de Pedidos</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Produtos abaixo do estoque mínimo — o que precisa pedir.</p>
+      <button class="btn btn-red" onclick="gerarPedidos()">🔄 Calcular Pedidos</button>
+    </div>
+    <div id="lista-pedidos"></div>
+  </div>
+
+  
 </div>
 
   <!-- ABA DESCARTE -->
@@ -484,24 +486,7 @@
   </div>
 </div>
 
-
-<!-- MODAL CORRIGIR ESTOQUE ADM -->
-<div id="modal-corrigir-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:2000;align-items:center;justify-content:center;">
-  <div style="background:#1a1a1a;border:2px solid #2979ff;border-radius:16px;padding:24px;width:92%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-    <h3 id="corrigir-nome" style="color:#f0f0f0;margin:0 0 4px 0;font-size:1.1rem;">Produto</h3>
-    <p id="corrigir-atual" style="color:#888;font-size:0.82rem;margin:0 0 16px 0;"></p>
-    <label style="color:#aaa;font-size:0.82rem;">Nova quantidade (valor correto):</label>
-    <input type="number" id="corrigir-qtd" step="0.001" min="0" placeholder="0"
-      style="width:100%;padding:12px;font-size:1.4rem;text-align:center;border:2px solid #2979ff;border-radius:8px;background:#111;color:#fff;margin:6px 0 14px 0;box-sizing:border-box;" />
-    <label style="color:#aaa;font-size:0.82rem;">Motivo da correção (opcional):</label>
-    <input type="text" id="corrigir-motivo" placeholder="Ex: Contagem manual, erro de lancamento..." maxlength="100"
-      style="width:100%;padding:10px;font-size:0.9rem;border:1.5px solid #444;border-radius:8px;background:#111;color:#fff;margin:6px 0 18px 0;box-sizing:border-box;" />
-    <button onclick="confirmarCorrecaoEstoque()" style="width:100%;padding:13px;background:#2979ff;color:#fff;font-weight:700;font-size:1rem;border:none;border-radius:8px;cursor:pointer;margin-bottom:8px;">Confirmar Correcao</button>
-    <button onclick="fecharCorrecaoEstoque()" style="width:100%;padding:11px;background:#333;color:#aaa;font-size:0.9rem;border:none;border-radius:8px;cursor:pointer;">Cancelar</button>
-  </div>
-</div>
-
-<div id="toast"></div>
+  <div id="toast"></div>
 
 <script>
 const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
@@ -559,11 +544,9 @@ async function fazerLogin() {
   if (!usuario || !senha) { document.getElementById('login-erro').style.display='block'; return; }
 
   try {
-    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.boqueiraw&select=*`);
+    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.centro&select=*`);
     if (res && res.length > 0) {
       usuarioLogado = res[0];
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
       iniciarApp();
     } else {
       document.getElementById('login-erro').style.display = 'block';
@@ -573,22 +556,23 @@ async function fazerLogin() {
   }
 }
 
+document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+
 function iniciarApp() {
-  try { document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador'); } catch(e) {}
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
 
   // Esconder abas ADM se for operador
   if (usuarioLogado.perfil !== 'adm') {
     document.querySelectorAll('.adm-only').forEach(el => el.style.display = 'none');
   }
 
+  iniciarNotificacoes();
   carregarProdutos();
-  try { iniciarNotificacoes(); } catch(e) {}
-  try { iniciarNomeOperador(); } catch(e) {}
-  try {
-    const hoje = dataHoje();
-    document.getElementById('hist-data').value = hoje;
-    document.getElementById('rel-data').value = hoje;
-  } catch(e) {}
+  const hoje = dataHoje();
+  document.getElementById('hist-data').value = hoje;
+  document.getElementById('rel-data').value = hoje;
 }
 
 function sair() {
@@ -601,7 +585,6 @@ function sair() {
 
 // ── TABS ──
 function showTab(name) {
-  if (name === 'lancamento') iniciarNomeOperador();
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
@@ -613,22 +596,11 @@ function showTab(name) {
 }
 
 // ── PRODUTOS ──
-
-function atualizarFiltrosCat() {
-  const cats = [...new Set(Object.values(produtosCache).map(p => p.categoria))].sort();
-  const emojis = { 'Bebidas': '🍺', 'Bruto': '🌿', 'Embalagens': '📦', 'Limpeza': '🧹', 'Processado': '🥩' };
-  const sel = document.getElementById('filtro-cat');
-  const atual = sel.value;
-  sel.innerHTML = '<option value="">Todas</option>' +
-    cats.map(c => `<option value="${c}" ${atual===c?'selected':''}>${emojis[c]||''} ${c}</option>`).join('');
-}
-
 async function carregarProdutos() {
   try {
-    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.boqueiraw');
+    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.centro');
     produtosCache = {};
     if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
-    atualizarFiltrosCat();
     renderEstoque();
     renderProdutos();
     atualizarStats();
@@ -637,36 +609,12 @@ async function carregarProdutos() {
   }
 }
 
-function extrairPesoEAN(cod) {
-  // EAN-13 peso variavel: 2 PPPPPP PPPPP C
-  // pos 0      = '2'
-  // pos 1-6    = codigo produto (6 dig)
-  // pos 7-11   = peso (5 dig, dividir por 1000 = kg)
-  // pos 12     = digito verificador
-  // Ex: 2000100002077 -> produto=000100, peso=00207 = 2.070 kg
-  if (cod && cod.length === 13 && cod[0] === '2') {
-    const pesoRaw = parseInt(cod.substring(7, 12), 10);
-    if (!isNaN(pesoRaw) && pesoRaw > 0) return pesoRaw / 1000;
-  }
-  return null;
-}
-
 function getProduto(cod) {
   if (produtosCache[cod]) return produtosCache[cod];
+  // buscar pelo sufixo da unidade (código do scanner sem _loja)
   const chaves = Object.keys(produtosCache);
-  // Busca direta sem sufixo _loja
   const match = chaves.find(k => k === cod + '_' + UNIDADE_LOJA || k.split('_').slice(0,-1).join('_') === cod);
-  if (match) return produtosCache[match];
-  // EAN-13 peso variavel: extrair codigo do produto (pos 1-6)
-  if (cod && cod.length === 13 && cod[0] === '2') {
-    const prefixo = cod.substring(1, 7);
-    const matchKg = chaves.find(k => {
-      const codSemLoja = k.replace('_' + UNIDADE_LOJA, '');
-      return codSemLoja.substring(0, 6) === prefixo;
-    });
-    if (matchKg) return produtosCache[matchKg];
-  }
-  return null;
+  return match ? produtosCache[match] : null;
 }
 
 function atualizarStats() {
@@ -696,7 +644,7 @@ function renderEstoque() {
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         <div class="produto-qty">${fmtQ(est, p.unidade)}<br><small>${p.unidade}</small></div>
-        ${usuarioLogado.perfil === 'adm' ? `<button onclick="abrirCorrecaoEstoque('${p.codigo}')" style="background:#1a237e;border:1.5px solid #2979ff;border-radius:8px;padding:6px 9px;cursor:pointer;" title="Corrigir estoque">✏️</button>` : ''}
+        ${usuarioLogado.perfil === 'adm' ? `<button onclick="editarProduto('${p.codigo}')" style="background:#f5f5f5;border:1.5px solid #ddd;border-radius:8px;padding:6px 9px;cursor:pointer;">✏️</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -815,9 +763,7 @@ function editarProduto(cod) {
   showToast('Editando: ' + p.nome, '');
 }
 
-function limparFormProduto() {
-  ['prod-id','prod-codigo','prod-nome','prod-min','prod-pct'].forEach(id => document.getElementById(id).value = '');
-}
+
 
 async function zerarEstoqueProduto(cod) {
   const p = getProduto(cod);
@@ -829,231 +775,35 @@ async function zerarEstoqueProduto(cod) {
   showToast('✅ Estoque zerado!', 'success');
 }
 
-// ── NOME OPERADOR ──
-let nomeOperador = '';
-
-function iniciarNomeOperador() {
-  if (usuarioLogado.perfil === 'adm') {
-    // ADM: usa o nome do login direto, sem pedir
-    nomeOperador = usuarioLogado.usuario;
-    document.getElementById('card-nome-operador').style.display = 'none';
-    document.getElementById('card-nome-confirmado').style.display = 'none';
-  } else {
-    // Operador: mostra card para digitar o nome
-    nomeOperador = '';
-    document.getElementById('card-nome-operador').style.display = 'block';
-    document.getElementById('card-nome-confirmado').style.display = 'none';
-    setTimeout(() => document.getElementById('input-nome-operador').focus(), 300);
-  }
-}
-
-function confirmarNomeOperador() {
-  const nome = document.getElementById('input-nome-operador').value.trim();
-  if (!nome) {
-    showToast('EI! Coloca seu nome aí mano, não sou adivinho não! 😤', 'error');
-    document.getElementById('input-nome-operador').focus();
-    return;
-  }
-  nomeOperador = nome;
-  document.getElementById('card-nome-operador').style.display = 'none';
-  const confirmado = document.getElementById('card-nome-confirmado');
-  confirmado.style.display = 'flex';
-  document.getElementById('label-nome-operador').textContent = nome;
-  showToast('👊 Bora ' + nome + '!', 'success');
-}
-
-function trocarNomeOperador() {
-  nomeOperador = '';
-  document.getElementById('card-nome-operador').style.display = 'block';
-  document.getElementById('card-nome-confirmado').style.display = 'none';
-  document.getElementById('input-nome-operador').value = '';
-  setTimeout(() => document.getElementById('input-nome-operador').focus(), 100);
-}
-
-
-// Origem: Bruto/Processado sempre CD (fixo). Bebidas/Embalagens: usuário escolhe.
-function origemPadrao(categoria) {
-  return (categoria === 'Bruto' || categoria === 'Processado') ? 'cd' : 'fornecedor';
-}
-function origemFixa(categoria) {
-  return (categoria === 'Bruto' || categoria === 'Processado');
-}
-
-// ── PENDENTES ──
-let pendentes = [];
-
-function adicionarPendente(p, tipo, qtd) {
-  const idx = pendentes.findIndex(x => x.codigo === p.codigo && x.tipo === tipo);
-  if (idx >= 0) {
-    pendentes[idx].qtd = parseFloat((pendentes[idx].qtd + qtd).toFixed(3));
-    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(pendentes[idx].qtd, p.unidade), 'success');
-    renderPendentes();
-    return;
-  }
-  if (pendentes.length >= 15) {
-    mostrarAviso15();
-    return;
-  }
-  const origem = origemPadrao(p.categoria || '');
-  pendentes.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade, operador: nomeOperador, categoria: p.categoria || '', origem });
-  if (pendentes.length === 15) {
-    mostrarAviso15();
-  } else {
-    showToast('➕ ' + p.nome + ' adicionado', 'success');
-  }
-  renderPendentes();
-}
-
-function mostrarAviso15() {
-  const el = document.getElementById('modal-limite');
-  el.style.display = 'flex';
-  setTimeout(() => { el.style.display = 'none'; }, 4000);
-}
-
-function renderPendentes() {
-  const el = document.getElementById('lista-pendentes');
-  const card = document.getElementById('card-pendentes');
-  const badge = document.getElementById('badge-pendentes');
-  badge.textContent = pendentes.length;
-  card.style.display = pendentes.length > 0 ? 'block' : 'none';
-  if (!pendentes.length) { el.innerHTML = ''; return; }
-  el.innerHTML = pendentes.map((item, i) => {
-    const icone = item.tipo === 'contagem' ? '📊' : '📥';
-    const cor = item.tipo === 'contagem' ? '#f57f17' : '#2e7d32';
-    // Bruto/Processado: origem CD fixo. Bebidas/Embalagens: toggle.
-    let origemLabel = '';
-    if (item.tipo === 'entrada') {
-      if (origemFixa(item.categoria)) {
-        origemLabel = '<div style="font-size:0.68rem;color:#1565c0;font-weight:700;margin-top:3px;">📦 CD (automático)</div>';
-      } else {
-        origemLabel = '<div style="display:flex;gap:4px;margin-top:4px;">'
-          + '<button onclick="toggleOrigem(' + i + ', \'cd\')" style="flex:1;padding:4px 6px;font-size:0.7rem;border:none;border-radius:6px;cursor:pointer;font-weight:700;background:' + (item.origem==='cd'?'#1565c0':'#222') + ';color:' + (item.origem==='cd'?'#fff':'#888') + ';">📦 CD</button>'
-          + '<button onclick="toggleOrigem(' + i + ', \'fornecedor\')" style="flex:1;padding:4px 6px;font-size:0.7rem;border:none;border-radius:6px;cursor:pointer;font-weight:700;background:' + (item.origem==='fornecedor'?'#2e7d32':'#222') + ';color:' + (item.origem==='fornecedor'?'#fff':'#888') + ';">🚚 Fornecedor</button>'
-          + '</div>';
-      }
-    }
-    return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
-      + '<div style="flex:1;">'
-      + '<div style="font-weight:700;font-size:0.88rem;">' + icone + ' ' + item.nome + '</div>'
-      + '<div style="font-size:0.75rem;color:#aaa;">' + (item.tipo === 'contagem' ? 'Contagem' : 'Entrada') + ' · ' + fmtQ(item.qtd, item.unidade) + '</div>'
-      + (item.tipo === 'entrada' ? origemLabel : '')
-      + '</div>'
-      + '<input type="number" value="' + item.qtd + '" step="0.001" min="0.001" onchange="editarPendente(' + i + ', this.value)" style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
-      + '<button onclick="removerPendente(' + i + ')" style="background:#b71c1c;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;font-size:1rem;">🗑️</button>'
-      + '</div>';
-  }).join('');
-}
-
-function editarPendente(i, val) {
-  const qtd = parseFloat(val);
-  if (qtd > 0) { pendentes[i].qtd = qtd; showToast('✏️ Quantidade atualizada', ''); }
-}
-
-function removerPendente(i) {
-  const nome = pendentes[i].nome;
-  pendentes.splice(i, 1);
-  renderPendentes();
-  showToast('🗑️ ' + nome + ' removido', 'error');
-}
-
-async function confirmarTodosPendentes() {
-  if (!pendentes.length) return;
-  const btn = document.querySelector('[onclick="confirmarTodosPendentes()"]');
-  btn.textContent = '⏳ Salvando...';
-  btn.disabled = true;
-  for (const item of pendentes) {
-    const p = getProduto(item.codigo);
-    if (!p) continue;
-    const est = parseFloat(p.estoque) || 0;
-    const novoEst = item.tipo === 'contagem' ? item.qtd : est + item.qtd;
-    const opts = {
-      method: 'PATCH',
-      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({ estoque: novoEst })
-    };
-    const r = await fetch(SUPA_URL + '/rest/v1/produtos?codigo=eq.' + item.codigo + '&unidade_loja=eq.' + UNIDADE_LOJA, opts);
-    const res = await r.json();
-    if (Array.isArray(res) && res.length) {
-      produtosCache[item.codigo].estoque = res[0].estoque;
-      await supa('POST', 'movimentacoes', {
-        codigo: item.codigo, nome: item.nome, tipo: item.tipo,
-        qtd: item.qtd, unidade: item.unidade,
-        colaborador: nomeOperador || usuarioLogado.usuario,
-        obs: item.tipo === 'contagem' ? 'Contagem' : (item.origem === 'cd' ? 'Entrada (CD)' : 'Entrada (Fornecedor)'),
-        unidade_loja: UNIDADE_LOJA,
-        estoque_anterior: est,
-        novo_estoque: novoEst
-      });
-    // ── SMART CD: descontar do CD ao registrar entrada ──
-    if (item.tipo === 'entrada' && item.origem === 'cd') {
-      try {
-        const codBase = item.codigo.replace(/_centro$|_delivery$|_boqueiraw$/, '');
-        const codCD   = codBase + '_cd';
-
-        // Busca primeiro no almoxarifado, se não achar busca no CD
-        let origemUnidade = null;
-        let oProd = null;
-        const resAlmox = await supa('GET', 'produtos', null, 'codigo=eq.' + codCD + '&unidade_loja=eq.almoxarifado_cd&select=codigo,nome,estoque,unidade');
-        if (Array.isArray(resAlmox) && resAlmox.length) {
-          origemUnidade = 'almoxarifado_cd';
-          oProd = resAlmox[0];
-        } else {
-          const resCD = await supa('GET', 'produtos', null, 'codigo=eq.' + codCD + '&unidade_loja=eq.cd&select=codigo,nome,estoque,unidade');
-          if (Array.isArray(resCD) && resCD.length) {
-            origemUnidade = 'cd';
-            oProd = resCD[0];
-          }
-        }
-        if (oProd && origemUnidade) {
-          const oEst = parseFloat(oProd.estoque) || 0;
-          const oNovo = oEst - item.qtd;
-          await supa('PATCH', 'produtos', { estoque: oNovo }, 'codigo=eq.' + oProd.codigo + '&unidade_loja=eq.' + origemUnidade);
-          await supa('POST', 'movimentacoes', {
-            codigo: oProd.codigo, nome: item.nome, tipo: 'saida',
-            qtd: item.qtd, unidade: item.unidade,
-            colaborador: UNIDADE_LOJA.toUpperCase(),
-            obs: '📤 Saída → ' + UNIDADE_LOJA.toUpperCase() + (origemUnidade === 'almoxarifado_cd' ? ' (Almox)' : '') + (oNovo < 0 ? ' ⚠️ NEGATIVO' : ''),
-            unidade_loja: origemUnidade,
-            estoque_anterior: oEst,
-            novo_estoque: oNovo
-          });
-        }
-      } catch(eCD) { console.warn('Smart CD erro:', eCD); }
-    }
-    }
-  }
-  pendentes = [];
-  renderPendentes();
-  renderEstoque();
-  popularSelectProdutos();
-  beep();
-  showToast('✅ Todos confirmados!', 'success');
-  btn.textContent = '✅ CONFIRMAR TUDO';
-  btn.disabled = false;
-}
-
 // ── LANÇAMENTO ──
 async function confirmarLancamento() {
-  if (!nomeOperador) {
-    showToast('PARA AÍ IRMÃO! Coloca seu nome primeiro, tá maluco?! 😤', 'error');
-    document.getElementById('card-nome-operador').style.display = 'block';
-    document.getElementById('input-nome-operador').focus();
-    return;
-  }
   const cod = document.getElementById('lanc-produto').value;
   const tipo = document.getElementById('lanc-tipo').value;
   const qtd = parseFloat(document.getElementById('lanc-qtd').value);
-  if (!cod) { showToast('Selecione um produto!', 'error'); return; }
-  if (qtd < 0) { showToast('Quantidade nao pode ser negativa!', 'error'); return; }
-  if (qtd <= 0 && tipo !== 'contagem') { showToast('Informe a quantidade!', 'error'); return; }
+
+  if (!cod) { showToast('Eita! Seleciona o produto primeiro, mano!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade aí, irmão!', 'error'); return; }
+
   const p = getProduto(cod);
-  adicionarPendente(p, tipo, qtd);
+  const est = parseFloat(p.estoque) || 0;
+
+  await supa('POST', 'movimentacoes', {
+    codigo: cod, nome: p.nome, tipo,
+    qtd, unidade: p.unidade,
+    colaborador: usuarioLogado.usuario,
+    obs: tipo === 'contagem' ? 'Contagem' : 'Entrada',
+    estoque_anterior: est,
+    novo_estoque: tipo === 'contagem' ? qtd : est + qtd,
+    status: 'pendente',
+    unidade_loja: UNIDADE_LOJA
+  });
+
   document.getElementById('lanc-qtd').value = '';
   document.getElementById('lanc-pct').value = '';
   document.getElementById('lanc-total').textContent = '—';
-  document.getElementById('scan-input').value = '';
-  document.getElementById('lanc-produto').value = '';
-  document.getElementById('lanc-info').style.display = 'none';
+  beep();
+  showToast('📋 Lançado! Aguardando confirmação...', 'success');
+  carregarPendentes();
 }
 
 // ── HISTÓRICO ──
@@ -1066,10 +816,10 @@ async function carregarHistorico() {
   const inicio = data + 'T00:00:00';
   const fim = data + 'T23:59:59';
   const movs = await supa('GET', 'movimentacoes', null,
-    `created_at=gte.${inicio}&created_at=lte.${fim}&unidade_loja=eq.boqueiraw&order=created_at.desc&select=*`);
+    `created_at=gte.${inicio}&created_at=lte.${fim}&status=eq.confirmado&order=created_at.desc&select=*`);
 
   if (!movs || !movs.length) {
-    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum lançamento nesta data</p>';
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nada confirmado nessa data, mano. Dia tranquilo 😎</p>';
     return;
   }
 
@@ -1083,10 +833,10 @@ async function carregarHistorico() {
           <span class="hist-tipo ${tipoCls}">${tipoLabel}</span>
           <span style="font-size:0.72rem;color:#aaa;margin-left:6px;">${hora}</span>
         </div>
-        <div style="font-weight:700;color:#e65100;">${fmtQ(m.qtd, m.unidade)}</div>
+        <div style="font-weight:700;color:#00e5ff;">${fmtQ(m.qtd, m.unidade)}</div>
       </div>
       <div style="font-size:0.85rem;font-weight:600;margin-top:3px;">${m.nome}</div>
-      <div style="font-size:0.75rem;color:#888;">por ${m.colaborador}</div>
+      <div style="font-size:0.75rem;color:#888;">por ${m.colaborador} · confirmado por ${m.confirmado_por || '?'}</div>
     </div>`;
   }).join('');
 }
@@ -1130,37 +880,77 @@ function selecionarCat(cat) {
 async function gerarRelatorio() {
   const data = document.getElementById('rel-data').value;
   const cat = document.getElementById('rel-cat-sel').value;
-  if (!data) { showToast('Seleciona uma data!', 'error'); return; }
+  if (!data) { showToast('Selecione uma data!', 'error'); return; }
 
   const el = document.getElementById('relatorio-resultado');
   el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
 
-  const inicio = data + 'T00:00:00';
-  const fim    = data + 'T23:59:59';
+  const hoje = dataHoje();
+  const eHoje = data === hoje;
 
+  // Filtrar produtos pela categoria
   const produtos = Object.values(produtosCache).filter(p => cat === 'Todos' || p.categoria === cat);
 
-  // Buscar movimentacoes do dia
-  const movs = await supa('GET', 'movimentacoes', null,
-    'created_at=gte.' + inicio + '&created_at=lte.' + fim + '&select=*&order=created_at.asc');
+  // Buscar movimentações do período completo (dia anterior + dia atual)
+  const diaAnterior = new Date(data);
+  diaAnterior.setDate(diaAnterior.getDate() - 1);
+  const diaAntStr = diaAnterior.getFullYear()+'-'+String(diaAnterior.getMonth()+1).padStart(2,'0')+'-'+String(diaAnterior.getDate()).padStart(2,'0');
+
+  const inicio = data + 'T00:00:00';
+  const fim = data + 'T23:59:59';
+  const inicioAnt = diaAntStr + 'T00:00:00';
+  const fimAnt = diaAntStr + 'T23:59:59';
+
+  // Movimentações do dia selecionado
+  const movsHoje = await supa('GET', 'movimentacoes', null,
+    `created_at=gte.${inicio}&created_at=lte.${fim}&select=*&order=created_at.asc`);
+
+  // Movimentações do dia anterior
+  const movsAnt = await supa('GET', 'movimentacoes', null,
+    `created_at=gte.${inicioAnt}&created_at=lte.${fimAnt}&select=*&order=created_at.asc`);
 
   let resultado = {};
   produtos.forEach(p => {
     resultado[p.codigo] = {
       nome: p.nome, unidade: p.unidade, categoria: p.categoria,
-      entradas: 0,       // soma das entradas do dia
-      contagem: null,    // ultima contagem do dia (null = nao realizado)
-      descarte: 0,       // soma dos descartes do dia
-      estoque: parseFloat(p.estoque) || 0  // estoque atual no banco
+      estoque_min: p.estoque_min || 0,
+      entrada_anterior: 0,   // entradas do dia anterior
+      contagem: null,        // última contagem do dia
+      entrada_atual: 0,      // entradas do dia atual
+      consumo: null,
+      descarte: 0,
+      estoque_atual: eHoje ? parseFloat(p.estoque) || 0 : null
     };
   });
 
-  if (Array.isArray(movs)) {
-    movs.forEach(m => {
+  // Processar movimentações do dia anterior
+  if (Array.isArray(movsAnt)) {
+    movsAnt.forEach(m => {
       if (!resultado[m.codigo]) return;
-      if (m.tipo === 'entrada') resultado[m.codigo].entradas += m.qtd;
+      if (m.tipo === 'entrada') resultado[m.codigo].entrada_anterior += m.qtd;
+    });
+  }
+
+  // Processar movimentações do dia atual
+  if (Array.isArray(movsHoje)) {
+    movsHoje.forEach(m => {
+      if (!resultado[m.codigo]) return;
       if (m.tipo === 'contagem') resultado[m.codigo].contagem = m.novo_estoque;
-      if (m.tipo === 'descarte') resultado[m.codigo].descarte += m.qtd;
+      else if (m.tipo === 'entrada') resultado[m.codigo].entrada_atual += m.qtd;
+      else if (m.tipo === 'descarte') resultado[m.codigo].descarte = (resultado[m.codigo].descarte || 0) + m.qtd;
+    });
+  }
+
+  // Para hoje: estoque atual = estoque no banco
+  // Calcular consumo para Processado
+  if (Array.isArray(movsHoje)) {
+    movsHoje.forEach(m => {
+      if (!resultado[m.codigo]) return;
+      const r = resultado[m.codigo];
+      if (m.tipo === 'contagem' && m.estoque_anterior !== null) {
+        r.consumo = (m.estoque_anterior || 0) - m.qtd + r.entrada_atual;
+        if (r.consumo < 0) r.consumo = 0;
+      }
     });
   }
 
@@ -1168,35 +958,39 @@ async function gerarRelatorio() {
   window._ultimoRelatorio = itens;
   window._ultimoRelCat = cat;
 
-  if (!itens.length) {
-    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>';
-    return;
-  }
+  if (!itens.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>'; return; }
 
-  const [ano, mes, dia2] = data.split('-');
-  let html = '<div style="background:#607d8b;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;">'
-    + '\uD83D\uDCC5 ' + dia2 + '/' + mes + '/' + ano + ' \u00B7 ' + (cat === 'Todos' ? 'Todas categorias' : cat)
-    + '</div>';
-
-  // Cabecalho tabela
-  html += '<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
-    + '<span>PRODUTO</span><span style="text-align:center;">ENTRADAS</span><span style="text-align:center;">DESCARTE</span><span style="text-align:center;">CONTAGEM</span><span style="text-align:center;">ESTOQUE</span>'
-    + '</div>';
+  const [ano, mes, dia] = data.split('-');
+  let html = `<div style="background:#607d8b;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;">
+    📅 ${dia}/${mes}/${ano} · ${cat === 'Todos' ? 'Todas categorias' : cat}
+  </div>`;
 
   itens.forEach(p => {
-    const estoque = p.estoque;
-    const cor = estoque === 0 ? '#b71c1c' : estoque <= (p.estoque_min || 0) ? '#ff9800' : '#2e7d32';
-    const contagemTxt = p.contagem !== null ? fmtQ(p.contagem, p.unidade) : '<span style="color:#888;font-style:italic;font-size:0.75rem;">Nao realizado</span>';
-    const entradasTxt = p.entradas > 0 ? '+' + fmtQ(p.entradas, p.unidade) : '<span style="color:#555;">-</span>';
-    const descarteTxt = p.descarte > 0 ? fmtQ(p.descarte, p.unidade) : '<span style="color:#555;">-</span>';
+    const isProc = true;
+    const semCont = p.contagem === null;
+    const estAtual = p.estoque_atual !== null ? p.estoque_atual : p.contagem;
+    const cor = semCont ? '#bbb' : estAtual === 0 ? '#b71c1c' : '#2e7d32';
 
-    html += '<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr 1fr 1fr;gap:4px;background:#161616;border-left:3px solid ' + cor + ';padding:8px 10px;margin-bottom:2px;align-items:center;">'
-      + '<span style="font-weight:700;font-size:0.85rem;">' + p.nome + '</span>'
-      + '<span style="text-align:center;font-size:0.82rem;color:#4fc3f7;">' + entradasTxt + '</span>'
-      + '<span style="text-align:center;font-size:0.82rem;color:#ef5350;">' + descarteTxt + '</span>'
-      + '<span style="text-align:center;font-size:0.82rem;">' + contagemTxt + '</span>'
-      + '<span style="text-align:center;font-size:0.85rem;font-weight:700;color:' + cor + ';">' + fmtQ(estoque, p.unidade) + '</span>'
-      + '</div>';
+    html += `<div style="background:#252540;border-left:4px solid ${cor};border-radius:8px;padding:10px 14px;margin-bottom:8px;">
+      <div style="font-weight:700;font-size:0.92rem;color:#fff;">${p.nome} <span style="font-size:0.72rem;color:#90a4ae;font-weight:400;">${p.categoria}</span></div>
+      <div style="font-size:0.8rem;margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;">`;
+
+    if (isProc) {
+      // PROCESSADO: Entrada anterior | Contagem | Entrada atual | Consumo
+      html += `<span style="background:#1a2a3a;color:#90caf9;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—'}</b></span>`;
+      html += `<span style="background:#2a1a3a;color:#ce93d8;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '—' : fmtQ(p.contagem, p.unidade)}</b></span>`;
+    if (p.descarte > 0) html += `<span style="background:#2a0a0a;color:#ef5350;padding:3px 8px;border-radius:6px;">🗑️ Descarte: <b>${fmtQ(p.descarte, p.unidade)}</b></span>`;
+      html += `<span style="background:#1a2a1a;color:#a5d6a7;padding:3px 8px;border-radius:6px;">📥 Ent. atual: <b style="color:#2e7d32">${p.entrada_atual > 0 ? fmtQ(p.entrada_atual, p.unidade) : '—'}</b></span>`;
+      if (p.consumo !== null && p.consumo > 0) html += `<span style="background:#2a1a00;color:#ffcc80;padding:3px 8px;border-radius:6px;">🍳 Consumo: <b style="color:#e65100">${fmtQ(p.consumo, p.unidade)}</b></span>`;
+    } else {
+      // BRUTO: Entrada anterior | Contagem | Pedido sugerido
+      html += `<span style="background:#1a2a3a;color:#90caf9;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—'}</b></span>`;
+      html += `<span style="background:#2a1a3a;color:#ce93d8;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '—' : fmtQ(p.contagem ?? estAtual, p.unidade)}</b></span>`;
+      const pedido = p.estoque_min > 0 && estAtual !== null ? Math.max(0, p.estoque_min - (estAtual || 0)) : null;
+      if (pedido !== null && pedido > 0) html += `<span style="background:#fde8e8;padding:3px 8px;border-radius:6px;">🛒 Pedir: <b style="color:#b71c1c">${fmtQ(pedido, p.unidade)}</b></span>`;
+    }
+
+    html += `</div></div>`;
   });
 
   el.innerHTML = html;
@@ -1274,83 +1068,94 @@ let cameraStream = null;
 let barcodeDetector = null;
 let scanLoop = null;
 
-function buscarPorCodigo() {
-  const cod = document.getElementById('scan-input').value.trim();
-  if (!cod) return;
-  const tipo = document.getElementById('lanc-tipo').value;
-  const p = getProduto(cod);
-
-  if (p) {
-    if (!nomeOperador) {
-      showToast('SEGURA AÍ! Coloca seu nome antes de sair escaneando, mano! 😤', 'error');
-      document.getElementById('card-nome-operador').style.display = 'block';
-      document.getElementById('input-nome-operador').focus();
-      return;
-    }
-    const sel = document.getElementById('lanc-produto');
-    sel.value = p.codigo;
-    sel.dispatchEvent(new Event('change'));
-    document.getElementById('scan-input').value = '';
-    beep();
-
-    // Produto em kg: verificar se tem peso no código de barras
-    if (p.unidade === 'kg') {
-      const pesoNoCode = extrairPesoEAN(cod);
-
-      if (pesoNoCode) {
-        // Tem peso no código: lança direto no pendente (entrada e contagem)
-        adicionarPendente(p, tipo, pesoNoCode);
-        document.getElementById('scan-input').value = '';
-        document.getElementById('lanc-produto').value = '';
-        document.getElementById('lanc-info').style.display = 'none';
-      } else {
-        // Sem peso no código: abre modal para digitar o peso
-        document.getElementById('modal-kg-nome').textContent = p.nome;
-        document.getElementById('modal-kg-peso').value = '';
-        document.getElementById('modal-kg-cod').value = p.codigo;
-        document.getElementById('modal-kg-info').textContent = 'Digite o peso real do produto';
-        document.getElementById('modal-kg-tipo').value = tipo;
-        document.getElementById('modal-kg').style.display = 'flex';
-        setTimeout(() => document.getElementById('modal-kg-peso').focus(), 100);
-      }
-    } else {
-      // Unidade: se tem qtd_por_pct abre modal pra escolher quantos PCT
-      const pctFator = parseFloat(p.qtd_por_pct) || 0;
-      if (pctFator > 1) {
-        document.getElementById('modal-pct-nome').textContent = '📦 ' + p.nome;
-        document.getElementById('modal-pct-info').textContent = '1 PCT = ' + pctFator + ' un';
-        document.getElementById('modal-pct-codigo').value = p.codigo;
-        document.getElementById('modal-pct-tipo').value = tipo;
-        document.getElementById('modal-pct-fator').value = pctFator;
-        document.getElementById('modal-pct-qtd').value = '1';
-        document.getElementById('modal-pct-total').textContent = 'Total: ' + pctFator + ' un';
-        document.getElementById('modal-pct').style.display = 'flex';
-        setTimeout(() => document.getElementById('modal-pct-qtd').select(), 100);
-      } else {
-        // Sem PCT definido: lança 1 direto
-        adicionarPendente(p, tipo, 1);
-        document.getElementById('scan-input').value = '';
-        document.getElementById('lanc-produto').value = '';
-        document.getElementById('lanc-info').style.display = 'none';
-      }
-    }
-  } else {
-    showToast('Oh! Irmão, só faço a contagem, não sou mãe Dina pra adivinhar! Pede pro chefe cadastrar esse bagulho aí pohh 😤', 'error');
+function extrairPesoBalanca(cod) {
+  if (cod && cod.length === 13 && cod[0] === '2' && /^\d{13}$/.test(cod)) {
+    const pesoG = parseInt(cod.substring(7, 12), 10);
+    if (!isNaN(pesoG) && pesoG > 0) return pesoG / 1000;
   }
+  return null;
 }
 
-function confirmarPesoKg() {
-  const peso = parseFloat(document.getElementById('modal-kg-peso').value);
-  const cod = document.getElementById('modal-kg-cod').value;
-  const tipo = document.getElementById('modal-kg-tipo').value || 'contagem';
-  if (!peso || peso <= 0) { showToast('Informe o peso!', 'error'); return; }
-  const p = getProduto(cod);
-  document.getElementById('modal-kg').style.display = 'none';
+function buscarPorCodigo() {
+  const rawCod = document.getElementById('scan-input').value.trim();
+  if (!rawCod) return;
+
+  const pesoKg = extrairPesoBalanca(rawCod);
+
+  let p = getProduto(rawCod);
+
+  if (!p && pesoKg !== null) {
+    const prefixoProduto = rawCod.substring(1, 7);
+    p = Object.values(produtosCache).find(function(prod) {
+      const base = prod.codigo.replace(/_[a-z]+$/, '');
+      return base === prefixoProduto || base.startsWith(prefixoProduto);
+    });
+  }
+
+  if (!p) {
+    showToast('Produto não encontrado! Pede pro chefe cadastrar esse código 😤', 'error');
+    return;
+  }
+
+  const tipo = document.getElementById('lanc-tipo').value;
+  var qtd = 0;
+
+  if (pesoKg !== null) {
+    // Balança: usa o peso extraído direto
+    qtd = pesoKg;
+  } else {
+    // EAN normal: verifica se já tem pct × fator preenchido
+    const pct   = parseFloat(document.getElementById('lanc-pct').value)   || 0;
+    const fator = parseFloat(document.getElementById('lanc-fator').value)  || 0;
+    const aberto= parseFloat(document.getElementById('lanc-aberto') ? document.getElementById('lanc-aberto').value : 0) || 0;
+    if (pct > 0 && fator > 0) {
+      qtd = pct * fator + aberto;
+    } else if (parseFloat(document.getElementById('lanc-qtd').value) > 0) {
+      qtd = parseFloat(document.getElementById('lanc-qtd').value);
+    } else {
+      qtd = 1;
+    }
+  }
+
+  qtd = Math.round(qtd * 1000) / 1000;
+
+  // Verificar duplicata no lote
+  var dup = null;
+  for (var i = 0; i < _lancamentos.length; i++) {
+    if (_lancamentos[i].cod === p.codigo && _lancamentos[i].tipo === tipo) {
+      dup = _lancamentos[i]; break;
+    }
+  }
+
+  if (_lancamentos.length >= 15 && !dup) {
+    showToast('Limite de 15 itens!', 'error');
+    return;
+  }
+
+  if (dup) {
+    dup.qtd = Math.round((dup.qtd + qtd) * 1000) / 1000;
+  } else {
+    _lancamentos.push({ cod: p.codigo, tipo: tipo, qtd: qtd, nome: p.nome, unidade: p.unidade, categoria: p.categoria || '' });
+  }
+
+  // Limpar campos
   document.getElementById('scan-input').value = '';
+  document.getElementById('lanc-qtd').value = '';
+  document.getElementById('lanc-pct').value = '';
+  var fel = document.getElementById('lanc-fator'); if (fel) fel.value = p.qtd_por_pct || '';
+  var ael = document.getElementById('lanc-aberto'); if (ael) ael.value = '';
   document.getElementById('lanc-produto').value = '';
-  document.getElementById('lanc-info').style.display = 'none';
-  adicionarPendente(p, tipo, peso);
+  var tel = document.getElementById('lanc-total'); if (tel) tel.textContent = '';
+
+  beep();
+  renderLancamentos();
+
+  var msg = pesoKg !== null
+    ? '⚖️ ' + p.nome + ' — ' + qtd + ' kg → pendente'
+    : '📥 ' + p.nome + ' — ' + qtd + ' ' + p.unidade + ' → pendente';
+  showToast(msg, 'success');
 }
+
 
 async function abrirCamera() {
   const area = document.getElementById('camera-area');
@@ -1390,452 +1195,366 @@ function fecharCamera() {
   document.getElementById('camera-area').style.display = 'none';
 }
 
-async function gerarRelatorioBebidas() {
-  const el = document.getElementById('bebidas-resultado');
-  el.innerHTML = '<p style="color:#888;text-align:center;padding:10px;">Carregando...</p>';
-  const prods = await supa('GET', 'produtos', null, 'categoria=eq.Bebidas&unidade_loja=eq.' + UNIDADE_LOJA + '&select=*&order=nome.asc');
-  if (!prods || !prods.length) { el.innerHTML = '<p style="color:#888;padding:10px;">Nenhuma bebida cadastrada</p>'; return; }
-  window._ultimoBebidas = prods;
-  const hoje = dataHoje();
-  let html = '<div style="background:#607d8b;color:#fff;border-radius:10px;padding:8px 14px;margin:10px 0 8px;font-weight:700;font-size:0.85rem;">🍺 Bebidas</div>
-      <button class="btn" onclick="abrirPedido()" id="btn-fazer-pedido" style="width:100%;background:linear-gradient(135deg,#e65100,#bf360c);color:#fff;padding:14px;font-size:1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;margin-top:4px;">
-        🛒 Fazer Pedido
-      </button>';
-  html += '<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
-    + '<span>PRODUTO</span><span style="text-align:center;">ESTOQUE</span><span style="text-align:center;">MINIMO</span><span style="text-align:center;">STATUS</span></div>';
-  prods.forEach(p => {
-    const est = parseFloat(p.estoque) || 0;
-    const min = parseFloat(p.estoque_min) || 0;
-    const cor = est === 0 ? '#b71c1c' : est <= min ? '#ff9800' : '#2e7d32';
-    const status = est === 0 ? '🔴 Zerado' : est <= min ? '🟡 Pedir' : '🟢 OK';
-    html += '<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr 1fr 1fr;gap:4px;background:#161616;border-left:3px solid '+cor+';padding:8px 10px;margin-bottom:2px;align-items:center;">'
-      + '<span style="font-weight:700;font-size:0.85rem;">'+p.nome+'</span>'
-      + '<span style="text-align:center;font-size:0.85rem;font-weight:700;color:'+cor+';">'+fmtQ(est,p.unidade)+'</span>'
-      + '<span style="text-align:center;font-size:0.82rem;color:#888;">'+fmtQ(min,p.unidade)+'</span>'
-      + '<span style="text-align:center;font-size:0.82rem;">'+status+'</span>'
-      + '</div>';
-  });
-  el.innerHTML = html;
-}
-
-async function compartilharBebidas() {
-  const prods = window._ultimoBebidas || await supa('GET', 'produtos', null, 'categoria=eq.Bebidas&unidade_loja=eq.' + UNIDADE_LOJA + '&select=*&order=nome.asc');
-  if (!prods || !prods.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
-  const hoje = dataHoje();
-  const [ano, mes, dia] = hoje.split('-');
-  let txt = '*Bebidas - ' + UNIDADE_LOJA.toUpperCase() + '*\n';
-  txt += '📅 ' + dia + '/' + mes + '/' + ano + '\n\n';
-  prods.forEach(p => {
-    const est = parseFloat(p.estoque) || 0;
-    const min = parseFloat(p.estoque_min) || 0;
-    const status = est === 0 ? '🔴 Zerado' : est <= min ? '🟡 Pedir' : '🟢 OK';
-    txt += p.nome + ': ' + fmtQ(est, p.unidade) + ' ' + status + '\n';
-  });
-  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
-}
-
-async function gerarPedidoAlimentos() {
-  const cat = document.getElementById('rel-cat-sel').value;
-  const el = document.getElementById('pedido-alimentos-resultado');
-  el.innerHTML = '<p style="color:#888;text-align:center;padding:10px;">Calculando...</p>';
-
-  const hoje = dataHoje();
-  const [ano, mes, dia] = hoje.split('-');
-
-  // Filtrar produtos da categoria
-  const prods = Object.values(produtosCache)
-    .filter(p => cat === 'Todos' || p.categoria === cat)
-    .sort((a,b) => a.nome.localeCompare(b.nome));
-
-  if (!prods.length) {
-    el.innerHTML = '<p style="color:#888;text-align:center;">Nenhum produto nessa categoria</p>';
-    return;
-  }
-
-  // Calcular sugestão de pedido por produto
-  const itens = prods.map(p => {
-    const est   = parseFloat(p.estoque)     || 0;
-    const pct   = parseFloat(p.qtd_por_pct) || 0;
-    const min   = parseFloat(p.estoque_min) || 0;
-    const max   = parseFloat(p.estoque_max) || 0;
-    const limite40 = pct * 0.4; // 40% do PCT
-
-    let nPct = 0;
-    let motivo = '';
-
-    const media = (min + max) / 2;
-    if (media > 0 && pct > 0) {
-      // Tem média definida: pede se estoque < média, alvo = média
-      if (est < media) {
-        const falta = media - est;
-        nPct = Math.ceil(falta / pct);
-        motivo = est === 0 ? 'zerado' : 'abaixo da média (' + fmtQ(media, p.unidade) + ')';
-      } else {
-        motivo = 'ok (acima da média)';
-      }
-    } else if (pct > 0) {
-      // Sem média: pede se estoque < 40% do PCT
-      if (est < limite40) {
-        nPct = 1;
-        motivo = est === 0 ? 'zerado' : 'abaixo de 40% do PCT';
-      } else {
-        motivo = 'ok (≥40% do PCT)';
-      }
-    } else {
-      motivo = 'sem PCT cadastrado';
-    }
-
-    return { p, est, pct, min, max, nPct, motivo };
-  });
-
-  const precisam = itens.filter(x => x.nPct > 0);
-  const ok       = itens.filter(x => x.nPct === 0);
-
-  let html = '<div style="background:#0a0a0a;border:2px solid #f9a825;border-radius:10px;padding:12px;margin-top:10px;">';
-  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;color:#f9a825;letter-spacing:1px;margin-bottom:8px;">🛒 PEDIDO — ' + dia + '/' + mes + '/' + ano + '</div>';
-
-  if (precisam.length === 0) {
-    html += '<div style="text-align:center;color:#2e7d32;font-weight:700;padding:12px;">✅ Estoque em dia! Nada pra pedir.</div>';
-  } else {
-    html += '<div style="font-size:0.75rem;color:#aaa;margin-bottom:10px;">Ajuste a quantidade se precisar 👇</div>';
-    precisam.forEach((x, i) => {
-      const { p, est, pct, nPct, motivo } = x;
-      const corEst = motivo === 'zerado' ? '#b71c1c' : '#ff9800';
-      html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #1e1e1e;">'
-        + '<div style="flex:1;">'
-        + '<div style="font-weight:700;font-size:0.88rem;">' + p.nome + '</div>'
-        + '<div style="font-size:0.72rem;color:' + corEst + ';">Estoque: ' + fmtQ(est, p.unidade) + ' · PCT: ' + fmtQ(pct, p.unidade) + ' · ' + motivo + '</div>'
-        + '</div>'
-        + '<div style="text-align:center;">'
-        + '<div style="font-size:0.65rem;color:#aaa;margin-bottom:2px;">PCT</div>'
-        + '<input type="number" id="ped-qtd-' + i + '" data-nome="' + p.nome + '" data-unidade="' + p.unidade + '" data-pct="' + pct + '" value="' + nPct + '" step="1" min="0" style="width:65px;margin:0;text-align:center;font-size:1rem;padding:6px;font-weight:700;" />'
-        + '</div>'
-        + '</div>';
-    });
-    html += '<button onclick="enviarPedidoAlimentos(' + precisam.length + ')" class="btn btn-green" style="width:100%;margin-top:12px;">📱 ENVIAR NO WHATSAPP</button>';
-  }
-
-  // Mostrar os que estão ok (colapsado)
-  if (ok.length > 0) {
-    html += '<details style="margin-top:10px;">';
-    html += '<summary style="font-size:0.78rem;color:#666;cursor:pointer;">✅ ' + ok.length + ' produto(s) em dia (sem necessidade de pedido)</summary>';
-    ok.forEach(x => {
-      html += '<div style="font-size:0.78rem;color:#555;padding:4px 0;">' + x.p.nome + ' — ' + fmtQ(x.est, x.p.unidade) + ' · ' + x.motivo + '</div>';
-    });
-    html += '</details>';
-  }
-
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-function enviarPedidoAlimentos(total) {
-  const hoje = dataHoje();
-  const [ano, mes, dia] = hoje.split('-');
-  const cat = document.getElementById('rel-cat-sel').value;
-
-  let txtWpp = '*🛒 Pedido ' + (cat === 'Todos' ? 'Geral' : cat) + ' — ' + UNIDADE_LOJA.toUpperCase() + '*\n';
-  txtWpp += '📅 ' + dia + '/' + mes + '/' + ano + '\n\n';
-  let temPedido = false;
-
-  for (let i = 0; i < total; i++) {
-    const input = document.getElementById('ped-qtd-' + i);
-    if (!input) continue;
-    const nPct = parseInt(input.value) || 0;
-    if (nPct <= 0) continue;
-    const nome = input.dataset.nome;
-    const unidade = input.dataset.unidade;
-    const pct = parseFloat(input.dataset.pct) || 0;
-    const total_kg = pct > 0 ? (nPct * pct) : nPct;
-    let linha = '';
-    if (unidade === 'un') {
-      linha = '• ' + nome + ': ' + nPct + ' PCT (' + total_kg + ' un)';
-    } else {
-      linha = '• ' + nome + ': ' + nPct + ' PCT (' + total_kg.toFixed(3).replace(/\.?0+$/, '') + ' kg)';
-    }
-    txtWpp += linha + '\n';
-    temPedido = true;
-  }
-
-  if (!temPedido) { showToast('Ajusta as quantidades antes de enviar! 😤', 'error'); return; }
-  txtWpp += '\n_Enviado pelo sistema Prensadão_ 🍔';
-  window.open('https://wa.me/?text=' + encodeURIComponent(txtWpp), '_blank');
-}
-
-async function pedidoBebidas() {
-  const prods = window._ultimoBebidas || await supa('GET', 'produtos', null, 'categoria=eq.Bebidas&unidade_loja=eq.' + UNIDADE_LOJA + '&select=*');
-  const pedidos = prods.filter(p => (parseFloat(p.estoque)||0) <= (parseFloat(p.estoque_min)||0));
-  if (!pedidos.length) { showToast('Bebidas em dia! Nada para pedir.', 'success'); return; }
-  const hoje = dataHoje();
-  const [ano, mes, dia] = hoje.split('-');
-  let txt = '*Pedido Bebidas - ' + UNIDADE_LOJA.toUpperCase() + '*\n';
-  txt += '📅 ' + dia + '/' + mes + '/' + ano + '\n\n';
-  pedidos.forEach(p => {
-    const precisa = (parseFloat(p.estoque_max)||0) - (parseFloat(p.estoque)||0);
-    const qtd = p.qtd_por_pct > 0 ? Math.ceil(precisa / p.qtd_por_pct) + ' cx' : fmtQ(precisa, p.unidade);
-    txt += p.nome + ': ' + qtd + '\n';
-  });
-  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
-}
-
-async function gerarRelatorioEmbalagens() {
-  const el = document.getElementById('embalagens-resultado');
-  el.innerHTML = '<p style="color:#888;text-align:center;padding:10px;">Carregando...</p>';
-  const prods = await supa('GET', 'produtos', null, 'categoria=eq.Embalagens&unidade_loja=eq.' + UNIDADE_LOJA + '&select=*&order=nome.asc');
-  if (!prods || !prods.length) { el.innerHTML = '<p style="color:#888;padding:10px;">Nenhuma embalagem cadastrada</p>'; return; }
-  window._ultimoEmbalagens = prods;
-  const hoje = dataHoje();
-  let html = '<div style="background:#607d8b;color:#fff;border-radius:10px;padding:8px 14px;margin:10px 0 8px;font-weight:700;font-size:0.85rem;">📦 Embalagens</div>';
-  html += '<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
-    + '<span>PRODUTO</span><span style="text-align:center;">ESTOQUE</span><span style="text-align:center;">MINIMO</span><span style="text-align:center;">PRECISA</span></div>';
-  prods.forEach(p => {
-    const est = parseFloat(p.estoque) || 0;
-    const min = parseFloat(p.estoque_min) || 0;
-    const precisa = Math.max(0, min - est);
-    const cor = est === 0 ? '#b71c1c' : precisa > 0 ? '#ff9800' : '#2e7d32';
-    const precisaTxt = precisa > 0 ? fmtQ(precisa, p.unidade) : '<span style="color:#2e7d32;">OK</span>';
-    html += '<div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr 1fr 1fr;gap:4px;background:#161616;border-left:3px solid '+cor+';padding:8px 10px;margin-bottom:2px;align-items:center;">'
-      + '<span style="font-weight:700;font-size:0.85rem;">'+p.nome+'</span>'
-      + '<span style="text-align:center;font-size:0.85rem;font-weight:700;color:'+cor+';">'+fmtQ(est,p.unidade)+'</span>'
-      + '<span style="text-align:center;font-size:0.82rem;color:#888;">'+fmtQ(min,p.unidade)+'</span>'
-      + '<span style="text-align:center;font-size:0.82rem;">'+precisaTxt+'</span>'
-      + '</div>';
-  });
-  el.innerHTML = html;
-}
-
-async function compartilharEmbalagens() {
-  const prods = window._ultimoEmbalagens || await supa('GET', 'produtos', null, 'categoria=eq.Embalagens&unidade_loja=eq.' + UNIDADE_LOJA + '&select=*&order=nome.asc');
-  if (!prods || !prods.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
-  const hoje = dataHoje();
-  const [ano, mes, dia] = hoje.split('-');
-  let txt = '*Embalagens - ' + UNIDADE_LOJA.toUpperCase() + '*\n';
-  txt += '📅 ' + dia + '/' + mes + '/' + ano + '\n\n';
-  prods.forEach(p => {
-    const est = parseFloat(p.estoque) || 0;
-    const min = parseFloat(p.estoque_min) || 0;
-    const precisa = Math.max(0, min - est);
-    txt += p.nome + ': ' + fmtQ(est, p.unidade) + (precisa > 0 ? ' (Pedir: ' + fmtQ(precisa, p.unidade) + ')' : ' ✅') + '\n';
-  });
-  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
-}
-
-async function pedidoEmbalagens() {
-  const prods = window._ultimoEmbalagens || await supa('GET', 'produtos', null, 'categoria=eq.Embalagens&unidade_loja=eq.' + UNIDADE_LOJA + '&select=*');
-  const pedidos = prods.filter(p => (parseFloat(p.estoque)||0) < (parseFloat(p.estoque_min)||0));
-  if (!pedidos.length) { showToast('Embalagens em dia! Nada para pedir.', 'success'); return; }
-  const hoje = dataHoje();
-  const [ano, mes, dia] = hoje.split('-');
-  let txt = '*Pedido Embalagens - ' + UNIDADE_LOJA.toUpperCase() + '*\n';
-  txt += '📅 ' + dia + '/' + mes + '/' + ano + '\n\n';
-  pedidos.forEach(p => {
-    const precisa = (parseFloat(p.estoque_min)||0) - (parseFloat(p.estoque)||0);
-    txt += p.nome + ': ' + fmtQ(precisa, p.unidade) + '\n';
-  });
-  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
-}
-
 // Init
 document.getElementById('login-usuario').focus();
 
+// ── PENDENTES ──
+async function carregarPendentes() {
+  const el = document.getElementById('lista-pendentes');
+  if (!el) return;
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Carregando...</p>';
+  const movs = await supa('GET', 'movimentacoes', null,
+    `status=eq.pendente&unidade_loja=eq.${UNIDADE_LOJA}&order=created_at.asc&select=*`);
 
-function fecharTutorial() {
-  document.getElementById('tutorial-overlay').style.display = 'none';
-  }
+  const badge = document.getElementById('badge-pendentes');
+  if (badge) badge.textContent = movs && movs.length ? movs.length : '';
 
-function tutorialNext() {
-  if (_tutStep < TUTORIAL_PASSOS.length - 1) { _tutStep++; renderTutorial(); }
-  else fecharTutorial();
-}
-
-function tutorialPrev() {
-  if (_tutStep > 0) { _tutStep--; renderTutorial(); }
-}
-
-function renderTutorial() {
-  const p = TUTORIAL_PASSOS[_tutStep];
-  const total = TUTORIAL_PASSOS.length;
-  document.getElementById('tut-titulo').textContent = p.titulo;
-  document.getElementById('tut-texto').innerHTML = p.texto;
-  // Dots
-  document.getElementById('tut-dots').innerHTML = TUTORIAL_PASSOS.map((_, i) =>
-    '<div style="width:8px;height:8px;border-radius:50%;background:' + (i === _tutStep ? '#f57f17' : '#333') + ';transition:background 0.2s;"></div>'
-  ).join('');
-  // Botões
-  document.getElementById('tut-btn-prev').style.opacity = _tutStep === 0 ? '0.3' : '1';
-  document.getElementById('tut-btn-prev').disabled = _tutStep === 0;
-  document.getElementById('tut-btn-next').textContent = _tutStep === total - 1 ? '✅ Entendi!' : 'Próximo →';
-}
-
-let notifUltimoAt = null;
-let notifInterval = null;
-let todasNotifs = [];
-
-// ── Notificação de versão ──
-(function() {
-  var VER_KEY = 'prensadao_notif_v2';
-  if (!localStorage.getItem(VER_KEY)) {
-    todasNotifs.push({
-      id: 'v2.0',
-      tipo: 'update',
-      nome: '🚀 Versão 2.0 disponível!',
-      colaborador: 'Sistema',
-      qtd: null,
-      unidade: '',
-      created_at: new Date().toISOString(),
-      _lida: false,
-      _detalhe: 'Contagem em Lote · Pedido Automático por Min/Máx · Extrato com tema escuro'
-    });
-    localStorage.setItem(VER_KEY, '1');
-    if (typeof atualizarBadge === 'function') {
-      atualizarBadge();
-    } else {
-      document.addEventListener('DOMContentLoaded', function() {
-        if (typeof atualizarBadge === 'function') atualizarBadge();
-      });
-    }
-  }
-})();
-
-function tipoEmoji(tipo) {
-  return {entrada:'📥', saida:'📤', contagem:'📊'}[tipo] || '📋';
-}
-
-function formatarHora(created_at) {
-  try {
-    const d = new Date(created_at);
-    return d.toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-  } catch(e) { return ''; }
-}
-
-function toggleNotif() {
-  const painel = document.getElementById('notif-painel');
-  painel.classList.toggle('open');
-  if (painel.classList.contains('open')) {
-    renderNotifs();
-  }
-}
-
-function marcarTodasLidas() {
-  todasNotifs.forEach(n => n._lida = true);
-  atualizarBadge();
-  renderNotifs();
-}
-
-function atualizarBadge() {
-  const badge = document.getElementById('notif-badge');
-  const naoLidas = todasNotifs.filter(n => !n._lida).length;
-  if (naoLidas > 0) {
-    badge.textContent = naoLidas > 99 ? '99+' : naoLidas;
-    badge.classList.add('show');
-  } else {
-    badge.classList.remove('show');
-  }
-}
-
-function renderNotifs() {
-  const lista = document.getElementById('notif-lista');
-  if (todasNotifs.length === 0) {
-    lista.innerHTML = '<div class="notif-vazia">Nenhuma notificação ainda 🔕</div>';
+  if (!movs || !movs.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Tudo confirmado, mano! Nada pendente 🤙</p>';
     return;
   }
-  lista.innerHTML = todasNotifs.slice().reverse().map(n => {
-    const lida = n._lida ? '' : ' nao-lida';
-    const emoji = tipoEmoji(n.tipo);
-    const hora = formatarHora(n.created_at);
-    return `<div class="notif-item ${n.tipo}${lida}">
-      <div class="notif-titulo">${emoji} ${n.nome}</div>
-      <div class="notif-detalhe">
-        ${n.tipo.charAt(0).toUpperCase()+n.tipo.slice(1)} · 
-        ${n.qtd} ${n.unidade} · 
-        <strong>${n.colaborador}</strong>
+
+  el.innerHTML = movs.map(m => {
+    const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+    const tipoLabel = m.tipo === 'contagem' ? '📊 Contagem' : '📥 Entrada';
+    return `<div class="hist-item" style="border-left:4px solid #ff9800;padding:12px;background:#1a1400;border-radius:4px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <span style="font-size:0.78rem;font-weight:700;color:#ff9800;">${tipoLabel}</span>
+          <span style="font-size:0.72rem;color:#555;margin-left:6px;">${hora} · por ${m.colaborador}</span>
+        </div>
+        <div style="font-weight:700;color:#ff9800;">${fmtQ(m.qtd, m.unidade)}</div>
       </div>
-      <div class="notif-hora">${hora}</div>
+      <div style="font-size:0.9rem;font-weight:700;margin:4px 0;color:#f0f0f0;">${m.nome}</div>
+      <div style="font-size:0.75rem;color:#555;">Est. anterior: ${fmtQ(m.estoque_anterior, m.unidade)} → Novo: ${fmtQ(m.novo_estoque, m.unidade)}</div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button onclick="confirmarPendente('${m.id}','${m.codigo}',${m.novo_estoque},'${m.nome}')" style="flex:1;padding:10px;background:#00e5ff;color:#000;border:none;border-radius:4px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">✅ CONFIRMAR</button>
+        <button onclick="rejeitarPendente('${m.id}','${m.nome}')" style="flex:1;padding:10px;background:#1a1a1a;color:#ff1744;border:1px solid #ff1744;border-radius:4px;font-weight:700;cursor:pointer;">❌ Rejeitar</button>
+      </div>
     </div>`;
   }).join('');
 }
 
-async function verificarNotificacoes() {
-  if (!usuarioLogado || usuarioLogado.perfil !== 'adm') return;
-  
+async function confirmarPendente(id, codigo, novoEst, nome) {
+  const isOperador = usuarioLogado.perfil === 'operador';
+  if (isOperador) {
+    if (!confirm('Ei, irmão! Já deu uma boa olhada nisso aí? Tem certeza que tá certo esse bagulho? 👀')) return;
+  }
+  // Atualiza estoque
+  await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codigo}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ estoque: novoEst })
+  });
+  // Marca como confirmado
+  await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'confirmado', confirmado_por: usuarioLogado.usuario, confirmado_em: new Date().toISOString() })
+  });
+
+// ── SMART CD: descontar do CD pelo código base ──
   try {
-    let url = 'movimentacoes';
-    let params = 'order=created_at.desc&limit=30&select=id,nome,tipo,qtd,unidade,colaborador,created_at,unidade_loja';
-    if (notifUltimoAt) {
-      params += '&created_at=gt.' + encodeURIComponent(notifUltimoAt);
+    const movRow = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}&select=tipo,qtd,codigo`, {
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    }).then(r => r.json());
+    const tipoMov  = movRow && movRow[0] ? movRow[0].tipo : '';
+    const qtdMov   = movRow && movRow[0] ? parseFloat(movRow[0].qtd) : 0;
+    const codMov   = movRow && movRow[0] ? movRow[0].codigo : '';
+
+    if (tipoMov === 'entrada' && qtdMov > 0 && codMov) {
+      // Extrair código base (remover sufixo _unidade)
+      const codBase = codMov.replace(/_centro$|_delivery$|_boqueiraw$/, '');
+      const codCD   = codBase + '_cd';
+
+      const cdRes = await fetch(
+        `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd&select=codigo,estoque`,
+        { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+      ).then(r => r.json());
+
+      if (cdRes && cdRes.length > 0) {
+        const cdEstAnt = parseFloat(cdRes[0].estoque || 0);
+        const novoCD = Math.max(0, cdEstAnt - qtdMov);
+        await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estoque: novoCD })
+        });
+        await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
+          method: 'POST',
+          headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            codigo: codCD, nome: movRow[0].nome, tipo: 'saida',
+            qtd: qtdMov, unidade: movRow[0].unidade,
+            colaborador: 'CENTRO',
+            obs: 'Saída → CENTRO',
+            unidade_loja: 'cd',
+            estoque_anterior: cdEstAnt,
+            novo_estoque: novoCD,
+            status: 'confirmado'
+          })
+        });
+        console.log('Smart CD: descontou ' + qtdMov + ' do CD (' + codCD + ') → novo estoque: ' + novoCD);
+      }
     }
-    const res = await supa('GET', url, null, params);
-    if (!res || !Array.isArray(res) || res.length === 0) return;
-    
-    // Novas notificações
-    const novas = res.filter(r => !todasNotifs.find(n => n.id === r.id));
-    novas.forEach(n => {
-      n._lida = false;
-      todasNotifs.push(n);
-    });
-    
-    // Atualizar timestamp mais recente
-    if (res[0] && res[0].created_at) notifUltimoAt = res[0].created_at;
-    
-    // Manter máximo 100 notificações
-    if (todasNotifs.length > 100) todasNotifs = todasNotifs.slice(-100);
-    
-    if (novas.length > 0) {
-      atualizarBadge();
-      const painel = document.getElementById('notif-painel');
-      if (painel.classList.contains('open')) renderNotifs();
-      // SOM
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.4);
-      } catch(se) {}
-      // PUSH
-      novas.forEach(function(n) {
-        try {
-          if (Notification && Notification.permission === 'granted') {
-            const tipo = (n.tipo||'lançamento').charAt(0).toUpperCase()+(n.tipo||'lançamento').slice(1);
-            new Notification('🔔 Novo lançamento', { body: tipo+' · '+(n.nome||'')+' · '+(n.colaborador||'-') });
-          }
-        } catch(pe) {}
+  } catch(e) { console.warn('Smart CD erro:', e); }
+  // ── FIM SMART CD ──
+  // Atualiza cache
+  const chave = Object.keys(produtosCache).find(k => k === codigo || k.startsWith(codigo.split('_')[0]));
+  if (chave) produtosCache[chave].estoque = novoEst;
+  renderEstoque();
+  beep();
+  showToast('✅ ' + nome + ' confirmado no estoque!', 'success');
+  carregarPendentes();
+}
+
+async function rejeitarPendente(id, nome) {
+  if (!confirm('Vai rejeitar "' + nome + '"? Isso some do histórico.')) return;
+  await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+  });
+  showToast('🗑️ Lançamento rejeitado!', 'error');
+  carregarPendentes();
+}
+
+// ── CALC TOTAL (fechados + aberto) ──
+function calcTotal() {
+  const pct    = parseFloat(document.getElementById('lanc-pct').value)    || 0;
+  const fator  = parseFloat(document.getElementById('lanc-fator').value)  || 0;
+  const aberto = parseFloat(document.getElementById('lanc-aberto') ? document.getElementById('lanc-aberto').value : 0) || 0;
+
+  const subtotalFechados = pct > 0 && fator > 0 ? pct * fator : 0;
+  const total = subtotalFechados + aberto;
+
+  if (total > 0) {
+    document.getElementById('lanc-qtd').value = parseFloat(total.toFixed(3));
+    document.getElementById('lanc-total').textContent = total.toFixed(3);
+  } else if (pct > 0 || fator > 0 || aberto > 0) {
+    document.getElementById('lanc-total').textContent = '—';
+  }
+}
+
+// Alias para compatibilidade
+
+
+// Mostrar/ocultar campo aberto conforme tipo
+
+
+function atualizarLabelAberto() {
+  const cod = document.getElementById('lanc-produto') ? document.getElementById('lanc-produto').value : '';
+  const p = cod ? getProduto(cod) : null;
+  const isKg = p && (p.unidade === 'kg' || p.unidade === 'Kg' || p.unidade === 'KG');
+  const label = document.getElementById('label-aberto');
+  const unitEl = document.getElementById('lanc-aberto-unit');
+  const input = document.getElementById('lanc-aberto');
+  if (label) {
+    if (isKg) {
+      label.textContent = '⚖️ Kg de pacote aberto';
+      if (input) { input.step = '0.001'; input.placeholder = 'Ex: 0.350'; }
+      if (unitEl) unitEl.textContent = 'kg restantes no pacote aberto';
+    } else {
+      label.textContent = '🔓 Unidades de pacote aberto';
+      if (input) { input.step = '1'; input.placeholder = 'Ex: 3'; }
+      if (unitEl) unitEl.textContent = (p ? p.unidade + ' ' : '') + 'restantes no pacote aberto';
+    }
+  }
+}
+// ── FIM CALC TOTAL ──
+
+
+
+async function gerarPedidos(){
+  var el=document.getElementById('lista-pedidos');
+  if(!el)return;
+  el.innerHTML='<p style="color:#888;text-align:center;padding:20px;">Calculando...</p>';
+  var prods=Object.values(produtosCache);
+  var precisam=prods.filter(function(p){
+    var min=parseFloat(p.estoque_min)||0;
+    var est=parseFloat(p.estoque)||0;
+    return min>0&&est<min;
+  });
+  if(!precisam.length){el.innerHTML='<p style="color:#4caf50;text-align:center;padding:20px;">Tudo OK!</p>';return;}
+  el.innerHTML=precisam.map(function(p){
+    var est=parseFloat(p.estoque)||0;
+    var min=parseFloat(p.estoque_min)||0;
+    var max=parseFloat(p.estoque_max)||0;
+    var falta=Math.max(0,(max>0?max:min)-est);
+    return '<div class="card" style="margin:0 0 8px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;">'
+      +'<div><div style="font-weight:700;font-size:0.9rem;">'+p.nome+'</div>'
+      +'<div style="font-size:0.75rem;color:#888;">Est: '+est+' '+p.unidade+' | Min: '+min+' | Max: '+(max>0?max:'—')+'</div></div>'
+      +'<div style="background:#fde8e8;color:#b71c1c;padding:4px 10px;border-radius:8px;font-weight:700;font-size:0.85rem;">Falta: '+falta+' '+p.unidade+'</div>'
+      +'</div></div>';
+  }).join('');
+}
+
+// ── LISTA DE LANÇAMENTOS ──
+var _lancamentos = [];
+
+function adicionarAoLote() {
+  var cod  = document.getElementById('lanc-produto').value;
+  var tipo = document.getElementById('lanc-tipo').value;
+  // Recalcular total antes de pegar o valor (garante pct×fator + aberto)
+  calcTotal();
+  var qtd  = parseFloat(document.getElementById('lanc-qtd').value);
+  // Se lanc-qtd ainda vazio, tentar pegar direto do aberto e multiplicar pelo fator
+  if (!qtd || qtd <= 0) {
+    var pct    = parseFloat(document.getElementById('lanc-pct').value) || 0;
+    var fator  = parseFloat(document.getElementById('lanc-fator').value) || 0;
+    var aberto = parseFloat((document.getElementById('lanc-aberto') || {value:'0'}).value) || 0;
+    var p2 = getProduto(cod);
+    var fat2 = p2 && p2.qtd_por_pct > 1 ? parseFloat(p2.qtd_por_pct) : 1;
+    if (pct > 0) qtd = pct * (fator || fat2);
+    else if (aberto > 0 && tipo !== 'contagem') qtd = aberto * fat2;
+    else if (aberto > 0) qtd = aberto;
+    else if (tipo === 'contagem') qtd = 0; // Permite zerar via contagem
+  }
+  if (!cod) { showToast('Seleciona o produto!', 'error'); return; }
+  if (qtd < 0) { showToast('Quantidade não pode ser negativa!', 'error'); return; }
+  if (qtd <= 0 && tipo !== 'contagem') { showToast('Coloca a quantidade!', 'error'); return; }
+  if (_lancamentos.length >= 15) { showToast('Limite de 15 itens!', 'error'); return; }
+  var p = getProduto(cod);
+  var dup = null;
+  for (var i=0;i<_lancamentos.length;i++){
+    if(_lancamentos[i].cod===cod&&_lancamentos[i].tipo===tipo){dup=_lancamentos[i];break;}
+  }
+  if (dup) { dup.qtd += qtd; } else {
+    _lancamentos.push({cod:cod, tipo:tipo, qtd:qtd, nome:p.nome, unidade:p.unidade, categoria:p.categoria||''});
+  }
+  document.getElementById('lanc-qtd').value='';
+  var elp=document.getElementById('lanc-pct'); if(elp) elp.value='';
+  var ela=document.getElementById('lanc-aberto'); if(ela) ela.value='';
+  document.getElementById('lanc-total').textContent='';
+  beep();
+  renderLancamentos();
+}
+
+function renderLancamentos() {
+  var el  = document.getElementById('lista-lancamentos-itens');
+  var cnt = document.getElementById('lanc-count');
+  var btn = document.getElementById('btn-salvar-estoque');
+  if (!el) return;
+  if (cnt) cnt.textContent = _lancamentos.length;
+  if (!_lancamentos.length) {
+    el.innerHTML = '<p style="color:#555;text-align:center;font-size:0.78rem;padding:10px;">Nenhum item ainda. Confirme um lançamento acima.</p>';
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  if (btn) btn.style.display = 'block';
+  el.innerHTML = _lancamentos.map(function(l, i) {
+    var tl  = l.tipo === 'contagem' ? '📊' : '📥';
+    var cat = (l.categoria || '').toLowerCase();
+    var isEmb = cat === 'embalagem' || cat === 'embalagens';
+    var dest = l.tipo === 'entrada'
+      ? '<span style="font-size:0.65rem;margin-left:4px;color:' + (isEmb ? '#f9a825' : '#64b5f6') + ';">→ ' + (isEmb ? 'Almox' : 'CD') + '</span>'
+      : '';
+    return '<div style="padding:8px 0;border-bottom:1px solid #1e1e1e;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<div style="flex:1;">'
+      + '<span style="font-size:0.88rem;font-weight:700;">' + tl + ' ' + l.nome + '</span>'
+      + dest
+      + '</div>'
+      + '<button onclick="_lancamentos.splice(' + i + ',1);renderLancamentos();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;padding:0 4px;">&#10006;</button>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-top:5px;">'
+      + '<input type="number" value="' + l.qtd + '" min="0" step="0.001"'
+      + ' onchange="_lancamentos[' + i + '].qtd=parseFloat(this.value)||0;renderLancamentos();"'
+      + ' style="width:80px;padding:5px 8px;border-radius:8px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:0.9rem;font-weight:700;" />'
+      + '<span style="font-size:0.82rem;color:#888;">' + l.unidade + '</span>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function limparLancamentos(){_lancamentos=[];renderLancamentos();}
+
+async function salvarLancamentos() {
+  var nomeLancEl = document.getElementById('nome-lancador');
+  var nomeLanc   = nomeLancEl ? nomeLancEl.value.trim() : '';
+  if (!nomeLanc) {
+    showToast('Coloca teu nome antes de salvar, parceiro!', 'error');
+    if (nomeLancEl) nomeLancEl.focus();
+    return;
+  }
+  if (!_lancamentos.length) { showToast('Nenhum lançamento!', 'error'); return; }
+  const btn = document.querySelector('#lista-lancamentos-wrap .btn-green');
+  if (btn) btn.disabled = true;
+  let ok = 0;
+  for (const l of _lancamentos) {
+    const p = getProduto(l.cod);
+    if (!p) continue;
+    const est = parseFloat(p.estoque) || 0;
+    // ENTRADA soma, CONTAGEM substitui
+    const novoEst = l.tipo === 'contagem' ? l.qtd : est + l.qtd;
+    const opts = {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ estoque: novoEst })
+    };
+    const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${l.cod}&unidade_loja=eq.${UNIDADE_LOJA}`, opts);
+    const res = await r.json();
+    if (Array.isArray(res) && res.length) {
+      await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
+        method: 'POST',
+        headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo: l.cod, nome: l.nome, tipo: l.tipo, qtd: l.qtd, unidade: l.unidade, colaborador: nomeLanc || usuarioLogado.usuario, obs: l.tipo === 'contagem' ? 'Contagem' : 'Entrada', unidade_loja: UNIDADE_LOJA, estoque_anterior: est, novo_estoque: novoEst, status: 'confirmado' })
       });
+
+      // Smart Desconto: SOMENTE em ENTRADA
+      if (l.tipo === 'entrada') {
+        try {
+          const codBase = l.cod.replace(/_centro$|_delivery$|_boqueiraw$/, '');
+          const cat = (l.categoria || p.categoria || '').toLowerCase();
+          const isEmbalagem = cat === 'embalagem' || cat === 'embalagens' || cat === 'limpeza';
+
+          if (isEmbalagem) {
+            // Embalagem → desconta do Almoxarifado pelo código base
+            const codAlmox = codBase + '_almoxarifado';
+            const almoxRes = await fetch(
+              `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codAlmox}&unidade_loja=eq.almoxarifado&select=codigo,estoque`,
+              { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+            ).then(function(r){ return r.json(); });
+            if (almoxRes && almoxRes.length > 0) {
+              const novoAlmox = Math.max(0, parseFloat(almoxRes[0].estoque || 0) - l.qtd);
+              await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codAlmox}&unidade_loja=eq.almoxarifado`, {
+                method: 'PATCH',
+                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estoque: novoAlmox })
+              });
+            }
+          } else {
+            // Processado / Bruto / outros → desconta do CD pelo código base
+            const codCD = codBase + '_cd';
+            const cdRes = await fetch(
+              `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd&select=codigo,estoque`,
+              { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+            ).then(function(r){ return r.json(); });
+            if (cdRes && cdRes.length > 0) {
+              const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - l.qtd);
+              await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
+                method: 'PATCH',
+                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estoque: novoCD })
+              });
+            }
+          }
+        } catch(e) { console.warn('Smart Desconto:', e); }
+      }
+
+      produtosCache[l.cod].estoque = res[0].estoque;
+      ok++;
     }
-  } catch(e) {}
+  }
+  renderEstoque();
+  var nl = document.getElementById('nome-lancador'); if (nl) nl.value = '';
+  limparLancamentos();
+  showToast('✅ ' + ok + ' lançamento(s) salvos!', 'success');
+  
+  if (btn) btn.disabled = false;
 }
 
-function iniciarNotificacoes() {
-  if (!usuarioLogado || usuarioLogado.perfil !== 'adm') return;
-  // Pedir permissão push
-  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-  
-  // Mostrar botão do sino
-  const btn = document.getElementById('notif-btn');
-  if (btn) btn.classList.add('adm-visible');
-  
-  // Carregar notificações iniciais
-  verificarNotificacoes();
-  
-  // Verificar a cada 30 segundos
-  if (notifInterval) clearInterval(notifInterval);
-  notifInterval = setInterval(verificarNotificacoes, 30000);
-}
+// ── FIM LISTA DE LANÇAMENTOS ──
 
-
-// Fechar painel ao clicar fora
-document.addEventListener('click', function(e) {
-  const painel = document.getElementById('notif-painel');
-  const btn = document.getElementById('notif-btn');
-  if (painel && btn && !painel.contains(e.target) && !btn.contains(e.target)) {
-    painel.classList.remove('open');
-  }
-});
 </script>
 
 
@@ -1869,13 +1588,13 @@ document.addEventListener('click', function(e) {
 
 <style>
 .chat-bot-msg { background:#1a1a1a;border:1px solid #2a2a2a;color:#ccc;padding:10px 12px;border-radius:12px 12px 12px 4px;font-size:0.83rem;line-height:1.6;max-width:92%;align-self:flex-start; }
-.chat-user-msg { background:#1565c0;color:#fff;padding:10px 12px;border-radius:12px 12px 4px 12px;font-size:0.83rem;line-height:1.6;max-width:80%;align-self:flex-end; }
+.chat-user-msg { background:#e65100;color:#fff;padding:10px 12px;border-radius:12px 12px 4px 12px;font-size:0.83rem;line-height:1.6;max-width:80%;align-self:flex-end; }
 .chat-sug { background:#1a1a1a;border:1px solid #333;color:#aaa;padding:8px 12px;border-radius:10px;font-size:0.8rem;cursor:pointer;text-align:left;transition:all 0.15s; }
 .chat-sug:hover { background:#252525;color:#fff; }
 </style>
 
 <script>
-var _RESPOSTAS = [{"q": "Como faço uma entrada?","tags": ["chegou","produto chegou","como lancar","lançar entrada","como faco uma entrada","como fazer uma entrada","como lancar uma entrada"],"r": "📥 <b>Como fazer uma ENTRADA:</b><br><br>1️⃣ Vai na aba <b>➕ LANÇAR</b><br>2️⃣ Seleciona <b>ENTRADA</b><br>3️⃣ Escaneia o código de barras ou digita o nome<br>4️⃣ Digita a quantidade em <b>PCT (pacotes)</b><br>5️⃣ Clica <b>ADICIONAR</b><br>6️⃣ Confere a lista de pendentes e clica <b>CONFIRMAR TUDO</b><br><br>⚠️ Não feche o app antes de confirmar!"},{"q": "O que é contagem?","tags": ["o que é contagem","diferença entrada contagem"],"r": "📊 <b>O que é CONTAGEM:</b><br><br>Contagem é quando você <b>confere o que tem fisicamente</b> no estoque e registra no sistema.<br><br>• <b>ENTRADA</b> = chegou produto novo do CD<br>• <b>CONTAGEM</b> = você tá verificando o que tem agora<br><br>Na contagem você digita o total real que existe — não o que chegou. Ex: tem 3kg de frango no freezer → digita 3."},{"q": "O que é PCT?","tags": ["pct","pacote","o que é pct","quantidade pct","o que significa pct"],"r": "📦 <b>O que é PCT (Pacote):</b><br><br>PCT é a unidade de compra do produto.<br><br>Exemplos:<br>• Coca Cola vem em caixa de <b>6 und</b> → 1 PCT = 6<br>• Frango vem em pacote de <b>3kg</b> → 1 PCT = 3kg<br>• Pão vem em pacote de <b>4 und</b> → 1 PCT = 4<br><br>Na entrada você digita <b>quantos pacotes chegaram</b> — o sistema multiplica automaticamente! 😊"},{"q": "Como funciona a multiplicação?","tags": ["multiplicação","multiplicar","calculo","cálculo","como calcula"],"r": "✖️ <b>Como funciona a multiplicação:</b><br><br>Quando você digita a quantidade na entrada, o sistema multiplica automaticamente pelo PCT do produto.<br><br>Exemplo:<br>• Chegaram <b>2 caixas</b> de Coca Cola (PCT = 6)<br>• Você digita: <b>2</b><br>• O sistema lança: <b>12 unidades</b> no estoque<br><br>Você só precisa contar os pacotes — o sistema faz o resto! 🧮"},{"q": "Por que preciso colocar quantidade?","tags": ["porque quantidade","por que quantidade","pra que quantidade","quantidade obrigatorio"],"r": "🔢 <b>Por que informar a quantidade:</b><br><br>A quantidade é essencial pra o sistema saber quanto tem em estoque.<br><br>Sem ela, não dá pra:<br>• Saber quando tá acabando 🔴<br>• Gerar pedido automático 🛒<br>• Controlar o que saiu do CD 📤<br><br>É o coração do sistema — cada lançamento conta!"},{"q": "Como tiro um relatório?","tags": ["relatorio","relatório","extrato","historico","histórico","como ver","ver lançamentos"],"r": "📊 <b>Como tirar relatório:</b><br><br><b>Operador:</b><br>→ Aba <b>📋 ROLO</b> — vê tudo que foi lançado no dia. Muda a data pra ver outros dias.<br><br><b>ADM:</b><br>→ Aba <b>📊 EXTRATO</b> — relatório completo com totais por produto. Dá pra exportar pro WhatsApp.<br><br>Filtra por data e tipo (entrada ou contagem)."},{"q": "O que significa o mínimo e máximo?","tags": ["minimo","mínimo","maximo","máximo","min","max","limite","o que é min","o que é max"],"r": "📏 <b>O que são Mínimo e Máximo:</b><br><br>• <b>Mínimo</b> = quantidade mínima que deve ter em estoque. Abaixo disso fica amarelo ⚠️ no sistema.<br>• <b>Máximo</b> = capacidade máxima de armazenamento.<br><br>Quem define esses valores é o <b>ADM ou o Chefão</b> no sistema.<br><br>Se estiver vermelho 🔴 = zerou. Se estiver amarelo 🟡 = tá no limite e precisa pedir mais!"},{"q": "Como sei meu mínimo e máximo?","tags": ["como ver min","como ver max","ver minimo","ver maximo","onde fica minimo"],"r": "📏 <b>Como ver o Mínimo e Máximo:</b><br><br>Na aba <b>📦 TRAMPO GERAL</b>, cada produto mostra:<br>• O estoque atual<br>• A cor indica se está OK, no limite ou zerado<br><br>Os valores de mín/máx são configurados pelo ADM.<br><br>Se quiser saber os valores exatos, <b>chama o Suporte</b> pelo botão abaixo! 👇"},{"q": "Produto não aparece ou código errado","tags": ["produto não aparece","nao aparece","código errado","codigo errado","produto errado","não acha","nao acha","produto sumiu"],"r": "🔍 <b>Produto não aparece / código errado:</b><br><br>Isso pode acontecer quando:<br>• O produto ainda não foi cadastrado no sistema<br>• O código de barras foi alterado pelo fornecedor<br>• O produto foi cadastrado com nome diferente<br><br>✅ Tenta buscar pelo <b>nome</b> em vez do código.<br><br>Se não achar mesmo assim, <b>chama o Suporte</b> pelo botão abaixo pra cadastrar! 👇"},{"q": "Esqueci a senha","tags": ["senha","esqueci senha","nao lembro senha","não lembro senha","senha errada","não consigo entrar"],"r": "🔑 <b>Esqueceu a senha:</b><br><br>Senhas são gerenciadas pelo Suporte.<br><br>Manda mensagem pra ele pelo botão abaixo que eles resolvem rapidinho! 👇"},{"q": "O que significa vermelho ou amarelo?","tags": ["vermelho","amarelo","verde","cor","cores","o que significa cor","por que vermelho","por que amarelo"],"r": "🎨 <b>O que significam as cores:</b><br><br>🔴 <b>Vermelho</b> = estoque ZERADO. Precisa fazer entrada urgente!<br>🟡 <b>Amarelo</b> = estoque abaixo do mínimo. Tá acabando, faz o pedido!<br>🟢 <b>Verde</b> = tá suave, estoque OK.<br><br>Essas cores aparecem na aba <b>📦 TRAMPO GERAL</b>."},{"q": "Como escanear o código?","tags": ["escanear","scanner","câmera","camera","como escanear","codigo barras","código de barras"],"r": "📷 <b>Como escanear o código de barras:</b><br><br>1️⃣ Na aba <b>➕ LANÇAR</b>, clica no campo de código<br>2️⃣ Se o celular tiver câmera disponível, aparece opção de escanear<br>3️⃣ Aponta pro código de barras do produto<br>4️⃣ O sistema preenche automaticamente!<br><br>💡 Dica: deixa o código bem iluminado pra leitura ser mais rápida."},{"q": "Como sei o que vai chegar de produto?","tags": ["vai chegar","o que vai chegar","produto vai chegar","pedido","precisao","precisão","o que pedir","o que precisa","falta produto","o que falta"],"r": "🛒 <b>Como saber o que vai chegar:</b><br><br>O sistema tem a aba <b>🛒 PRECISÃO</b> (só no Chefão e ADM) que mostra automaticamente o que precisa ser pedido.<br><br>Ela calcula com base no estoque mínimo de cada produto:<br>• Se tiver abaixo do mínimo → aparece na lista de pedido<br>• Mostra a quantidade sugerida pra pedir<br><br>Pra operadores: quando um produto ficar <b>🔴 vermelho ou 🟡 amarelo</b> na aba TRAMPO GERAL, é sinal que tá chegando pedido em breve — fala com o Suporte ou ADM!"},{"q": "Como lançar uma contagem?","tags": ["como lancar contagem","como fazer contagem","lançar contagem","fazer contagem","como lanço contagem","como contar estoque","fazer contagem do estoque","lancar contagem","contagem do estoque"],"r": "📊 <b>Como LANÇAR uma CONTAGEM:</b><br><br>1️⃣ Vai na aba <b>➕ LANÇAR</b><br>2️⃣ Seleciona o tipo <b>CONTAGEM</b><br>3️⃣ Escaneia o código ou digita o nome<br>4️⃣ Digita o <b>total real que existe</b> no estoque agora (não o que chegou!)<br>5️⃣ Clica <b>ADICIONAR</b><br>6️⃣ Clica <b>CONFIRMAR TUDO</b> pra salvar<br><br>💡 Exemplo: tem 3 pacotes de frango no freezer → digita 3."},{"q": "Como salvar os pendentes?","tags": ["salvar pendente","como salvo","confirmar pendente","como confirmar","pendente","como salvar","pendentes somem","como confirmar tudo"],"r": "💾 <b>Como SALVAR os pendentes:</b><br><br>Depois de adicionar os produtos na aba <b>➕ LANÇAR</b>, eles ficam na lista de <b>PENDENTES</b> (parte de baixo da tela).<br><br>✅ Clica em <b>CONFIRMAR TUDO</b> pra salvar tudo de uma vez.<br><br>⚠️ <b>Atenção:</b> se você fechar o app antes de confirmar, os pendentes somem e você terá que lançar de novo!<br><br>Confirma sempre antes de sair! 👊"},{"q": "Fiz uma entrada errada","tags": ["entrada errada","errei entrada","lancei errado","lançar errado","entrada errado","como corrigir entrada","corrijo entrada","desfazer entrada","cancelar entrada"],"r": "❌ <b>Fiz uma ENTRADA errada — o que fazer:</b><br><br><b>Se ainda não confirmou (tá nos pendentes):</b><br>→ Clica no ❌ ao lado do item na lista de pendentes pra remover antes de confirmar.<br><br><b>Se já confirmou:</b><br>→ Faz uma nova <b>CONTAGEM</b> com a quantidade correta. A contagem sobrescreve o estoque e corrige o valor.<br><br>💡 Se precisar, chama o ADM — ele pode usar a ferramenta de <b>Correção de Estoque</b> direto no painel! 👇"},{"q": "Fiz uma contagem errada","tags": ["contagem errada","errei contagem","contagem errado","como corrigir contagem","corrijo contagem","desfazer contagem","cancelar contagem","fiz contagem errado"],"r": "❌ <b>Fiz uma CONTAGEM errada — o que fazer:</b><br><br><b>Se ainda não confirmou (tá nos pendentes):</b><br>→ Clica no ❌ ao lado do item pra remover e digita de novo.<br><br><b>Se já confirmou:</b><br>→ Faz uma nova <b>CONTAGEM</b> com o valor correto. A contagem mais recente sempre prevalece.<br><br>💡 ADM também pode corrigir direto usando a ferramenta de <b>Correção de Estoque</b> (ícone ✏️ na lista de produtos)!"},{"q": "Como cadastrar um novo produto?", "tags": ["cadastrar produto", "cadastrar novo produto", "como cadastro produto", "como cadastrar produto", "novo produto", "adicionar produto", "produto novo", "cadastro produto", "criar produto", "como adicionar produto"], "r": "➕ <b>Como CADASTRAR um novo produto:</b><br><br>⚠️ Só <b>ADM ou Chefão</b> pode cadastrar novos produtos.<br><br>1️⃣ Faz login como <b>ADM</b><br>2️⃣ Vai na aba <b>📦 TRAMPO GERAL</b><br>3️⃣ Clica no botão <b>+ Cadastrar novo produto</b><br>4️⃣ Preenche o nome, código de barras, PCT e unidade<br>5️⃣ Define o <b>mínimo</b> e <b>máximo</b> (opcional)<br>6️⃣ Clica <b>SALVAR</b><br><br>💡 Se você é operador e achou um produto que não existe no sistema, <b>chama o Suporte</b> pelo botão abaixo! 👇"}];
+var _RESPOSTAS = [{"q": "Como faço uma entrada?", "tags": ["entrada", "entrar", "chegou", "produto chegou", "como lancar", "lançar entrada"], "r": "📥 <b>Como fazer uma ENTRADA:</b><br><br>1️⃣ Vai na aba <b>➕ LANÇAR</b><br>2️⃣ Seleciona <b>ENTRADA</b><br>3️⃣ Escaneia o código de barras ou digita o nome<br>4️⃣ Digita a quantidade em <b>PCT (pacotes)</b><br>5️⃣ Clica <b>ADICIONAR</b><br>6️⃣ Confere a lista de pendentes e clica <b>CONFIRMAR TUDO</b><br><br>⚠️ Não feche o app antes de confirmar!"}, {"q": "O que é contagem?", "tags": ["contagem", "contar", "o que é contagem", "diferença entrada contagem"], "r": "📊 <b>O que é CONTAGEM:</b><br><br>Contagem é quando você <b>confere o que tem fisicamente</b> no estoque e registra no sistema.<br><br>• <b>ENTRADA</b> = chegou produto novo do CD<br>• <b>CONTAGEM</b> = você tá verificando o que tem agora<br><br>Na contagem você digita o total real que existe — não o que chegou. Ex: tem 3kg de frango no freezer → digita 3."}, {"q": "O que é PCT?", "tags": ["pct", "pacote", "o que é pct", "quantidade pct", "o que significa pct"], "r": "📦 <b>O que é PCT (Pacote):</b><br><br>PCT é a unidade de compra do produto.<br><br>Exemplos:<br>• Coca Cola vem em caixa de <b>6 und</b> → 1 PCT = 6<br>• Frango vem em pacote de <b>3kg</b> → 1 PCT = 3kg<br>• Pão vem em pacote de <b>4 und</b> → 1 PCT = 4<br><br>Na entrada você digita <b>quantos pacotes chegaram</b> — o sistema multiplica automaticamente! 😊"}, {"q": "Como funciona a multiplicação?", "tags": ["multiplicação", "multiplicar", "calculo", "cálculo", "conta", "como calcula"], "r": "✖️ <b>Como funciona a multiplicação:</b><br><br>Quando você digita a quantidade na entrada, o sistema multiplica automaticamente pelo PCT do produto.<br><br>Exemplo:<br>• Chegaram <b>2 caixas</b> de Coca Cola (PCT = 6)<br>• Você digita: <b>2</b><br>• O sistema lança: <b>12 unidades</b> no estoque<br><br>Você só precisa contar os pacotes — o sistema faz o resto! 🧮"}, {"q": "Por que preciso colocar quantidade?", "tags": ["porque quantidade", "por que quantidade", "pra que quantidade", "quantidade obrigatorio"], "r": "🔢 <b>Por que informar a quantidade:</b><br><br>A quantidade é essencial pra o sistema saber quanto tem em estoque.<br><br>Sem ela, não dá pra:<br>• Saber quando tá acabando 🔴<br>• Gerar pedido automático 🛒<br>• Controlar o que saiu do CD 📤<br><br>É o coração do sistema — cada lançamento conta!"}, {"q": "Como tiro um relatório?", "tags": ["relatorio", "relatório", "extrato", "historico", "histórico", "como ver", "ver lançamentos"], "r": "📊 <b>Como tirar relatório:</b><br><br><b>Operador:</b><br>→ Aba <b>📋 ROLO</b> — vê tudo que foi lançado no dia. Muda a data pra ver outros dias.<br><br><b>ADM:</b><br>→ Aba <b>📊 EXTRATO</b> — relatório completo com totais por produto. Dá pra exportar pro WhatsApp.<br><br>Filtra por data e tipo (entrada ou contagem)."}, {"q": "O que significa o mínimo e máximo?", "tags": ["minimo", "mínimo", "maximo", "máximo", "min", "max", "limite", "o que é min", "o que é max"], "r": "📏 <b>O que são Mínimo e Máximo:</b><br><br>• <b>Mínimo</b> = quantidade mínima que deve ter em estoque. Abaixo disso fica amarelo ⚠️ no sistema.<br>• <b>Máximo</b> = capacidade máxima de armazenamento.<br><br>Quem define esses valores é o <b>ADM ou o Chefão</b> no sistema.<br><br>Se estiver vermelho 🔴 = zerou. Se estiver amarelo 🟡 = tá no limite e precisa pedir mais!"}, {"q": "Como sei meu mínimo e máximo?", "tags": ["como ver min", "como ver max", "ver minimo", "ver maximo", "onde fica minimo"], "r": "📏 <b>Como ver o Mínimo e Máximo:</b><br><br>Na aba <b>📦 TRAMPO GERAL</b>, cada produto mostra:<br>• O estoque atual<br>• A cor indica se está OK, no limite ou zerado<br><br>Os valores de mín/máx são configurados pelo ADM.<br><br>Se quiser saber os valores exatos, <b>chama o Josiel</b> pelo botão abaixo! 👇"}, {"q": "Produto não aparece ou código errado", "tags": ["produto não aparece", "nao aparece", "código errado", "codigo errado", "produto errado", "não acha", "nao acha", "produto sumiu"], "r": "🔍 <b>Produto não aparece / código errado:</b><br><br>Isso pode acontecer quando:<br>• O produto ainda não foi cadastrado no sistema<br>• O código de barras foi alterado pelo fornecedor<br>• O produto foi cadastrado com nome diferente<br><br>✅ Tenta buscar pelo <b>nome</b> em vez do código.<br><br>Se não achar mesmo assim, <b>chama o Josiel</b> pelo botão abaixo pra cadastrar! 👇"}, {"q": "Esqueci a senha", "tags": ["senha", "esqueci senha", "nao lembro senha", "não lembro senha", "senha errada", "não consigo entrar"], "r": "🔑 <b>Esqueceu a senha:</b><br><br>Senhas são gerenciadas pelo Josiel.<br><br>Manda mensagem pra ele pelo botão abaixo que ele resolve rapidinho! 👇"}, {"q": "O que significa vermelho ou amarelo?", "tags": ["vermelho", "amarelo", "verde", "cor", "cores", "o que significa cor", "por que vermelho", "por que amarelo"], "r": "🎨 <b>O que significam as cores:</b><br><br>🔴 <b>Vermelho</b> = estoque ZERADO. Precisa fazer entrada urgente!<br>🟡 <b>Amarelo</b> = estoque abaixo do mínimo. Tá acabando, faz o pedido!<br>🟢 <b>Verde</b> = tá suave, estoque OK.<br><br>Essas cores aparecem na aba <b>📦 TRAMPO GERAL</b>."}, {"q": "Como escanear o código?", "tags": ["escanear", "scanner", "câmera", "camera", "como escanear", "codigo barras", "código de barras"], "r": "📷 <b>Como escanear o código de barras:</b><br><br>1️⃣ Na aba <b>➕ LANÇAR</b>, clica no campo de código<br>2️⃣ Se o celular tiver câmera disponível, aparece opção de escanear<br>3️⃣ Aponta pro código de barras do produto<br>4️⃣ O sistema preenche automaticamente!<br><br>💡 Dica: deixa o código bem iluminado pra leitura ser mais rápida."}, {"q": "Como sei o que vai chegar de produto?", "tags": ["vai chegar", "o que vai chegar", "produto vai chegar", "pedido", "precisao", "precisão", "o que pedir", "o que precisa", "falta produto", "o que falta"], "r": "🛒 <b>Como saber o que vai chegar:</b><br><br>O sistema tem a aba <b>🛒 PRECISÃO</b> (só no Chefão e ADM) que mostra automaticamente o que precisa ser pedido.<br><br>Ela calcula com base no estoque mínimo de cada produto:<br>• Se tiver abaixo do mínimo → aparece na lista de pedido<br>• Mostra a quantidade sugerida pra pedir<br><br>Pra operadores: quando um produto ficar <b>🔴 vermelho ou 🟡 amarelo</b> na aba TRAMPO GERAL, é sinal que tá chegando pedido em breve — fala com o Josiel ou ADM!"}];
 var _chatAberto = false;
 
 var _SUGESTOES = [
@@ -1959,10 +1678,10 @@ function buscarResposta(pergunta) {
     }, 600);
   } else {
     // Não encontrou resposta
-    var msgWpp = 'Oi Suporte, tenho uma duvida: ' + pergunta;
+    var msgWpp = '#sistema DÚVIDA: ' + pergunta;
     var wppUrl = 'https://wa.me/5542988819420?text=' + encodeURIComponent(msgWpp);
     adicionarMsg(
-      'Hmm, essa eu não sei responder não, mano! 🤔<br><br>Mas o Suporte resolve — clica aí pra chamar ele diretamente:<br><br><a href="' + wppUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:8px;padding:8px 12px;text-decoration:none;font-size:0.82rem;font-weight:700;margin-top:4px;">💬 Chamar Suporte no WhatsApp</a>',
+      'Hmm, essa eu não sei responder não, mano! 🤔<br><br>Mas o Josiel resolve — clica aí pra chamar ele diretamente:<br><br><a href="' + wppUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:8px;padding:8px 12px;text-decoration:none;font-size:0.82rem;font-weight:700;margin-top:4px;">💬 Chamar Josiel no WhatsApp</a>',
       'bot'
     );
   }
@@ -1991,7 +1710,7 @@ function mostrarTodasOpcoes() {
       <span style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#7c4dff;letter-spacing:2px;">💡 FEEDBACK</span>
       <button onclick="toggleFeedback()" style="background:none;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
     </div>
-    <p style="font-size:0.78rem;color:#555;margin-bottom:16px;">Encontrou um erro ou tem uma sugestão? Manda aqui — vai direto pro Suporte!</p>
+    <p style="font-size:0.78rem;color:#555;margin-bottom:16px;">Encontrou um erro ou tem uma sugestão? Manda aqui — vai direto pro Josiel!</p>
 
     <!-- Tipo -->
     <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;">TIPO</label>
@@ -2029,7 +1748,7 @@ function setFbTipo(tipo) {
   _fbTipo = tipo;
   var estilos = {
     'erro':     { bg: '#2a0a0a', border: '2px solid #b71c1c', color: '#ef5350' },
-    'sugestao': { bg: '#0a1a2a', border: '2px solid #1565c0', color: '#42a5f5' },
+    'sugestao': { bg: '#0a1a2a', border: '2px solid #e65100', color: '#42a5f5' },
     'elogio':   { bg: '#1a1200', border: '2px solid #f9a825', color: '#f9a825' },
   };
   ['erro','sugestao','elogio'].forEach(function(t) {
@@ -2058,8 +1777,8 @@ function enviarFeedback() {
     return;
   }
 
-  var tipoLabel = _fbTipo === 'erro' ? '🐛 ERRO' : _fbTipo === 'sugestao' ? '💡 SUGESTÃO' : '⭐ ELOGIO';
-  var msg = tipoLabel + ' — Sistema Boqueirão\n\nDe: ' + nome + '\n\n' + texto;
+  var tipoLabel = _fbTipo === 'erro' ? '#sistema 🐛 ERRO' : _fbTipo === 'sugestao' ? '#sistema 💡 SUGESTÃO' : '#sistema ⭐ ELOGIO';
+  var msg = tipoLabel + ' — Sistema Centro\n\nDe: ' + nome + '\n\n' + texto;
   var url = 'https://wa.me/5542988819420?text=' + encodeURIComponent(msg);
 
   window.open(url, '_blank');
@@ -2074,380 +1793,331 @@ function enviarFeedback() {
     status.textContent = '';
   }, 2000);
 }
-</script>
 
-<div id="tut-ov" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.93);z-index:99999;padding:16px;box-sizing:border-box;">
-  <div style="background:#0d0d0d;border:2px solid #f57f17;border-radius:18px;width:100%;max-width:420px;padding:24px 20px;max-height:90vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <span style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#f57f17;letter-spacing:2px;">COMO USAR</span>
-      <button onclick="fecharTut()" style="background:none;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
-    </div>
-    <div id="tut-dots" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
-    <div id="tut-tit" style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#fff;margin-bottom:10px;letter-spacing:1px;"></div>
-    <div id="tut-txt" style="font-size:0.88rem;color:#bbb;line-height:1.75;min-height:110px;"></div>
-    <div style="display:flex;gap:8px;margin-top:18px;">
-      <button id="tut-prev" onclick="tutPrev()" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.85rem;">← VOLTAR</button>
-      <button id="tut-next" onclick="tutNext()" style="flex:2;background:#f57f17;border:none;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.88rem;">PRÓXIMO →</button>
-    </div>
-    <a id="tut-wpp" href="#" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Preciso de ajuda — falar com Suporte</a>
-  </div>
-</div>
-<script>
-var _TUT_OP=[["\ud83d\udce6 TRAMPO GERAL", "Aqui \u00e9 o raio-x do estoque, mano!<br><br>\ud83d\udd34 Vermelho = zerou, t\u00e1 na fissura<br>\ud83d\udfe1 Amarelo = t\u00e1 no limite, fica esperto<br>\ud83d\udfe2 Verde = tranquilo, t\u00e1 suave<br><br>Filtra por categoria ou digita o nome pra achar r\u00e1pido."], ["\u2795 LAN\u00c7AR", "Aqui voc\u00ea registra o que entrou ou confere o estoque.<br><br><b>ENTRADA</b> = chegou produto novo do CD<br><b>CONTAGEM</b> = voc\u00ea t\u00e1 contando o que tem<br><br>1\ufe0f\u20e3 Escolhe o tipo<br>2\ufe0f\u20e3 Escaneia o c\u00f3digo de barras ou digita o nome<br>3\ufe0f\u20e3 Digita a quantidade em PCT (pacotes)<br>4\ufe0f\u20e3 Clica ADICIONAR<br>5\ufe0f\u20e3 Confere tudo e manda CONFIRMAR TUDO"], ["\ud83d\udccb ROLO", "Aqui \u00e9 o hist\u00f3rico \u2014 o livro de tudo que foi lan\u00e7ado.<br><br>Filtra a data pra ver dias anteriores.<br>Mostra quem lan\u00e7ou, o que foi e quando."], ["\ud83d\udd25 DICAS FINAIS", "Pra n\u00e3o vacilar:<br><br>\u2705 Confirma os pendentes antes de sair<br>\ud83d\udcf7 Escanear o c\u00f3digo \u00e9 mais r\u00e1pido que digitar<br>\ud83d\udd34 Produto zerado? Faz uma contagem pra atualizar<br>\u26a0\ufe0f Nunca fecha o app com pendentes na lista<br>\u2753 Travou ou n\u00e3o sabe o que fazer? Cola no bot\u00e3o de ajuda!"]];
-var _TUT_ADM=[["\ud83d\udce6 TRAMPO GERAL", "Aqui \u00e9 o raio-x completo do estoque.<br><br>\ud83d\udd34 Vermelho = zerou<br>\ud83d\udfe1 Amarelo = abaixo do m\u00ednimo<br>\ud83d\udfe2 Verde = OK<br><br>Como ADM, voc\u00ea tamb\u00e9m pode corrigir estoque direto \u2014 toca no \u270f\ufe0f ao lado do produto."], ["\u2795 LAN\u00c7AR", "Registra entradas e contagens.<br><br><b>ENTRADA</b> = chegou produto novo<br><b>CONTAGEM</b> = confer\u00eancia do estoque<br><br>1\ufe0f\u20e3 Tipo \u2192 2\ufe0f\u20e3 Produto \u2192 3\ufe0f\u20e3 Quantidade em PCT \u2192 4\ufe0f\u20e3 ADICIONAR \u2192 5\ufe0f\u20e3 CONFIRMAR TUDO"], ["\ud83d\udccb ROLO", "Hist\u00f3rico completo de tudo que foi lan\u00e7ado na unidade.<br><br>Filtra por data. Mostra quem lan\u00e7ou cada item."], ["\ud83d\udcca EXTRATO", "Relat\u00f3rio completo da unidade \u2014 s\u00f3 ADM v\u00ea.<br><br>Mostra entradas, contagens e movimenta\u00e7\u00f5es por per\u00edodo.<br>D\u00e1 pra exportar pro WhatsApp."], ["\u2699\ufe0f BASE", "Aqui voc\u00ea gerencia os produtos da unidade \u2014 s\u00f3 ADM acessa.<br><br>Edita nome, c\u00f3digo de barras, unidade de medida e PCT.<br>\u26a0\ufe0f Cuidado: mudar o c\u00f3digo pode afetar leituras de scanner."], ["\ud83d\udd25 DICAS FINAIS", "Como ADM voc\u00ea tem mais poder \u2014 use com responsabilidade!<br><br>\u2705 Confirma pendentes antes de sair<br>\u270f\ufe0f Corrija estoques errados pelo bot\u00e3o de edi\u00e7\u00e3o<br>\ud83d\udcca Use o Extrato pra conferir o hist\u00f3rico antes de qualquer cobran\u00e7a<br>\u2753 D\u00favidas? Cola no Suporte!"]];
-var _TUT=_TUT_OP;
-var _tStep=0;
-var _tutChave='tut_ok_boqueiraw_operador';
-function abrirTutorial(){var ov=document.getElementById('tut-ov');ov.style.display='flex';ov.style.alignItems='center';ov.style.justifyContent='center';_tStep=0;
-  var isAdm=(typeof usuarioLogado!=='undefined'&&usuarioLogado&&usuarioLogado.perfil==='adm');
-  _TUT=isAdm?_TUT_ADM:_TUT_OP;
-  _tutChave=isAdm?'tut_ok_boqueiraw_adm':'tut_ok_boqueiraw_operador';
-  document.getElementById('tut-wpp').href=isAdm?'https://wa.me/5542988819420?text=oi%2C%20suporte':'https://wa.me/5542988819420?text=oi%2C%20suporte';
-  _tStep=0;
-  document.getElementById('tut-ov').style.display='flex';
-  _rTut();
+// TUTORIAL
+var _tutPassos = [
+    ['📦 Estoque', 'Aqui você vê todos os produtos da unidade. Use os filtros por categoria ou busca para encontrar rápido. Vermelho = zerado, amarelo = abaixo do mínimo.'],
+    ['➕ Lançar', 'Escaneie o código de barras ou selecione o produto manualmente. Escolha Entrada (chegou produto) ou Contagem (ajuste de estoque). Adicione à lista de pendentes e salve tudo de uma vez.'],
+    ['📋 Histórico', 'Veja todas as movimentações do dia ou de datas anteriores. Filtre por tipo (entrada, contagem) para conferir o que foi lançado.'],
+  ];
+var _tutAtual  = 0;
+
+function abrirTutorial() {{
+  _tutAtual = 0;
+  document.getElementById('tutorial-overlay').style.display = 'flex';
+  tutRender();
+}}
+
+function fecharTutorial() {{
+  document.getElementById('tutorial-overlay').style.display = 'none';
+}}
+
+function tutProximo() {{
+  if (_tutAtual < _tutPassos.length - 1) {{
+    _tutAtual++;
+    tutRender();
+  }} else {{
+    fecharTutorial();
+  }}
+}}
+
+function tutAnterior() {{
+  if (_tutAtual > 0) {{
+    _tutAtual--;
+    tutRender();
+  }}
+}}
+
+function tutRender() {{
+  var p = _tutPassos[_tutAtual];
+  var total = _tutPassos.length;
+  // Icone e titulo
+  var partes = p[0].split(' ');
+  var icone  = partes[0];
+  var titulo = partes.slice(1).join(' ');
+  document.getElementById('tut-icone').textContent  = icone;
+  document.getElementById('tut-titulo').textContent = titulo;
+  document.getElementById('tut-desc').textContent   = p[1];
+  document.getElementById('tut-passo-label').textContent = 'Passo ' + (_tutAtual+1) + ' de ' + total;
+  // Dots
+  var dots = '';
+  for (var i=0; i<total; i++) {{
+    dots += '<div style="width:'+(i===_tutAtual?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_tutAtual?'#e53935':'#444')+';transition:width 0.2s;"></div>';
+  }}
+  document.getElementById('tut-dots').innerHTML = dots;
+  // Botoes
+  var btnAnt  = document.getElementById('tut-btn-ant');
+  var btnProx = document.getElementById('tut-btn-prox');
+  if (btnAnt)  btnAnt.style.display  = _tutAtual === 0 ? 'none' : 'block';
+  if (btnProx) btnProx.textContent   = _tutAtual === total-1 ? '✅ Concluir' : 'Próximo →';
+}}
+// FIM TUTORIAL
+
+
+// -- REL EMBALAGENS & BEBIDAS --
+var _mreItens=null, _mreData=null, _mreFilter='todos';
+var _mrbItens=null, _mrbData=null, _mrbFilter='todos';
+
+function abrirRelEmb() {
+  document.getElementById("mre").style.display="block";
+  document.getElementById("emb-data").value=dataHoje();
+  _mreFilter='todos';
+  gerarRelEmb();
 }
-function fecharTut(){var ov=document.getElementById('tut-ov');ov.style.display='none';localStorage.setItem(_tutChave,'1');}
-function tutNext(){if(_tStep<_TUT.length-1){_tStep++;_rTut();}else fecharTut();}
-function tutPrev(){if(_tStep>0){_tStep--;_rTut();}}
-function _rTut(){
-  var p=_TUT[_tStep];
-  document.getElementById('tut-tit').textContent=p[0];
-  document.getElementById('tut-txt').innerHTML=p[1];
-  document.getElementById('tut-dots').innerHTML=_TUT.map(function(_,i){return '<div style="width:9px;height:9px;border-radius:50%;background:'+(i===_tStep?'#f57f17':'#2a2a2a')+';border:1px solid '+(i===_tStep?'#f57f17':'#444')+'"></div>';}).join('');
-  document.getElementById('tut-prev').style.opacity=_tStep===0?'0.25':'1';
-  document.getElementById('tut-next').textContent=_tStep===_TUT.length-1?'✅ ENTENDIDO!':'PRÓXIMO →';
+function abrirRelBeb() {
+  document.getElementById("mrb").style.display="block";
+  document.getElementById("beb-data").value=dataHoje();
+  _mrbFilter='todos';
+  gerarRelBeb();
 }
-function verificarTutorial(){
-  var isAdm=(typeof usuarioLogado!=='undefined'&&usuarioLogado&&usuarioLogado.perfil==='adm');
-  var chave=isAdm?'tut_ok_boqueiraw_adm':'tut_ok_boqueiraw_operador';
-  if(!localStorage.getItem(chave)){setTimeout(abrirTutorial,1200);}
+function filtrarRelEmb(f) { _mreFilter=f; renderRelEmb(); }
+function filtrarRelBeb(f) { _mrbFilter=f; renderRelBeb(); }
+
+async function gerarRelEmb() {
+  var data=document.getElementById("emb-data").value;
+  if(!data) return;
+  document.getElementById("emb-resultado").innerHTML="<p style='color:#888;text-align:center;padding:20px;'>Carregando...</p>";
+  _mreData=data;
+  _mreItens = await _buscarItensRel(data, "Embalagens");
+  renderRelEmb();
+}
+async function gerarRelBeb() {
+  var data=document.getElementById("beb-data").value;
+  if(!data) return;
+  document.getElementById("beb-resultado").innerHTML="<p style='color:#888;text-align:center;padding:20px;'>Carregando...</p>";
+  _mrbData=data;
+  _mrbItens = await _buscarItensRel(data, "Bebidas");
+  renderRelBeb();
 }
 
-// ── CONTAGEM POR CATEGORIA ──
-// ── SCAN NA CONTAGEM EM LOTE ──
-let scanContagemStream = null;
-let scanContagemLoop = null;
-let scanContagemDetector = null;
-let scanContagemItens = {}; // { codigo: { produto, qtd } }
+async function _buscarItensRel(data, categoria) {
+  var prods = await supa("GET","produtos",null,"unidade_loja=eq."+UNIDADE_LOJA+"&categoria=eq."+encodeURIComponent(categoria)+"&select=*&order=nome.asc");
+  if(!prods||!prods.length) return [];
 
-function abrirContagemCat() {
-  // Popular categorias disponíveis
-  const cats = [...new Set(Object.values(produtosCache).map(p => p.categoria).filter(Boolean))].sort();
-  const sel = document.getElementById('cat-contagem-sel');
-  sel.innerHTML = '<option value="">-- Escolha a categoria --</option>';
-  cats.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c;
-    opt.textContent = c;
-    sel.appendChild(opt);
+  var dtI=new Date(data+"T00:00:00-03:00"), dtF=new Date(data+"T23:59:59-03:00");
+  var ini=dtI.toISOString().replace("Z",""), fim=dtF.toISOString().replace("Z","");
+  var dtAI=new Date(data+"T00:00:00-03:00"); dtAI.setDate(dtAI.getDate()-1);
+  var dtAF=new Date(data+"T00:00:00-03:00"); dtAF.setMilliseconds(dtAF.getMilliseconds()-1);
+  var iniA=dtAI.toISOString().replace("Z",""), fimA=dtAF.toISOString().replace("Z","");
+
+  var movsH=await supa("GET","movimentacoes",null,"unidade_loja=eq."+UNIDADE_LOJA+"&created_at=gte."+ini+"&created_at=lte."+fim+"&status=eq.confirmado&select=*");
+  var movsA=await supa("GET","movimentacoes",null,"unidade_loja=eq."+UNIDADE_LOJA+"&created_at=gte."+iniA+"&created_at=lte."+fimA+"&status=eq.confirmado&select=*");
+
+  var res={};
+  prods.forEach(function(p){ res[p.codigo]={nome:p.nome,unidade:p.unidade,est:parseFloat(p.estoque)||0,min:parseFloat(p.estoque_min)||0,entA:0,ent:0,cont:null}; });
+  if(Array.isArray(movsA)) movsA.forEach(function(m){ if(res[m.codigo]&&m.tipo==="entrada") res[m.codigo].entA+=parseFloat(m.qtd)||0; });
+  if(Array.isArray(movsH)) movsH.forEach(function(m){
+    if(!res[m.codigo]) return;
+    if(m.tipo==="entrada") res[m.codigo].ent+=parseFloat(m.qtd)||0;
+    else if(m.tipo==="contagem") res[m.codigo].cont=parseFloat(m.novo_estoque);
   });
-  // reset
-  scanContagemItens = {};
-  renderScanContagemLista();
-  document.getElementById('scan-contagem-input').value = '';
-  document.getElementById('cat-contagem-lista').style.display = 'none';
-  document.getElementById('modal-contagem-cat').style.display = 'block';
+  return Object.values(res).sort(function(a,b){return a.nome.localeCompare(b.nome);});
 }
 
-function fecharContagemCat() {
-  fecharCameraContagem();
-  document.getElementById('modal-contagem-cat').style.display = 'none';
+function _renderItens(itens, filter, elId, titulo) {
+  var el=document.getElementById(elId);
+  if(!itens||!itens.length){el.innerHTML="<p style='color:#888;text-align:center;padding:20px;'>Nenhum produto.</p>";return;}
+  var lista = filter==='pedido' ? itens.filter(function(p){return p.min>0&&p.est<=p.min;}) : itens;
+  if(!lista.length){el.innerHTML="<p style='color:#4caf50;text-align:center;padding:20px;'>&#10003; Tudo em dia!</p>";return;}
+  var out="";
+  lista.forEach(function(p){
+    var cor=p.est===0?"#f44336":p.min>0&&p.est<=p.min?"#ff9800":"#4caf50";
+    var contLabel=p.cont===null?"**":fmtQ(p.cont,p.unidade);
+    var pedido=p.min>0&&p.est<p.min?fmtQ(p.min-p.est,p.unidade):null;
+    out+="<div style='background:#1e1e1e;border-left:4px solid "+cor+";border-radius:8px;padding:10px 14px;margin-bottom:8px;'>";
+    out+="<div style='font-weight:700;font-size:0.92rem;color:#fff;color:#f0f0f0;'>"+p.nome+"</div>";
+    out+="<div style='font-size:0.8rem;margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;'>";
+    out+="<span style='background:#0d2a3a;padding:3px 8px;border-radius:6px;color:#90caf9;'>&#128230; Ent.ant.: <b>"+(p.entA>0?fmtQ(p.entA,p.unidade):"&mdash;")+"</b></span>";
+    out+="<span style='background:#0d2a0d;padding:3px 8px;border-radius:6px;color:#a5d6a7;'>&#128229; Entrada: <b>"+(p.ent>0?fmtQ(p.ent,p.unidade):"&mdash;")+"</b></span>";
+    out+="<span style='background:#2a0d3a;padding:3px 8px;border-radius:6px;color:#ce93d8;'>&#128202; Contagem: <b style='color:"+cor+"'>"+contLabel+"</b></span>";
+    out+="<span style='background:#1a1a2a;padding:3px 8px;border-radius:6px;color:#90caf9;'>&#128230; Estoque: <b style='color:#fff'>"+fmtQ(p.est,p.unidade)+"</b></span>";
+    if(pedido) out+="<span style='background:#2a0d0d;padding:3px 8px;border-radius:6px;color:#ef9a9a;'>&#128722; Pedir: <b>"+pedido+"</b></span>";
+    out+="</div></div>";
+  });
+  el.innerHTML=out;
 }
 
-function carregarProdutosContagem() {
-  const cat = document.getElementById('cat-contagem-sel').value;
-  if (!cat) { document.getElementById('cat-contagem-lista').style.display = 'none'; return; }
+function renderRelEmb() { _renderItens(_mreItens,_mreFilter,"emb-resultado","Embalagens"); }
+function renderRelBeb() { _renderItens(_mrbItens,_mrbFilter,"beb-resultado","Bebidas"); }
 
-  const produtos = Object.values(produtosCache)
-    .filter(p => p.categoria === cat)
-    .sort((a, b) => a.nome.localeCompare(b.nome));
-
-  const div = document.getElementById('cat-contagem-produtos');
-  div.innerHTML = produtos.map(p => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0;">
-      <div style="flex:1;">
-        <div style="font-size:0.9rem;font-weight:600;color:#37474f;">${p.nome}</div>
-        <div style="font-size:0.75rem;color:#aaa;">${p.unidade || ''} · Atual: ${p.estoque || 0}</div>
-      </div>
-      <input type="number" id="cnt_${p.codigo}" placeholder="Branco = 0" step="0.001" min="0"
-        style="width:90px;margin:0;padding:8px;border-radius:8px;border:1.5px solid #ddd;font-size:0.9rem;text-align:center;" />
-    </div>
-  `).join('');
-
-  document.getElementById('cat-contagem-lista').style.display = 'block';
+function _textoWpp(itens, titulo, data, filter) {
+  var lista=filter==='pedido'?itens.filter(function(p){return p.min>0&&p.est<=p.min;}):itens;
+  var p2=data.split("-");
+  var txt="*Relatório "+titulo+" — Prensadão*\n&#128197; "+p2[2]+"/"+p2[1]+"/"+p2[0]+"\n";
+  if(filter==='pedido') txt+="*🛒 APENAS O QUE PRECISA REPOR*\n";
+  txt+="\n";
+  lista.forEach(function(p){
+    txt+="▪️ *"+p.nome+"*\n";
+    if(p.entA>0) txt+="   Ent.ant.: "+fmtQ(p.entA,p.unidade)+"\n";
+    if(p.ent>0)  txt+="   Entrada: +"+fmtQ(p.ent,p.unidade)+"\n";
+    txt+="   Estoque: "+fmtQ(p.est,p.unidade)+"\n";
+    if(p.min>0&&p.est<=p.min) txt+="   🛒 Pedir: "+fmtQ(Math.max(0,p.min-p.est),p.unidade)+"\n";
+  });
+  txt+="\n_Gerado por Estoques Prensadão_";
+  return txt;
 }
 
-// ── SCAN ──
-function scanContagemBuscarCodigo() {
-  const cod = document.getElementById('scan-contagem-input').value.trim();
-  if (!cod) return;
-  document.getElementById('scan-contagem-input').value = '';
+function compartilharRelEmb() {
+  if(!_mreItens) { showToast("Gere o relatório primeiro!","error"); return; }
+  window.open("https://wa.me/?text="+encodeURIComponent(_textoWpp(_mreItens,"Embalagens",_mreData,_mreFilter)),"_blank");
+}
+function compartilharRelBeb() {
+  if(!_mrbItens) { showToast("Gere o relatório primeiro!","error"); return; }
+  window.open("https://wa.me/?text="+encodeURIComponent(_textoWpp(_mrbItens,"Bebidas",_mrbData,_mrbFilter)),"_blank");
+}
 
-  const u = typeof UNIDADE_LOJA !== 'undefined' ? UNIDADE_LOJA : '';
-  let produto = null;
-  let pesoKg = null;
+function _csvRel(itens, data) {
+  var p2=data.split("-");
+  var csv="Produto;Unidade;Ent.Ant;Entrada;Contagem;Estoque;Pedido\n";
+  itens.forEach(function(p){
+    var ped=p.min>0&&p.est<p.min?Math.max(0,p.min-p.est):0;
+    csv+='"'+p.nome+'";'+p.unidade+";"+p.entA+";"+p.ent+";"+(p.cont!==null?p.cont:"")+";"+p.est+";"+ped+"\n";
+  });
+  return csv;
+}
+function exportarRelEmbCSV() {
+  if(!_mreItens) { showToast("Gere o relatório primeiro!","error"); return; }
+  var p2=_mreData.split("-");
+  var blob=new Blob(["\uFEFF"+_csvRel(_mreItens,_mreData)],{type:"text/csv;charset=utf-8;"});
+  var link=document.createElement("a"); link.href=URL.createObjectURL(blob);
+  link.download="embalagens_"+p2[2]+"-"+p2[1]+"-"+p2[0]+".csv"; link.click();
+  showToast("Planilha baixada!","success");
+}
+function exportarRelBebCSV() {
+  if(!_mrbItens) { showToast("Gere o relatório primeiro!","error"); return; }
+  var p2=_mrbData.split("-");
+  var blob=new Blob(["\uFEFF"+_csvRel(_mrbItens,_mrbData)],{type:"text/csv;charset=utf-8;"});
+  var link=document.createElement("a"); link.href=URL.createObjectURL(blob);
+  link.download="bebidas_"+p2[2]+"-"+p2[1]+"-"+p2[0]+".csv"; link.click();
+  showToast("Planilha baixada!","success");
+}
 
-  if (cod.length === 13 && cod[0] === '2') {
-    // EAN-13 peso variável
-    const prefixo = cod.substring(1, 7);
-    pesoKg = parseInt(cod.substring(7, 12), 10) / 1000;
-    produto = Object.values(produtosCache).find(p => {
-      const codSemLoja = p.codigo.replace('_' + u, '');
-      return codSemLoja.substring(0, 6) === prefixo;
+
+// ── SINO DE NOTIFICAÇÕES ──
+let _notifUltimoAt = null;
+let _notifInterval = null;
+let _todasNotifs = [];
+
+// ── Notificação de versão ──
+(function() {
+  var VER_KEY = 'prensadao_notif_v2';
+  if (!localStorage.getItem(VER_KEY)) {
+    _todasNotifs.push({
+      id: 'v2.0',
+      tipo: 'update',
+      nome: '🚀 Versão 2.0 disponível!',
+      colaborador: 'Sistema',
+      qtd: null,
+      unidade: '',
+      created_at: new Date().toISOString(),
+      _lida: false,
+      _detalhe: 'Contagem em Lote · Pedido Automático por Min/Máx · Extrato com tema escuro'
     });
-  } else {
-    produto = produtosCache[cod] || produtosCache[cod + '_' + u];
-  }
-
-  if (!produto) {
-    showToast('Produto não encontrado! Verifique o código.', 'error');
-    return;
-  }
-
-  beep();
-  const key = produto.codigo;
-
-  if (pesoKg !== null) {
-    // Produto pesável — acumula o peso lido do código
-    if (scanContagemItens[key]) {
-      scanContagemItens[key].qtd = parseFloat((scanContagemItens[key].qtd + pesoKg).toFixed(3));
+    localStorage.setItem(VER_KEY, '1');
+    // Atualizar badge assim que o DOM estiver pronto
+    if (typeof _atualizarBadge === 'function') {
+      _atualizarBadge();
     } else {
-      scanContagemItens[key] = { produto, qtd: pesoKg };
-    }
-    showToast('➕ ' + produto.nome + ' — ' + scanContagemItens[key].qtd + ' kg', 'success');
-    renderScanContagemLista();
-  } else {
-    // Pacote fechado → soma 1 kg automaticamente
-    if (scanContagemItens[key]) {
-      scanContagemItens[key].qtd = parseFloat((scanContagemItens[key].qtd + 1).toFixed(3));
-    } else {
-      scanContagemItens[key] = { produto, qtd: 1 };
-    }
-    showToast('➕ ' + produto.nome + ' — total: ' + scanContagemItens[key].qtd + ' ' + (produto.unidade || ''), 'success');
-    renderScanContagemLista();
-  }
-}
-
-function renderScanContagemLista() {
-  const div = document.getElementById('scan-contagem-lista');
-  const itens = Object.values(scanContagemItens);
-  if (!itens.length) {
-    div.innerHTML = '<div style="text-align:center;color:#aaa;font-size:0.85rem;padding:12px;">Nenhum item escaneado ainda</div>';
-    document.getElementById('scan-contagem-confirmar').style.display = 'none';
-    return;
-  }
-  div.innerHTML = itens.map(({ produto: p, qtd }) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0;">
-      <div style="flex:1;">
-        <div style="font-size:0.88rem;font-weight:600;color:#37474f;">${p.nome}</div>
-        <div style="font-size:0.75rem;color:#888;">Atual: ${p.estoque || 0} ${p.unidade || ''}</div>
-      </div>
-      <input type="number" id="scan_cnt_${p.codigo}" value="${qtd}" step="0.001" min="0"
-        style="width:80px;margin:0;padding:6px;border-radius:8px;border:1.5px solid #5c6bc0;font-size:0.9rem;text-align:center;font-weight:700;"
-        onchange="scanContagemItens['${p.codigo}'].qtd = parseFloat(this.value)||0" />
-      <button onclick="deleteScanContagemItem('${p.codigo}')"
-        style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#e57373;">🗑️</button>
-    </div>
-  `).join('');
-  document.getElementById('scan-contagem-confirmar').style.display = 'block';
-}
-
-function deleteScanContagemItem(codigo) {
-  delete scanContagemItens[codigo];
-  renderScanContagemLista();
-}
-
-async function confirmarScanContagem() {
-  const itens = Object.values(scanContagemItens);
-  if (!itens.length) return;
-
-  // sincroniza qtd dos inputs
-  itens.forEach(({ produto: p }) => {
-    const inp = document.getElementById('scan_cnt_' + p.codigo);
-    if (inp) scanContagemItens[p.codigo].qtd = parseFloat(inp.value) || 0;
-  });
-
-  if (!confirm(`Confirmar contagem de ${itens.length} produto(s) via scanner?`)) return;
-
-  let erros = 0;
-  for (const { produto: p, qtd } of itens) {
-    const est = parseFloat(p.estoque) || 0;
-    try {
-      const opts = {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON,
-          'Content-Type': 'application/json', 'Prefer': 'return=representation'
-        },
-        body: JSON.stringify({ estoque: qtd })
-      };
-      const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${p.codigo}&unidade_loja=eq.${UNIDADE_LOJA}`, opts);
-      const res = await r.json();
-      if (!Array.isArray(res) || !res.length) { erros++; continue; }
-
-      await supa('POST', 'movimentacoes', {
-        codigo: p.codigo, nome: p.nome, tipo: 'contagem',
-        qtd: qtd, unidade: p.unidade,
-        colaborador: usuarioLogado.usuario,
-        obs: 'Contagem (scanner)',
-        unidade_loja: UNIDADE_LOJA,
-        estoque_anterior: est,
-        novo_estoque: qtd
+      document.addEventListener('DOMContentLoaded', function() {
+        if (typeof _atualizarBadge === 'function') _atualizarBadge();
       });
-
-      if (produtosCache[p.codigo]) produtosCache[p.codigo].estoque = res[0].estoque;
-    } catch(e) { erros++; }
+    }
   }
+})();
 
-  fecharContagemCat();
-  renderEstoque();
-  beep();
-  if (erros > 0) {
-    showToast('⚠️ ' + erros + ' erro(s). Resto confirmado!', 'error');
-  } else {
-    showToast('✅ Contagem via scanner salva! 📊', 'success');
-  }
-}
-
-async function confirmarContagemCat() {
-  const cat = document.getElementById('cat-contagem-sel').value;
-  if (!cat) return;
-
-  const produtos = Object.values(produtosCache).filter(p => p.categoria === cat);
-  if (!produtos.length) return;
-
-  const lancamentos = produtos.map(p => {
-    const input = document.getElementById('cnt_' + p.codigo);
-    const val = input ? input.value.trim() : '';
-    const qtd = val === '' ? 0 : parseFloat(val);
-    return { produto: p, qtd: isNaN(qtd) ? 0 : qtd };
-  });
-
-  const total = lancamentos.length;
-  if (!confirm(`Confirmar contagem de ${total} produto(s) da categoria "${cat}"?\n\nProdutos em branco serão zerados.`)) return;
-
-  let erros = 0;
-  for (const { produto: p, qtd } of lancamentos) {
-    const est = parseFloat(p.estoque) || 0;
-    const novoEst = qtd;
-
-    try {
-      const opts = {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON,
-          'Content-Type': 'application/json', 'Prefer': 'return=representation'
-        },
-        body: JSON.stringify({ estoque: novoEst })
-      };
-      const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${p.codigo}&unidade_loja=eq.${UNIDADE_LOJA}`, opts);
-      const res = await r.json();
-      if (!Array.isArray(res) || !res.length) { erros++; continue; }
-
-      await supa('POST', 'movimentacoes', {
-        codigo: p.codigo, nome: p.nome, tipo: 'contagem',
-        qtd: novoEst, unidade: p.unidade,
-        colaborador: usuarioLogado.usuario,
-        obs: 'Contagem (' + cat + ')',
-        unidade_loja: UNIDADE_LOJA,
-        estoque_anterior: est,
-        novo_estoque: novoEst
-      });
-
-      if (produtosCache[p.codigo]) produtosCache[p.codigo].estoque = res[0].estoque;
-    } catch(e) { erros++; }
-  }
-
-  fecharContagemCat();
-  renderEstoque();
-  beep();
-
-  if (erros > 0) {
-    showToast('⚠️ ' + erros + ' erro(s). Resto confirmado!', 'error');
-  } else {
-    showToast('✅ Contagem de "' + cat + '" salva! 📊', 'success');
-  }
-}
-
-// ── CÂMERA na contagem ──
-async function abrirCameraContagem() {
-  if (!('BarcodeDetector' in window)) { showToast('Câmera não suportada neste dispositivo. Use o leitor Bluetooth.', 'error'); return; }
-  try {
-    scanContagemStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    const video = document.getElementById('scan-contagem-video');
-    video.srcObject = scanContagemStream;
-    document.getElementById('scan-contagem-camera-area').style.display = 'block';
-    scanContagemDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code'] });
-    scanContagemLoop = setInterval(async () => {
-      try {
-        const barcodes = await scanContagemDetector.detect(video);
-        if (barcodes.length > 0) {
-          const cod = barcodes[0].rawValue;
-          fecharCameraContagem();
-          document.getElementById('scan-contagem-input').value = cod;
-          scanContagemBuscarCodigo();
-        }
-      } catch(e) {}
-    }, 500);
-  } catch(e) { showToast('Erro ao acessar câmera', 'error'); }
-}
-
-function fecharCameraContagem() {
-  if (scanContagemLoop) { clearInterval(scanContagemLoop); scanContagemLoop = null; }
-  if (scanContagemStream) { scanContagemStream.getTracks().forEach(t => t.stop()); scanContagemStream = null; }
-  const area = document.getElementById('scan-contagem-camera-area');
-  if (area) area.style.display = 'none';
-}
-
-
-// CORRIGIR ESTOQUE (ADM)
-let _corrigirCod = null;
-
-function abrirCorrecaoEstoque(cod) {
-  if (!usuarioLogado || usuarioLogado.perfil !== 'adm') return;
-  const p = getProduto(cod);
+function toggleNotif() {
+  const p = document.getElementById('notif-painel');
   if (!p) return;
-  _corrigirCod = cod;
-  document.getElementById('corrigir-nome').textContent = p.nome;
-  document.getElementById('corrigir-atual').textContent = 'Estoque atual: ' + fmtQ(parseFloat(p.estoque) || 0, p.unidade) + ' ' + p.unidade;
-  document.getElementById('corrigir-qtd').value = parseFloat(p.estoque) || 0;
-  document.getElementById('corrigir-motivo').value = '';
-  const ov = document.getElementById('modal-corrigir-overlay');
-  ov.style.display = 'flex';
-  setTimeout(function(){ document.getElementById('corrigir-qtd').focus(); }, 200);
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) _renderNotifs();
 }
-
-function fecharCorrecaoEstoque() {
-  document.getElementById('modal-corrigir-overlay').style.display = 'none';
-  _corrigirCod = null;
+function marcarTodasLidas() {
+  _todasNotifs.forEach(n => n._lida = true);
+  _atualizarBadge();
+  _renderNotifs();
 }
-
-async function confirmarCorrecaoEstoque() {
-  if (!_corrigirCod) return;
-  const qtd = parseFloat(document.getElementById('corrigir-qtd').value);
-  if (isNaN(qtd) || qtd < 0) { showToast('Quantidade invalida!', 'error'); return; }
-  const motivo = document.getElementById('corrigir-motivo').value.trim() || 'Correcao manual ADM';
-  const p = getProduto(_corrigirCod);
-  const anterior = parseFloat(p.estoque) || 0;
-
-  await supa('PATCH', 'produtos?codigo=eq.' + _corrigirCod, { estoque: qtd });
-
+function _atualizarBadge() {
+  const badge = document.getElementById('notif-badge');
+  if (!badge) return;
+  const nao = _todasNotifs.filter(n => !n._lida).length;
+  badge.textContent = nao > 99 ? '99+' : nao;
+  badge.classList.toggle('show', nao > 0);
+}
+function _renderNotifs() {
+  const lista = document.getElementById('notif-lista');
+  if (!lista) return;
+  if (_todasNotifs.length === 0) {
+    lista.innerHTML = '<div class="notif-vazia">Nenhuma notificação ainda 🔕</div>';
+    return;
+  }
+  const emoji = {entrada:'📥', saida:'📤', contagem:'📊', update:'🆕'};
+  lista.innerHTML = _todasNotifs.slice().reverse().map(n => {
+    const lida = n._lida ? '' : ' nao-lida';
+    const e = emoji[n.tipo] || '📋';
+    let hora = '';
+    try { hora = new Date(n.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); } catch(e2){}
+    return `<div class="notif-item ${n.tipo||''}${lida}">
+      <div class="notif-titulo">${e} ${n.nome||''}</div>
+      <div class="notif-detalhe">${(n.tipo||'').charAt(0).toUpperCase()+(n.tipo||'').slice(1)} · ${n.qtd||0} ${n.unidade||''} · <strong>${n.colaborador||''}</strong></div>
+      <div class="notif-hora">${hora}</div>
+    </div>`;
+  }).join('');
+}
+async function _verificarNotifs() {
+  if (!usuarioLogado || usuarioLogado.perfil !== 'adm') return;
   try {
-    await supa('POST', 'movimentacoes', {
-      produto_id: p.id,
-      tipo: 'contagem',
-      quantidade: qtd,
-      operador: usuarioLogado.usuario + ' (correcao ADM)',
-      observacao: motivo + ' | anterior: ' + anterior
-    });
+    let url = 'movimentacoes?order=created_at.desc&limit=30&select=id,nome,tipo,qtd,unidade,colaborador,created_at,unidade_loja';
+    if (_notifUltimoAt) url += '&created_at=gt.' + encodeURIComponent(_notifUltimoAt);
+    const res = await supa('GET', url);
+    if (!res || !Array.isArray(res) || res.length === 0) return;
+    const novas = res.filter(r => !_todasNotifs.find(n => n.id === r.id));
+    novas.forEach(n => { n._lida = false; _todasNotifs.push(n); });
+    if (res[0] && res[0].created_at) _notifUltimoAt = res[0].created_at;
+    if (_todasNotifs.length > 100) _todasNotifs = _todasNotifs.slice(-100);
+    if (novas.length > 0) {
+      _atualizarBadge();
+      const p = document.getElementById('notif-painel');
+      if (p && p.classList.contains('open')) _renderNotifs();
+      // SOM
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.4);
+      } catch(se) {}
+      // PUSH
+      novas.forEach(function(n) {
+        try {
+          if (Notification && Notification.permission === 'granted') {
+            const tipo = (n.tipo||'lançamento').charAt(0).toUpperCase()+(n.tipo||'lançamento').slice(1);
+            new Notification('🔔 Novo lançamento', { body: tipo+' · '+(n.nome||'')+' · '+(n.colaborador||'-') });
+          }
+        } catch(pe) {}
+      });
+    }
   } catch(e) {}
-
-  produtosCache[_corrigirCod].estoque = qtd;
-  fecharCorrecaoEstoque();
-  renderEstoque();
-  showToast('Estoque corrigido para ' + fmtQ(qtd, p.unidade) + ' ' + p.unidade, 'success');
 }
+function iniciarNotificacoes() {
+  if (!usuarioLogado || usuarioLogado.perfil !== 'adm') return;
+  const btn = document.getElementById('notif-btn');
+  if (btn) btn.classList.add('adm-visible');
+  // Pedir permissão push
+  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+  _verificarNotifs();
+  if (_notifInterval) clearInterval(_notifInterval);
+  _notifInterval = setInterval(_verificarNotifs, 30000);
+}
+document.addEventListener('click', function(e) {
+  const p = document.getElementById('notif-painel');
+  const b = document.getElementById('notif-btn');
+  if (p && b && !p.contains(e.target) && !b.contains(e.target)) p.classList.remove('open');
+});
 
 
 
@@ -2769,61 +2439,73 @@ async function carregarDescartesHoje() {
 
 </script>
 
-  <!-- MODAL: Contagem por Categoria -->
-  <div id="modal-contagem-cat" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;overflow-y:auto;padding:16px;">
-    <div style="background:#fff;border-radius:16px;max-width:500px;margin:0 auto;padding:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <span style="font-size:1.1rem;font-weight:700;color:#37474f;">📋 Contagem em Lote</span>
-        <button onclick="fecharContagemCat()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#999;">✖</button>
-      </div>
+<!-- TUTORIAL OVERLAY -->
+<div id="tutorial-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:#1e1e1e;border-radius:16px;padding:24px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.6);position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span id="tut-passo-label" style="font-size:0.75rem;color:#888;">Passo 1 de 3</span>
+      <button onclick="fecharTutorial()" style="background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;padding:0;">✕</button>
+    </div>
+    <div style="text-align:center;margin-bottom:16px;">
+      <div id="tut-icone" style="font-size:2.5rem;margin-bottom:8px;">📦</div>
+      <div id="tut-titulo" style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:10px;"></div>
+      <div id="tut-desc" style="font-size:0.88rem;color:#ccc;line-height:1.5;"></div>
+    </div>
+    <!-- Dots -->
+    <div id="tut-dots" style="display:flex;justify-content:center;gap:6px;margin-bottom:20px;"></div>
+    <!-- Botoes -->
+    <div style="display:flex;gap:10px;">
+      <button id="tut-btn-ant" onclick="tutAnterior()" style="flex:1;padding:10px;border:none;border-radius:10px;background:#333;color:#fff;cursor:pointer;font-size:0.9rem;">← Anterior</button>
+      <button id="tut-btn-prox" onclick="tutProximo()" style="flex:1;padding:10px;border:none;border-radius:10px;background:#e53935;color:#fff;cursor:pointer;font-weight:700;font-size:0.9rem;">Próximo →</button>
+    </div>
+  </div>
+</div>
+<!-- FIM TUTORIAL -->
 
-      <!-- SCANNER -->
-      <div style="background:#e8f5e9;border-radius:12px;padding:14px;margin-bottom:16px;">
-        <div style="font-size:0.85rem;font-weight:700;color:#2e7d32;margin-bottom:10px;">📷 Contar por Scanner</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input id="scan-contagem-input" type="text" placeholder="Leia o código de barras..." inputmode="none"
-            style="flex:1;margin:0;padding:10px;border-radius:10px;border:1.5px solid #a5d6a7;font-size:0.95rem;"
-            onkeydown="if(event.key==='Enter'){scanContagemBuscarCodigo();}" />
-          <button onclick="abrirCameraContagem()"
-            style="background:#43a047;color:#fff;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;">📷</button>
-        </div>
-        <div id="scan-contagem-camera-area" style="display:none;margin-bottom:8px;">
-          <video id="scan-contagem-video" autoplay playsinline style="width:100%;border-radius:10px;"></video>
-          <button onclick="fecharCameraContagem()" style="width:100%;margin-top:6px;background:#e57373;color:#fff;border:none;border-radius:8px;padding:8px;cursor:pointer;">Fechar câmera</button>
-        </div>
-        <div style="font-size:0.75rem;color:#666;margin-bottom:8px;">
-          📦 Pacote fechado = +1 kg automático &nbsp;|&nbsp; 🔓 Pacote aberto = edite a qtd na lista
-        </div>
-        <div id="scan-contagem-lista" style="max-height:220px;overflow-y:auto;">
-          <div style="text-align:center;color:#aaa;font-size:0.85rem;padding:12px;">Nenhum item escaneado ainda</div>
-        </div>
-        <button id="scan-contagem-confirmar" onclick="confirmarScanContagem()"
-          style="display:none;width:100%;margin-top:10px;background:#43a047;color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.95rem;font-weight:700;cursor:pointer;">
-          ✅ CONFIRMAR CONTAGEM (SCANNER)
-        </button>
-      </div>
 
-      <!-- CONTAGEM POR CATEGORIA -->
-      <div style="border-top:2px solid #f0f0f0;padding-top:14px;">
-        <div style="font-size:0.85rem;font-weight:700;color:#5c6bc0;margin-bottom:10px;">📂 Contar por Categoria</div>
-        <div style="margin-bottom:14px;">
-          <select id="cat-contagem-sel" onchange="carregarProdutosContagem()" style="width:100%;margin:0;padding:10px;border-radius:10px;border:1.5px solid #ddd;font-size:0.95rem;">
-            <option value="">-- Escolha a categoria --</option>
-          </select>
-        </div>
-        <div id="cat-contagem-lista" style="display:none;">
-          <div style="font-size:0.8rem;color:#888;margin-bottom:10px;padding:8px;background:#fff8e1;border-radius:8px;border-left:3px solid #ff9800;">
-            ⚠️ <b>Atenção:</b> produtos deixados em branco serão zerados automaticamente no estoque.
-          </div>
-          <div id="cat-contagem-produtos"></div>
-          <button class="btn btn-red" onclick="confirmarContagemCat()" style="width:100%;margin-top:14px;font-size:1rem;">✅ CONFIRMAR CONTAGEM</button>
-          <button onclick="fecharContagemCat()" class="btn btn-gray" style="width:100%;margin-top:8px;">Cancelar</button>
-        </div>
+  <div class="screen adm-only" id="tab-embalagens">
+    <div class="card">
+      <h3>📦 Relatório de Embalagens</h3>
+      <input type="date" id="emb-data" style="width:100%;margin-bottom:10px;" onchange="gerarRelEmb()" />
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="btn btn-red" onclick="gerarRelEmb()" style="flex:1;margin:0;">📊 Gerar</button>
+        <button class="btn btn-green" onclick="compartilharRelEmb()" style="flex:1;margin:0;">📱 WhatsApp</button>
+        <button class="btn btn-gray" onclick="exportarRelEmbCSV()" style="flex:1;margin:0;">📄 Planilha</button>
       </div>
-
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button onclick="filtrarRelEmb('todos')" style="flex:1;background:#333;border:none;border-radius:8px;color:#fff;padding:8px;cursor:pointer;font-size:0.8rem;">Todos</button>
+        <button onclick="filtrarRelEmb('pedido')" style="flex:1;background:#b71c1c;border:none;border-radius:8px;color:#fff;padding:8px;cursor:pointer;font-size:0.8rem;">🛒 Só Pedido</button>
+      </div>
+      <div id="emb-resultado"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data acima.</p></div>
     </div>
   </div>
 
+  <div class="screen adm-only" id="tab-bebidas">
+    <div class="card">
+      <h3>🍺 Relatório de Bebidas</h3>
+      <input type="date" id="beb-data" style="width:100%;margin-bottom:10px;" onchange="gerarRelBeb()" />
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="btn btn-red" onclick="gerarRelBeb()" style="flex:1;margin:0;">📊 Gerar</button>
+        <button class="btn btn-green" onclick="compartilharRelBeb()" style="flex:1;margin:0;">📱 WhatsApp</button>
+        <button class="btn btn-gray" onclick="exportarRelBebCSV()" style="flex:1;margin:0;">📄 Planilha</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button onclick="filtrarRelBeb('todos')" style="flex:1;background:#333;border:none;border-radius:8px;color:#fff;padding:8px;cursor:pointer;font-size:0.8rem;">Todos</button>
+        <button onclick="filtrarRelBeb('pedido')" style="flex:1;background:#b71c1c;border:none;border-radius:8px;color:#fff;padding:8px;cursor:pointer;font-size:0.8rem;">🛒 Só Pedido</button>
+      </div>
+      <div id="beb-resultado"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data acima.</p></div>
+    </div>
+  </div>
+<!-- PAINEL DE NOTIFICAÇÕES -->
+<div class="notif-painel" id="notif-painel">
+  <div class="notif-header">
+    🔔 Notificações
+    <span onclick="marcarTodasLidas()">Marcar tudo como lido</span>
+  </div>
+  <div class="notif-lista" id="notif-lista">
+    <div class="notif-vazia">Nenhuma notificação ainda</div>
+  </div>
+</div>
 
 <!-- ══════════ MODAL CONTAGEM EM LOTE ══════════ -->
 <div id="modal-lote" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9998;overflow-y:auto;padding:16px;">
@@ -2843,7 +2525,7 @@ async function carregarDescartesHoje() {
         <option value="">-- Selecione a categoria --</option>
       </select>
 
-      <button onclick="carregarItenslote()" style="width:100%;padding:14px;background:#1565c0;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:1rem;font-weight:700;">
+      <button onclick="carregarItenslote()" style="width:100%;padding:14px;background:#e65100;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:1rem;font-weight:700;">
         ▶ Avançar
       </button>
     </div>
@@ -2877,4 +2559,5 @@ async function carregarDescartesHoje() {
   </div>
 </div>
 </body>
+<!-- deploy-1782147947 -->
 </html>
