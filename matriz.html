@@ -120,6 +120,7 @@
     <div class="tab" onclick="showTab('hist-cd')">📤 SAÍDAS CD</div>
     <div class="tab" onclick="showTab('almox-chefao')">📦 ALMOXARIFADO</div>
     <div class="tab" onclick="showTab('cadastro')">➕ CADASTRAR</div>
+    <div class="tab" onclick="showTab('descarte')">🗑️ DESCARTE</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -336,6 +337,40 @@
 
   
 </div>
+
+  <!-- ABA DESCARTE -->
+  <div class="screen" id="tab-descarte">
+    <div class="card">
+      <h3>🗑️ Descarte do Dia</h3>
+      <p style="font-size:0.78rem;color:#888;margin-bottom:12px;">Registra o que foi descartado. Desconta automático do estoque.</p>
+
+      <label>Produto</label>
+      <select id="desc-produto" style="margin-bottom:10px;"><option value="">Selecione a unidade primeiro</option></select>
+
+      <label>Quantidade Descartada</label>
+      <input type="number" id="desc-qtd" placeholder="Ex: 0.5, 1, 2..." min="0" step="0.001" style="margin-bottom:10px;" />
+
+      <label>Motivo <span style="color:#555;font-size:0.72rem;">(opcional)</span></label>
+      <select id="desc-motivo" style="margin-bottom:12px;">
+        <option value="">— Selecione —</option>
+        <option value="Vencido">📅 Vencido</option>
+        <option value="Estragado">🤢 Estragado</option>
+        <option value="Quemado">🔥 Queimado</option>
+        <option value="Erro de preparo">❌ Erro de preparo</option>
+        <option value="Contaminação">⚠️ Contaminação</option>
+        <option value="Outro">📝 Outro</option>
+      </select>
+
+      <div id="desc-resumo" style="display:none;background:#1a0a0a;border:1px solid #b71c1c44;border-radius:10px;padding:12px;margin-bottom:12px;font-size:0.84rem;"></div>
+
+      <button class="btn btn-red" onclick="confirmarDescarte()" style="width:100%;font-size:1rem;">🗑️ REGISTRAR DESCARTE</button>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <h3 style="font-size:0.92rem;">📋 Descartes de Hoje</h3>
+      <div id="desc-lista-hoje"><p style="color:#888;text-align:center;padding:12px;font-size:0.82rem;">Nenhum descarte hoje</p></div>
+    </div>
+  </div>
 
 <!-- MODAL MOVIMENTAÇÃO -->
 <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;align-items:flex-end;justify-content:center;">
@@ -1549,7 +1584,8 @@ function showTab(name) {
       supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado_cd&select=*&order=nome.asc').then(res => {
         if (Array.isArray(res)) todosEstoques = todosEstoques.concat(res);
         renderMinimos();
-      });
+        if (name === 'descarte') popularDescarteChefao();
+});
     } else {
       renderMinimos();
     }
@@ -2820,6 +2856,109 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   obs.observe(document.body, { childList: true, subtree: true });
 });
+
+// ── DESCARTE (CHEFÃO) ──
+async function popularDescarteChefao() {
+  var sel = document.getElementById('desc-produto');
+  if (!sel) return;
+  var uni = document.getElementById('mtz-unidade-selector');
+  var unidade = uni ? uni.value : '';
+  if (!unidade) { sel.innerHTML = '<option value="">Selecione a unidade</option>'; return; }
+  var prods = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + unidade + '&order=nome.asc&select=*');
+  sel.innerHTML = '<option value="">-- Selecione --</option>' +
+    prods.map(function(p) {
+      return '<option value="' + p.codigo + '">' + p.nome + ' (' + fmtQ(p.estoque, p.unidade) + ')</option>';
+    }).join('');
+  sel.onchange = function() { atualizarResumoDescarteChefao(); };
+  carregarDescartesHojeChefao();
+}
+
+function atualizarResumoDescarteChefao() {
+  var sel = document.getElementById('desc-produto');
+  var qtd = parseFloat(document.getElementById('desc-qtd').value) || 0;
+  var motivo = document.getElementById('desc-motivo').value;
+  var el = document.getElementById('desc-resumo');
+  if (!sel.value || qtd <= 0) { el.style.display = 'none'; return; }
+  var uni = document.getElementById('mtz-unidade-selector');
+  var unidade = uni ? uni.value : '';
+  _mtzRecarregarProdutos(unidade).then(function() {
+    var prods = todosEstoques.filter(function(p) { return p.codigo === sel.value && p.unidade_loja === unidade; });
+    if (!prods.length) return;
+    var p = prods[0];
+    var novoEst = Math.max(0, (parseFloat(p.estoque)||0) - qtd);
+    el.style.display = 'block';
+    el.innerHTML = '<div style="color:#ef5350;">🗑️ <b>' + p.nome + '</b></div>'
+      + '<div style="margin-top:4px;color:#aaa;">Atual: <b>' + fmtQ(p.estoque, p.unidade) + '</b> → Depois: <b style="color:#ef5350;">' + fmtQ(novoEst, p.unidade) + '</b></div>'
+      + (motivo ? '<div style="margin-top:2px;color:#888;">Motivo: ' + motivo + '</div>' : '');
+  });
+}
+
+async function confirmarDescarteChefao() {
+  var cod = document.getElementById('desc-produto').value;
+  var qtd = parseFloat(document.getElementById('desc-qtd').value);
+  var motivo = document.getElementById('desc-motivo').value;
+  var uni = document.getElementById('mtz-unidade-selector');
+  var unidade = uni ? uni.value : '';
+  if (!unidade) { showToast('Selecione a unidade!', 'error'); return; }
+  if (!cod) { showToast('Seleciona o produto!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
+
+  var prods = await supa('GET', 'produtos', null, 'codigo=eq.' + encodeURIComponent(cod) + '&unidade_loja=eq.' + unidade + '&select=*');
+  if (!prods || !prods.length) { showToast('Produto não encontrado!', 'error'); return; }
+  var p = prods[0];
+  var est = parseFloat(p.estoque) || 0;
+  var novoEst = Math.max(0, est - qtd);
+
+  await supa('PATCH', 'produtos', { estoque: novoEst }, 'codigo=eq.' + encodeURIComponent(cod) + '&unidade_loja=eq.' + unidade);
+  await supa('POST', 'movimentacoes', {
+    codigo: cod, nome: p.nome, tipo: 'descarte',
+    qtd: qtd, unidade: p.unidade,
+    colaborador: (typeof usuarioLogado !== 'undefined' && usuarioLogado && usuarioLogado.usuario) ? usuarioLogado.usuario : 'chefao',
+    obs: motivo ? 'Descarte: ' + motivo : 'Descarte',
+    estoque_anterior: est,
+    novo_estoque: novoEst,
+    status: 'confirmado',
+    unidade_loja: unidade
+  });
+
+  document.getElementById('desc-qtd').value = '';
+  document.getElementById('desc-motivo').value = '';
+  document.getElementById('desc-resumo').style.display = 'none';
+  document.getElementById('desc-produto').value = '';
+  beep();
+  showToast('🗑️ Descarte registrado em ' + unidade.toUpperCase() + '!', 'success');
+  popularDescarteChefao();
+}
+
+async function carregarDescartesHojeChefao() {
+  var el = document.getElementById('desc-lista-hoje');
+  if (!el) return;
+  var uni = document.getElementById('mtz-unidade-selector');
+  var unidade = uni ? uni.value : '';
+  if (!unidade) { el.innerHTML = '<p style="color:#888;text-align:center;padding:12px;font-size:0.82rem;">Selecione a unidade</p>'; return; }
+  var hoje = new Date().toISOString().slice(0,10);
+  var inicio = hoje + 'T00:00:00';
+  var fim = hoje + 'T23:59:59';
+  var movs = await supa('GET', 'movimentacoes', null,
+    'tipo=eq.descarte&unidade_loja=eq.' + unidade + '&created_at=gte.' + inicio + '&created_at=lte.' + fim + '&order=created_at.desc&select=*');
+  if (!movs || !movs.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:12px;font-size:0.82rem;">Nenhum descarte hoje</p>';
+    return;
+  }
+  el.innerHTML = movs.map(function(m) {
+    var hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    return '<div style="background:#1a0a0a;border-left:3px solid #b71c1c;padding:8px 10px;margin-bottom:4px;border-radius:6px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<div><span style="font-weight:700;font-size:0.85rem;color:#ef5350;">🗑️ ' + m.nome + '</span>'
+      + '<span style="font-size:0.72rem;color:#888;margin-left:6px;">' + hora + '</span></div>'
+      + '<span style="font-weight:700;color:#ef5350;font-size:0.85rem;">-' + fmtQ(m.qtd, m.unidade) + '</span>'
+      + '</div>'
+      + (m.obs ? '<div style="font-size:0.72rem;color:#666;margin-top:2px;">' + m.obs + ' · por ' + (m.colaborador||'?') + '</div>' : '')
+      + '</div>';
+  }).join('');
+}
+// ── FIM DESCARTE (CHEFÃO) ──
+
 </script>
 
   <div class="screen" id="tab-historico">
