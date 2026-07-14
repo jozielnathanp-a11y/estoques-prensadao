@@ -779,18 +779,11 @@ async function confirmarLancamento() {
   });
 
 
-// ── SMART CD: descontar do CD pelo código base ──
+// ── SMART CD: descontar do CD ao registrar entrada ──
   try {
-    const movRow = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}&select=tipo,qtd,codigo`, {
-      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
-    }).then(r => r.json());
-    const tipoMov  = movRow && movRow[0] ? movRow[0].tipo : '';
-    const qtdMov   = movRow && movRow[0] ? parseFloat(movRow[0].qtd) : 0;
-    const codMov   = movRow && movRow[0] ? movRow[0].codigo : '';
-
-    if (tipoMov === 'entrada' && qtdMov > 0 && codMov) {
+    if (tipo === 'entrada' && qtd > 0 && cod) {
       // Extrair código base (remover sufixo _unidade)
-      const codBase = codMov.replace(/_centro$|_delivery$|_boqueiraw$/, '');
+      const codBase = cod.replace(/_centro$|_delivery$|_boqueiraw$/, '');
       const codCD   = codBase + '_cd';
 
       const cdRes = await fetch(
@@ -799,13 +792,13 @@ async function confirmarLancamento() {
       ).then(r => r.json());
 
       if (cdRes && cdRes.length > 0) {
-        const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - qtdMov);
+        const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - qtd);
         await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
           method: 'PATCH',
           headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
           body: JSON.stringify({ estoque: novoCD })
         });
-        console.log('Smart CD: descontou ' + qtdMov + ' do CD (' + codCD + ') → novo estoque: ' + novoCD);
+        console.log('Smart CD: descontou ' + qtd + ' do CD (' + codCD + ') → novo estoque: ' + novoCD);
       }
     }
   } catch(e) { console.warn('Smart CD erro:', e); }
@@ -2356,5 +2349,4 @@ function enviarPedidoWhatsApp() {
   </div>
 </div>
 </body>
-<!-- v1782148029 -->
 </html>
