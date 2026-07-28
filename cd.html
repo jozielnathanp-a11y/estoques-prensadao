@@ -605,8 +605,8 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 
   if (name === 'historico') carregarHistorico();
-  if (name === 'almox') { carregarAlmox();   if (name === 'descarte') popularDescarte();
-}
+  if (name === 'almox') carregarAlmox();
+  if (name === 'descarte') popularDescarte();
   if (name === 'lancar') popularSelectProdutos();
 }
 
