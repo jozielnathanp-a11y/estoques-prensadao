@@ -81,6 +81,15 @@
     #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 1000; align-items: flex-end; justify-content: center; }
     .modal-box { background: #fff; border-radius: 20px 20px 0 0; padding: 24px 20px 36px; width: 100%; max-width: 480px; }
   </style>
+
+  <!-- Prensadão PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#ff1744" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Prensadão" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
 </head>
 <body>
 
@@ -223,7 +232,7 @@
       <div style="display:flex;align-items:center;gap:10px;margin:4px 0 8px;">
         <label style="font-size:0.95rem;font-weight:700;color:#37474f;margin:0;">Total:</label>
         <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="margin:0;flex:1;" oninput="calcTotal()" />
-        <span id="lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;"></span>
+        <span id="lanc-total" style="font-weight:700;color:#ffffff;min-width:50px;text-align:right;"></span>
       </div>
       <button class="btn btn-red" onclick="adicionarAoLote()">✅ Confirmar</button>
     <!-- PENDENTES -->
@@ -879,6 +888,14 @@ function exportarRelBebCSV() {
       <div id="beb-resultado"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data acima.</p></div>
     </div>
   </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('service-worker.js').catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>
 
@@ -1672,7 +1689,7 @@ function renderEstoque() {
         </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <div style="font-weight:700;color:#1a237e;text-align:right;">${fmtQ(est, p.unidade)}</div>
+          <div style="font-weight:700;color:#ffffff;text-align:right;">${fmtQ(est, p.unidade)}</div>
           <button onclick="abrirCorrecao('${p.codigo}','${u}')" style="background:#fff3e0;border:1px solid #f9a825;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:0.8rem;">✏️</button>
           <button onclick="abrirEdicao('${p.codigo}','${u}')" style="background:#e3f2fd;border:1px solid #1565c0;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:0.8rem;">🖊️</button>
         </div>
@@ -1972,7 +1989,7 @@ function renderContagens() {
       const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
       const estAnt = m.estoque_anterior != null ? fmtQ(m.estoque_anterior, m.unidade) : '—';
       const perfilBadgeC = m.perfil_colaborador === 'adm' ? '<span style="background:#1565c0;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:8px;margin-left:4px;">👑 ADM</span>' : '<span style="background:#444;color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:8px;margin-left:4px;">👷 Operador</span>';
-      html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}${perfilBadgeC}</div><div style="font-size:0.72rem;color:#aaa;">Anterior: ${estAnt} · ${hora}</div></div><div style="font-weight:700;color:#1a237e;">${fmtQ(m.novo_estoque, m.unidade)}</div></div>`;
+      html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}${perfilBadgeC}</div><div style="font-size:0.72rem;color:#aaa;">Anterior: ${estAnt} · ${hora}</div></div><div style="font-weight:700;color:#ffffff;">${fmtQ(m.novo_estoque, m.unidade)}</div></div>`;
     });
   });
   el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
