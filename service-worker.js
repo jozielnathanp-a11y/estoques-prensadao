@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prensadao-pwa-v1';
+const CACHE_NAME = 'prensadao-pwa-v2';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
