@@ -455,7 +455,8 @@
       <select id="desc-produto" style="margin-bottom:10px;"></select>
 
       <label>Quantidade Descartada</label>
-      <input type="number" id="desc-qtd" placeholder="Ex: 0.5, 1, 2..." min="0" step="0.001" style="margin-bottom:10px;" />
+      <input type="text" id="desc-qtd" inputmode="decimal" autocomplete="off" placeholder="Ex: 1, 500 ou 1500" style="margin-bottom:4px;" />
+      <div id="desc-qtd-ajuda" style="font-size:0.72rem;color:#888;margin:0 0 10px 2px;">Em kg: 1 = 1 kg · 500 = 0,500 kg · 1500 = 1,500 kg.</div>
 
       <label>Motivo <span style="color:#555;font-size:0.72rem;">(opcional)</span></label>
       <select id="desc-motivo" style="margin-bottom:12px;">
@@ -2304,6 +2305,39 @@ function enviarPedidoWhatsApp() {
 // ===== /PEDIDO VIA RELATÓRIO v3 =====
 
 // ── DESCARTE ──
+// Converte a quantidade digitada no descarte para a unidade do produto.
+// Para produtos em kg: 1 = 1 kg; 500 = 0,500 kg; 1500 = 1,500 kg.
+// Também aceita os sufixos "g" e "kg" e os formatos 0.5 ou 0,5.
+function normalizarQuantidadeDescarte(valor, unidade) {
+  var texto = String(valor == null ? '' : valor).trim().toLowerCase().replace(/\s+/g, '');
+  if (!texto) return 0;
+  var temGramas = /g$/.test(texto) && !/kg$/.test(texto);
+  var temQuilos = /kg$/.test(texto);
+  var numeroTexto = texto.replace(/(kg|g)$/i, '').replace(',', '.');
+  var numero = parseFloat(numeroTexto);
+  if (!isFinite(numero) || numero < 0) return 0;
+  if (String(unidade || '').toLowerCase() === 'kg') {
+    if (temGramas) return numero / 1000;
+    if (temQuilos || /[.,]/.test(numeroTexto)) return numero;
+    return numero >= 100 ? numero / 1000 : numero;
+  }
+  return numero;
+}
+
+function atualizarAjudaQuantidadeDescarte() {
+  var ajuda = document.getElementById('desc-qtd-ajuda');
+  var campo = document.getElementById('desc-qtd');
+  if (!ajuda || !campo) return;
+  var cod = document.getElementById('desc-produto') ? document.getElementById('desc-produto').value : '';
+  var produto = typeof getProduto === 'function' ? getProduto(cod) : null;
+  if (produto && String(produto.unidade || '').toLowerCase() === 'kg') {
+    var qtd = normalizarQuantidadeDescarte(campo.value, 'kg');
+    ajuda.textContent = campo.value ? 'Quantidade entendida: ' + qtd.toLocaleString('pt-BR', {minimumFractionDigits: 3, maximumFractionDigits: 3}) + ' kg' : 'Em kg: 1 = 1 kg · 500 = 0,500 kg · 1500 = 1,500 kg';
+  } else {
+    ajuda.textContent = 'Em kg: 1 = 1 kg · 500 = 0,500 kg · 1500 = 1,500 kg.';
+  }
+}
+
 async function popularDescarte() {
   var sel = document.getElementById('desc-produto');
   if (!sel) return;
@@ -2312,20 +2346,21 @@ async function popularDescarte() {
     lista.map(function(p) {
       return '<option value="' + p.codigo + '">' + p.nome + ' (' + fmtQ(p.estoque, p.unidade) + ')</option>';
     }).join('');
-  sel.onchange = function() { atualizarResumoDescarte(); };
-  document.getElementById('desc-qtd').oninput = function() { atualizarResumoDescarte(); };
+  sel.onchange = function() { atualizarResumoDescarte(); atualizarAjudaQuantidadeDescarte(); };
+  document.getElementById('desc-qtd').oninput = function() { atualizarResumoDescarte(); atualizarAjudaQuantidadeDescarte(); };
   document.getElementById('desc-motivo').onchange = function() { atualizarResumoDescarte(); };
   carregarDescartesHoje();
 }
 
 function atualizarResumoDescarte() {
   var sel = document.getElementById('desc-produto');
-  var qtd = parseFloat(document.getElementById('desc-qtd').value) || 0;
   var motivo = document.getElementById('desc-motivo').value;
   var el = document.getElementById('desc-resumo');
-  if (!sel.value || qtd <= 0) { el.style.display = 'none'; return; }
+  if (!sel.value) { el.style.display = 'none'; return; }
   var p = getProduto(sel.value);
   if (!p) return;
+  var qtd = normalizarQuantidadeDescarte(document.getElementById('desc-qtd').value, p.unidade);
+  if (qtd <= 0) { el.style.display = 'none'; return; }
   var novoEst = Math.max(0, (parseFloat(p.estoque)||0) - qtd);
   el.style.display = 'block';
   el.innerHTML = '<div style="color:#ef5350;">🗑️ <b>' + p.nome + '</b></div>'
@@ -2335,13 +2370,15 @@ function atualizarResumoDescarte() {
 
 async function confirmarDescarte() {
   var cod = document.getElementById('desc-produto').value;
-  var qtd = parseFloat(document.getElementById('desc-qtd').value);
   var motivo = document.getElementById('desc-motivo').value;
 
   if (!cod) { showToast('Seleciona o produto!', 'error'); return; }
-  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
 
   var p = getProduto(cod);
+  if (!p) { showToast('Produto não encontrado!', 'error'); return; }
+  var qtd = normalizarQuantidadeDescarte(document.getElementById('desc-qtd').value, p.unidade);
+  if (!qtd || qtd <= 0) { showToast('Coloca uma quantidade válida!', 'error'); return; }
+
   var est = parseFloat(p.estoque) || 0;
   var novoEst = Math.max(0, est - qtd);
 
