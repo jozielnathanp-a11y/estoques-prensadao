@@ -1250,8 +1250,22 @@ async function confirmarPendente(id, codigo, novoEst, nome) {
   if (isOperador) {
     if (!confirm('Ei, irmão! Já deu uma boa olhada nisso aí? Tem certeza que tá certo esse bagulho? 👀')) return;
   }
+
+  // Recalcula com o estoque real no momento da confirmação:
+  // ENTRADA soma; CONTAGEM substitui.
+  const movAtual = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}&select=tipo,qtd`, {
+    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+  }).then(r => r.json());
+  const tipoAtual = movAtual && movAtual[0] ? movAtual[0].tipo : '';
+  const qtdAtual = movAtual && movAtual[0] ? (parseFloat(movAtual[0].qtd) || 0) : 0;
+  const produtoAtual = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${encodeURIComponent(codigo)}&unidade_loja=eq.${UNIDADE_LOJA}&select=estoque`, {
+    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+  }).then(r => r.json());
+  const estoqueReal = produtoAtual && produtoAtual[0] ? (parseFloat(produtoAtual[0].estoque) || 0) : 0;
+  novoEst = tipoAtual === 'contagem' ? qtdAtual : estoqueReal + qtdAtual;
+
   // Atualiza estoque
-  await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codigo}`, {
+  await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${encodeURIComponent(codigo)}&unidade_loja=eq.${UNIDADE_LOJA}`, {
     method: 'PATCH',
     headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
     body: JSON.stringify({ estoque: novoEst })
@@ -1260,7 +1274,7 @@ async function confirmarPendente(id, codigo, novoEst, nome) {
   await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}`, {
     method: 'PATCH',
     headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: 'confirmado', confirmado_por: usuarioLogado.usuario, confirmado_em: new Date().toISOString() })
+    body: JSON.stringify({ status: 'confirmado', confirmado_por: usuarioLogado.usuario, confirmado_em: new Date().toISOString(), estoque_anterior: estoqueReal, novo_estoque: novoEst })
   });
 
 // ── SMART CD: descontar do CD pelo código base ──
@@ -1493,7 +1507,13 @@ async function salvarLancamentos() {
   for (const l of _lancamentos) {
     const p = getProduto(l.cod);
     if (!p) continue;
-    const est = parseFloat(p.estoque) || 0;
+    const estoqueAtualRes = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${encodeURIComponent(l.cod)}&unidade_loja=eq.${UNIDADE_LOJA}&select=estoque`, {
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    });
+    const estoqueAtualLista = await estoqueAtualRes.json();
+    const est = Array.isArray(estoqueAtualLista) && estoqueAtualLista.length
+      ? (parseFloat(estoqueAtualLista[0].estoque) || 0)
+      : (parseFloat(p.estoque) || 0);
     // ENTRADA soma, CONTAGEM substitui
     const novoEst = l.tipo === 'contagem' ? l.qtd : est + l.qtd;
     const opts = {

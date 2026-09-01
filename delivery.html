@@ -1436,7 +1436,13 @@ async function salvarLancamentos() {
   for (const l of _lancamentos) {
     const p = getProduto(l.cod);
     if (!p) continue;
-    const est = parseFloat(p.estoque) || 0;
+    const estoqueAtualRes = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${encodeURIComponent(l.cod)}&unidade_loja=eq.${UNIDADE_LOJA}&select=estoque`, {
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    });
+    const estoqueAtualLista = await estoqueAtualRes.json();
+    const est = Array.isArray(estoqueAtualLista) && estoqueAtualLista.length
+      ? (parseFloat(estoqueAtualLista[0].estoque) || 0)
+      : (parseFloat(p.estoque) || 0);
     // ENTRADA soma, CONTAGEM substitui
     const novoEst = l.tipo === 'contagem' ? l.qtd : est + l.qtd;
     const opts = {
