@@ -246,29 +246,28 @@
     });
   </script>
 
-  <div id="prensadao-update-notice" role="status" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);width:min(92%,540px);background:#171717;color:#fff;border:1px solid #ff1744;border-left:5px solid #ff1744;border-radius:12px;padding:13px 42px 13px 15px;box-shadow:0 8px 28px #000b;z-index:10000;font-family:'Rajdhani',sans-serif;font-size:0.86rem;line-height:1.35;">
-    <div style="font-weight:700;color:#ff5370;margin-bottom:4px;">🔔 SISTEMA ATUALIZADO</div>
-    <div><b>Entrada</b> agora soma ao estoque atual. <b>Contagem</b> substitui pelo total informado.</div>
-    <div style="color:#aaa;font-size:0.76rem;margin-top:4px;">Motivo: evitar que uma entrada apague o saldo existente. O sistema agora busca o estoque atualizado antes de salvar — inclusive para o pão de hot dog.</div>
-    <div style="color:#aaa;font-size:0.76rem;margin-top:4px;">No descarte em kg: <b>1 = 1 kg</b> · <b>500 = 0,500 kg</b> · <b>1500 = 1,500 kg</b>.</div>
-    <div style="color:#aaa;font-size:0.76rem;margin-top:4px;">Nova lista de compras no Chefão: prioridade para Embalagens e Limpeza, com exportação em planilha, PDF ou imagem.</div>
-    <button id="fechar-prensadao-update" aria-label="Fechar aviso" style="position:absolute;right:9px;top:8px;background:none;border:0;color:#aaa;font-size:1.3rem;cursor:pointer;line-height:1;">×</button>
-  </div>
-  <script>
-    (function () {
-      var aviso = document.getElementById('prensadao-update-notice');
-      var fechar = document.getElementById('fechar-prensadao-update');
-      var chave = 'prensadao-aviso-compras-prioritarias-2026-09-23';
-      try {
-        if (localStorage.getItem(chave) === 'lido') aviso.style.display = 'none';
-        if (fechar) fechar.onclick = function () {
-          aviso.style.display = 'none';
-          localStorage.setItem(chave, 'lido');
-        };
-      } catch (e) {
-        if (fechar) fechar.onclick = function () { aviso.style.display = 'none'; };
-      }
-    }());
-  </script>
+  <div id="prensadao-update-notice" role="status" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);width:min(92%,540px);background:#171717;color:#fff;border:1px solid #ff9800;border-left:5px solid #ff9800;border-radius:12px;padding:13px 42px 13px 15px;box-shadow:0 8px 28px #000b;z-index:10000;font-family:'Rajdhani',sans-serif;font-size:0.86rem;line-height:1.4;">
+  <div style="font-weight:700;color:#ffcc80;margin-bottom:4px;">🔧 MELHORIAS NO SISTEMA</div>
+  <div>Estamos preparando atualizações. Durante esse período, o sistema pode ficar um pouco lento, mas continua funcionando normalmente.</div>
+  <div style="color:#ddd;font-size:0.8rem;margin-top:5px;">Assim que estiver tudo pronto, avisaremos por aqui.</div>
+  <div style="color:#aaa;font-size:0.76rem;margin-top:5px;">Tem uma sugestão, percebeu falta de algum produto ou algo que pode melhorar? Acesse o robozinho de ajuda e envie sua mensagem.</div>
+  <button id="fechar-prensadao-update" aria-label="Fechar aviso" style="position:absolute;right:9px;top:8px;background:none;border:0;color:#aaa;font-size:1.3rem;cursor:pointer;line-height:1;">×</button>
+</div>
+<script>
+  (function () {
+    var aviso = document.getElementById('prensadao-update-notice');
+    var fechar = document.getElementById('fechar-prensadao-update');
+    var chave = 'prensadao-aviso-melhorias-2026-09-23';
+    try {
+      if (localStorage.getItem(chave) === 'lido') aviso.style.display = 'none';
+      if (fechar) fechar.onclick = function () {
+        aviso.style.display = 'none';
+        localStorage.setItem(chave, 'lido');
+      };
+    } catch (e) {
+      if (fechar) fechar.onclick = function () { aviso.style.display = 'none'; };
+    }
+  }());
+</script>
 </body>
 </html>
