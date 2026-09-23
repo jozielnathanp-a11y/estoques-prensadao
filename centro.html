@@ -2650,13 +2650,14 @@ async function carregarDescartesHoje() {
     <div><b>Entrada</b> agora soma ao estoque atual. <b>Contagem</b> substitui pelo total informado.</div>
     <div style="color:#aaa;font-size:0.76rem;margin-top:4px;">Motivo: evitar que uma entrada apague o saldo existente. O sistema agora busca o estoque atualizado antes de salvar — inclusive para o pão de hot dog.</div>
     <div style="color:#aaa;font-size:0.76rem;margin-top:4px;">No descarte em kg: <b>1 = 1 kg</b> · <b>500 = 0,500 kg</b> · <b>1500 = 1,500 kg</b>.</div>
+    <div style="color:#aaa;font-size:0.76rem;margin-top:4px;">Nova lista de compras no Chefão: prioridade para Embalagens e Limpeza, com exportação em planilha, PDF ou imagem.</div>
     <button id="fechar-prensadao-update" aria-label="Fechar aviso" style="position:absolute;right:9px;top:8px;background:none;border:0;color:#aaa;font-size:1.3rem;cursor:pointer;line-height:1;">×</button>
   </div>
   <script>
     (function () {
       var aviso = document.getElementById('prensadao-update-notice');
       var fechar = document.getElementById('fechar-prensadao-update');
-      var chave = 'prensadao-aviso-entrada-contagem-2026-09-01';
+      var chave = 'prensadao-aviso-compras-prioritarias-2026-09-23';
       try {
         if (localStorage.getItem(chave) === 'lido') aviso.style.display = 'none';
         if (fechar) fechar.onclick = function () {

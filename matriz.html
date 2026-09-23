@@ -337,10 +337,34 @@
   <!-- PEDIDOS (ADM) -->
   <div class="screen adm-only" id="tab-pedidos">
     <div class="card">
-      <h3>🛒 Lista de Pedidos</h3>
-      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Produtos abaixo do estoque mínimo — o que precisa pedir.</p>
-      <button class="btn btn-red" onclick="gerarPedidos()">🔄 Calcular Pedidos</button>
+      <h3>🛒 Lista de Compras — Prioridades</h3>
+      <p style="font-size:0.82rem;color:#bbb;margin-bottom:10px;">Embalagens e produtos de limpeza que estão abaixo do estoque mínimo.</p>
+      <label>Categoria da lista</label>
+      <select id="compras-cat-filter" onchange="renderPedidos()" style="margin-bottom:8px;">
+        <option value="prioridades" selected>📦 Embalagens + Limpeza (prioridade)</option>
+        <option value="Embalagens">📦 Somente Embalagens</option>
+        <option value="Limpeza">🧼 Somente Limpeza</option>
+        <option value="todas">📋 Todas as categorias</option>
+      </select>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <select id="ped-unidade" onchange="renderPedidos()" style="margin:0;flex:1;">
+          <option value="">Todas as unidades</option>
+          <option value="cd">🏭 CD</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
+        </select>
+        <input type="text" id="busca-pedidos" placeholder="🔍 Buscar produto..." oninput="renderPedidos()" style="margin:0;flex:1;" />
+      </div>
+      <button class="btn btn-gold" onclick="carregarPedidos()">🔄 ATUALIZAR ESTOQUES</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+        <button onclick="baixarCsvPedidos()" style="flex:1;min-width:100px;background:#1565c0;color:#fff;border:0;border-radius:8px;padding:10px 6px;font-weight:700;cursor:pointer;">📊 Planilha CSV</button>
+        <button onclick="baixarPdfPedidos()" style="flex:1;min-width:100px;background:#555;color:#fff;border:0;border-radius:8px;padding:10px 6px;font-weight:700;cursor:pointer;">📄 Imprimir / PDF</button>
+        <button onclick="baixarImagemPedidos()" style="flex:1;min-width:100px;background:#7b1fa2;color:#fff;border:0;border-radius:8px;padding:10px 6px;font-weight:700;cursor:pointer;">🖼️ Baixar imagem</button>
+      </div>
+      <p style="font-size:0.72rem;color:#888;margin:8px 0 0;">A quantidade sugerida completa até o máximo cadastrado; se não houver máximo, até o mínimo. Itens sem mínimo aparecem separados para conferência, sem quantidade calculada.</p>
     </div>
+    <div id="lista-pedidos-resumo"></div>
     <div id="lista-pedidos"></div>
   </div>
 
@@ -903,13 +927,14 @@ function exportarRelBebCSV() {
     <div><b>Entrada</b> agora soma ao estoque atual. <b>Contagem</b> substitui pelo total informado.</div>
     <div style="color:#aaa;font-size:0.76rem;margin-top:4px;">Motivo: evitar que uma entrada apague o saldo existente. O sistema agora busca o estoque atualizado antes de salvar — inclusive para o pão de hot dog.</div>
     <div style="color:#aaa;font-size:0.76rem;margin-top:4px;">No descarte em kg: <b>1 = 1 kg</b> · <b>500 = 0,500 kg</b> · <b>1500 = 1,500 kg</b>.</div>
+    <div style="color:#aaa;font-size:0.76rem;margin-top:4px;">Nova lista de compras no Chefão: prioridade para Embalagens e Limpeza, com exportação em planilha, PDF ou imagem.</div>
     <button id="fechar-prensadao-update" aria-label="Fechar aviso" style="position:absolute;right:9px;top:8px;background:none;border:0;color:#aaa;font-size:1.3rem;cursor:pointer;line-height:1;">×</button>
   </div>
   <script>
     (function () {
       var aviso = document.getElementById('prensadao-update-notice');
       var fechar = document.getElementById('fechar-prensadao-update');
-      var chave = 'prensadao-aviso-entrada-contagem-2026-09-01';
+      var chave = 'prensadao-aviso-compras-prioritarias-2026-09-23';
       try {
         if (localStorage.getItem(chave) === 'lido') aviso.style.display = 'none';
         if (fechar) fechar.onclick = function () {
@@ -2020,34 +2045,195 @@ function renderContagens() {
   el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
 }
 
-// ── PEDIDOS ──
+// ── PEDIDOS DE COMPRA ──
 let _todosPedidos = [];
+let _pedidosVisiveis = [];
+let _pedidosSemMinimo = [];
+
+function textoSeguroPedido(valor) {
+  return String(valor == null ? '' : valor).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function unidadePedidoLabel(u) {
+  return ({cd:'CD',centro:'Centro',delivery:'Delivery',boqueiraw:'Boqueirão'})[u] || u;
+}
+function dataPedidoNome() {
+  var d = new Date();
+  return String(d.getDate()).padStart(2,'0') + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + d.getFullYear();
+}
 async function carregarPedidos() {
   const el = document.getElementById('lista-pedidos');
-  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
-  const prods = await supa('GET', 'produtos', 'select=*&order=nome.asc');
-  _todosPedidos = prods.filter(p => p.estoque_min > 0 && (parseFloat(p.estoque)||0) < p.estoque_min);
-  renderPedidos();
+  if (!el) return;
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Conferindo estoque…</p>';
+  try {
+    const prods = await supa('GET', 'produtos', 'select=*&order=nome.asc');
+    _todosPedidos = Array.isArray(prods) ? prods.filter(p => UNIDADES.includes(p.unidade_loja)) : [];
+    renderPedidos();
+  } catch(e) {
+    el.innerHTML = '<p style="color:#ef5350;text-align:center;padding:20px;">Não consegui atualizar a lista. Tente novamente.</p>';
+  }
 }
 function renderPedidos() {
   const el = document.getElementById('lista-pedidos');
-  const filtroU = document.getElementById('ped-unidade').value;
-  const busca = (document.getElementById('busca-pedidos').value || '').toLowerCase();
+  if (!el) return;
+  const filtroU = (document.getElementById('ped-unidade') || {}).value || '';
+  const busca = ((document.getElementById('busca-pedidos') || {}).value || '').trim().toLocaleLowerCase('pt-BR');
+  const filtroCat = (document.getElementById('compras-cat-filter') || {}).value || 'prioridades';
   const unidades = filtroU ? [filtroU] : UNIDADES;
-  if (!_todosPedidos.length) { el.innerHTML = '<p style="color:#2e7d32;text-align:center;padding:20px;font-weight:600;">✅ Tudo em dia — nenhum pedido necessário</p>'; return; }
-  let html = '';
-  unidades.forEach(u => {
-    const lista = _todosPedidos.filter(p => p.unidade_loja === u && (!busca || p.nome.toLowerCase().includes(busca)));
-    if (!lista.length) return;
-    html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} itens</div>`;
-    lista.forEach(p => {
-      const est = parseFloat(p.estoque) || 0;
-      const pedir = p.estoque_min - est;
-      html += `<div class="prod-row zerado"><div><div style="font-weight:600;font-size:0.88rem;">${p.nome}</div><div style="font-size:0.72rem;color:#aaa;">Tem: ${fmtQ(est, p.unidade)} | Precisa: ${fmtQ(p.estoque_min, p.unidade)}</div></div><div style="font-weight:700;color:#b71c1c;">🛒 ${fmtQ(pedir, p.unidade)}</div></div>`;
+  const categoriasPrioritarias = ['embalagens','limpeza'];
+  const porProduto = {};
+  const zeradosSemMinimo = {};
+
+  _todosPedidos.forEach(function(p) {
+    if (!unidades.includes(p.unidade_loja)) return;
+    const cat = String(p.categoria || '').trim();
+    const catLower = cat.toLocaleLowerCase('pt-BR');
+    if (filtroCat === 'prioridades' && !categoriasPrioritarias.includes(catLower)) return;
+    if (filtroCat !== 'prioridades' && filtroCat !== 'todas' && cat !== filtroCat) return;
+    if (busca && !String(p.nome || '').toLocaleLowerCase('pt-BR').includes(busca)) return;
+    const estoque = parseFloat(p.estoque) || 0;
+    const minimo = parseFloat(p.estoque_min) || 0;
+    const maximo = parseFloat(p.estoque_max) || 0;
+    const codigoBase = String(p.codigo || p.nome).replace(/_[a-z]+$/i, '');
+    const chave = codigoBase + '|' + String(p.unidade || 'und');
+
+    if (minimo <= 0) {
+      if (estoque <= 0) {
+        if (!zeradosSemMinimo[chave]) zeradosSemMinimo[chave] = {nome:p.nome,categoria:cat,unidade:p.unidade||'und',destinos:[]};
+        zeradosSemMinimo[chave].destinos.push(p.unidade_loja);
+      }
+      return;
+    }
+    if (estoque >= minimo) return;
+    const meta = maximo > 0 ? maximo : minimo;
+    const pedir = Math.max(0, meta - estoque);
+    if (!pedir) return;
+    if (!porProduto[chave]) porProduto[chave] = {
+      codigo:codigoBase, nome:p.nome, categoria:cat, unidade:p.unidade || 'und',
+      quantidade:0, destinos:[]
+    };
+    porProduto[chave].quantidade += pedir;
+    porProduto[chave].destinos.push({
+      unidade:p.unidade_loja, estoque:estoque, minimo:minimo, maximo:maximo, meta:meta, pedir:pedir
     });
   });
-  el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
+
+  _pedidosVisiveis = Object.values(porProduto).sort(function(a,b) {
+    return a.categoria.localeCompare(b.categoria,'pt-BR') || a.nome.localeCompare(b.nome,'pt-BR');
+  });
+  _pedidosSemMinimo = Object.values(zeradosSemMinimo).sort(function(a,b) {
+    return a.categoria.localeCompare(b.categoria,'pt-BR') || a.nome.localeCompare(b.nome,'pt-BR');
+  });
+  const resumo = document.getElementById('lista-pedidos-resumo');
+  if (resumo) {
+    const quantos = _pedidosVisiveis.length;
+    const unidadesReposicao = _pedidosVisiveis.reduce((n,p) => n + p.destinos.length, 0);
+    resumo.innerHTML = (quantos
+      ? '<div style="background:#201600;border:1px solid #f9a82555;border-radius:10px;padding:10px 12px;margin-bottom:10px;color:#f9a825;font-weight:700;">🛒 ' + quantos + ' produtos com quantidade calculada · reposição em ' + unidadesReposicao + ' unidade(s)</div>'
+      : '<div style="background:#09200e;border:1px solid #2e7d3255;border-radius:10px;padding:10px 12px;margin-bottom:10px;color:#81c784;font-weight:700;">✅ Nenhum item abaixo do mínimo nesta lista.</div>')
+      + (_pedidosSemMinimo.length ? '<div style="background:#2b1b00;border:1px solid #ff980055;border-radius:10px;padding:10px 12px;margin-bottom:10px;color:#ffcc80;font-size:0.82rem;">⚠️ ' + _pedidosSemMinimo.length + ' produtos estão zerados sem mínimo definido. Aparecem para conferência, mas o sistema não inventa a quantidade de compra.</div>' : '');
+  }
+  let html = '';
+  if (_pedidosVisiveis.length) {
+    let categoriaAtual = '';
+    _pedidosVisiveis.forEach(function(p) {
+      if (p.categoria !== categoriaAtual) {
+        categoriaAtual = p.categoria;
+        html += '<div class="unidade-header" style="background:' + (categoriaAtual.toLowerCase()==='limpeza'?'#455a64':'#6a1b9a') + ';">' + (categoriaAtual.toLowerCase()==='limpeza'?'🧼 ':'📦 ') + textoSeguroPedido(categoriaAtual) + '</div>';
+      }
+      const destinos = p.destinos.map(function(d) {
+        return '<span style="display:inline-block;background:#222;padding:3px 7px;border-radius:6px;margin:2px 3px 2px 0;font-size:0.72rem;">' + textoSeguroPedido(unidadePedidoLabel(d.unidade)) + ': ' + fmtQ(d.estoque,p.unidade) + ' → comprar ' + fmtQ(d.pedir,p.unidade) + '</span>';
+      }).join('');
+      html += '<div class="card" style="margin-bottom:7px;padding:12px;border-left:4px solid #ff9800;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
+        + '<div><div style="font-weight:700;font-size:0.92rem;">' + textoSeguroPedido(p.nome) + '</div>'
+        + '<div style="font-size:0.75rem;color:#aaa;margin-top:5px;">' + destinos + '</div></div>'
+        + '<div style="flex-shrink:0;background:#3a1111;color:#ffcdd2;padding:5px 8px;border-radius:7px;font-weight:700;font-size:0.82rem;">Total: ' + fmtQ(p.quantidade,p.unidade) + '</div>'
+        + '</div></div>';
+    });
+  }
+  if (_pedidosSemMinimo.length) {
+    html += '<div class="unidade-header" style="background:#8a4b00;">⚠️ ZERADOS SEM MÍNIMO — CONFERIR QUANTIDADE</div>';
+    _pedidosSemMinimo.forEach(function(p) {
+      const locais = [...new Set(p.destinos)].map(unidadePedidoLabel).join(', ');
+      html += '<div class="prod-row baixo"><div><div style="font-weight:700;font-size:0.88rem;">' + textoSeguroPedido(p.nome) + '</div><div style="font-size:0.72rem;color:#aaa;">' + textoSeguroPedido(p.categoria) + ' · zerado em: ' + textoSeguroPedido(locais) + ' · mínimo não configurado</div></div><div style="font-weight:700;color:#ffcc80;text-align:right;">Definir qtd.</div></div>';
+    });
+  }
+  el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto encontrado.</p>';
 }
+function pedidoListaTexto() {
+  if (!_pedidosVisiveis.length && !_pedidosSemMinimo.length) return '';
+  let texto = 'LISTA DE COMPRAS — PRENSADÃO\n' + dataPedidoNome() + '\n\n';
+  _pedidosVisiveis.forEach(function(p) {
+    texto += p.categoria + ' — ' + p.nome + ': comprar ' + fmtQ(p.quantidade,p.unidade) + '\n';
+    p.destinos.forEach(function(d) { texto += '  • ' + unidadePedidoLabel(d.unidade) + ': ' + fmtQ(d.estoque,p.unidade) + ' atual; repor ' + fmtQ(d.pedir,p.unidade) + '\n'; });
+  });
+  if (_pedidosSemMinimo.length) {
+    texto += '\nZERADOS SEM MÍNIMO — conferir necessidade e definir quantidade:\n';
+    _pedidosSemMinimo.forEach(function(p) { texto += '• ' + p.categoria + ' — ' + p.nome + ' (' + [...new Set(p.destinos)].map(unidadePedidoLabel).join(', ') + ')\n'; });
+  }
+  return texto;
+}
+function baixarCsvPedidos() {
+  if (!_pedidosVisiveis.length && !_pedidosSemMinimo.length) { showToast('Atualize a lista; não há itens para exportar.','error'); return; }
+  let csv = 'Produto;Categoria;Quantidade total para comprar;Unidade;Unidades de destino;Estoque atual por unidade;Quantidade de reposição por unidade\n';
+  _pedidosVisiveis.forEach(function(p) {
+    const destinos = p.destinos.map(d => unidadePedidoLabel(d.unidade)).join(', ');
+    const estoques = p.destinos.map(d => unidadePedidoLabel(d.unidade)+': '+d.estoque).join(' | ');
+    const reposicoes = p.destinos.map(d => unidadePedidoLabel(d.unidade)+': '+d.pedir).join(' | ');
+    const vals = [p.nome,p.categoria,p.quantidade,p.unidade,destinos,estoques,reposicoes];
+    csv += vals.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(';')+'\n';
+  });
+  _pedidosSemMinimo.forEach(function(p) {
+    const destinos = [...new Set(p.destinos)].map(unidadePedidoLabel).join(', ');
+    const vals = [p.nome,p.categoria,'CONFERIR / DEFINIR','',destinos,'0','Sem mínimo cadastrado'];
+    csv += vals.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(';')+'\n';
+  });
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'lista_compras_prensadao_'+dataPedidoNome()+'.csv'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href),1000);
+}
+function baixarPdfPedidos() {
+  if (!_pedidosVisiveis.length && !_pedidosSemMinimo.length) { showToast('Atualize a lista; não há itens para exportar.','error'); return; }
+  const win = window.open('','_blank');
+  if (!win) { showToast('Permita a janela de impressão para salvar o PDF.','error'); return; }
+  const linhas = _pedidosVisiveis.map(function(p) {
+    const destinos = p.destinos.map(d => textoSeguroPedido(unidadePedidoLabel(d.unidade))+': estoque '+fmtQ(d.estoque,p.unidade)+' — comprar '+fmtQ(d.pedir,p.unidade)).join('<br>');
+    return '<tr><td>'+textoSeguroPedido(p.categoria)+'</td><td>'+textoSeguroPedido(p.nome)+'</td><td>'+textoSeguroPedido(fmtQ(p.quantidade,p.unidade))+'</td><td>'+destinos+'</td></tr>';
+  }).join('');
+  const revisao = _pedidosSemMinimo.map(function(p) {
+    return '<tr><td>'+textoSeguroPedido(p.categoria)+'</td><td>'+textoSeguroPedido(p.nome)+'</td><td><b>Conferir / definir</b></td><td>Estoque zero em: '+[...new Set(p.destinos)].map(unidadePedidoLabel).map(textoSeguroPedido).join(', ')+'; mínimo não configurado</td></tr>';
+  }).join('');
+  win.document.write('<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Lista de compras</title><style>body{font:14px Arial,sans-serif;color:#222;padding:24px}h1{font-size:22px}p{color:#555}table{border-collapse:collapse;width:100%;margin-top:18px}th,td{border:1px solid #bbb;text-align:left;padding:8px;vertical-align:top}th{background:#eee}</style><h1>Lista de compras — Prensadão</h1><p>Embalagens e produtos de limpeza · '+dataPedidoNome()+'</p><table><thead><tr><th>Categoria</th><th>Produto</th><th>Total a comprar</th><th>Reposição por unidade</th></tr></thead><tbody>'+linhas+'</tbody></table>'+(revisao?'<h2>Estoque zerado sem mínimo — conferir e definir quantidade</h2><table><thead><tr><th>Categoria</th><th>Produto</th><th>Quantidade</th><th>Observação</th></tr></thead><tbody>'+revisao+'</tbody></table>':'')+'<p>Quantidades calculadas para completar o estoque máximo cadastrado; sem máximo, completar o mínimo. Itens sem mínimo precisam ser conferidos antes de comprar.</p><script>window.onload=function(){setTimeout(function(){window.print()},300)};<\/script></html>');
+  win.document.close();
+}
+function baixarImagemPedidos() {
+  if (!_pedidosVisiveis.length && !_pedidosSemMinimo.length) { showToast('Atualize a lista; não há itens para exportar.','error'); return; }
+  const largura=1200, altura=190+_pedidosVisiveis.length*94+(_pedidosSemMinimo.length?80+_pedidosSemMinimo.length*52:0);
+  const canvas=document.createElement('canvas'); canvas.width=largura; canvas.height=altura;
+  const ctx=canvas.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,largura,altura);
+  ctx.fillStyle='#202020'; ctx.font='bold 34px Arial'; ctx.fillText('LISTA DE COMPRAS — PRENSADÃO',40,55);
+  ctx.font='20px Arial'; ctx.fillStyle='#555'; ctx.fillText('Embalagens e Limpeza · '+dataPedidoNome(),40,92);
+  let y=135, cat='';
+  _pedidosVisiveis.forEach(function(p) {
+    if (p.categoria!==cat) {cat=p.categoria;ctx.fillStyle=cat.toLowerCase()==='limpeza'?'#455a64':'#6a1b9a';ctx.fillRect(32,y,1136,34);ctx.fillStyle='#fff';ctx.font='bold 20px Arial';ctx.fillText(cat.toUpperCase(),46,y+24);y+=48;}
+    ctx.fillStyle='#222';ctx.font='bold 20px Arial';ctx.fillText(p.nome,46,y+4,690);
+    ctx.fillStyle='#a21';ctx.font='bold 19px Arial';ctx.textAlign='right';ctx.fillText('Comprar: '+fmtQ(p.quantidade,p.unidade),1150,y+4);ctx.textAlign='left';
+    ctx.fillStyle='#555';ctx.font='15px Arial';
+    const dest=p.destinos.map(d=>unidadePedidoLabel(d.unidade)+': '+fmtQ(d.estoque,p.unidade)+' atual → repor '+fmtQ(d.pedir,p.unidade)).join('  |  ');
+    ctx.fillText(dest,46,y+31,1090);ctx.strokeStyle='#ddd';ctx.beginPath();ctx.moveTo(40,y+49);ctx.lineTo(1160,y+49);ctx.stroke();y+=80;
+  });
+  if (_pedidosSemMinimo.length) {
+    y+=8;ctx.fillStyle='#ff9800';ctx.fillRect(32,y,1136,34);ctx.fillStyle='#fff';ctx.font='bold 18px Arial';ctx.fillText('ZERADOS SEM MÍNIMO — CONFERIR QUANTIDADE ANTES DE COMPRAR',46,y+24);y+=48;
+    _pedidosSemMinimo.forEach(function(p){ctx.fillStyle='#333';ctx.font='bold 16px Arial';ctx.fillText(p.categoria+' — '+p.nome,46,y,850);ctx.fillStyle='#8a4b00';ctx.font='15px Arial';ctx.fillText('Conferir em: '+[...new Set(p.destinos)].map(unidadePedidoLabel).join(', ')+' · qtd a definir',46,y+23,1080);y+=48;});
+  }
+  canvas.toBlob(function(blob){
+    if(!blob){showToast('Não consegui gerar a imagem.','error');return;}
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lista_compras_prensadao_'+dataPedidoNome()+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  },'image/png');
+}
+// ── FIM PEDIDOS ──
 
 // ── MÍNIMOS ──
 function renderMinimos() {
