@@ -2664,17 +2664,15 @@ async function carregarDescartesHoje() {
   </script>
 
   <div id="prensadao-update-notice" role="status" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);width:min(92%,540px);background:#171717;color:#fff;border:1px solid #ff9800;border-left:5px solid #ff9800;border-radius:12px;padding:13px 42px 13px 15px;box-shadow:0 8px 28px #000b;z-index:10000;font-family:'Rajdhani',sans-serif;font-size:0.86rem;line-height:1.4;">
-  <div style="font-weight:700;color:#ffcc80;margin-bottom:4px;">🔧 MELHORIAS NO SISTEMA</div>
-  <div>Estamos preparando atualizações. Durante esse período, o sistema pode ficar um pouco lento, mas continua funcionando normalmente.</div>
-  <div style="color:#ddd;font-size:0.8rem;margin-top:5px;">Assim que estiver tudo pronto, avisaremos por aqui.</div>
-  <div style="color:#aaa;font-size:0.76rem;margin-top:5px;">Tem uma sugestão, percebeu falta de algum produto ou algo que pode melhorar? Acesse o robozinho de ajuda e envie sua mensagem.</div>
+  <div style="font-weight:700;color:#ffcc80;margin-bottom:4px;">📢 ESTOQUE EM ATUALIZAÇÃO</div>
+  <div>Estoque centralizado no CD; cadastros e categorias ajustados. Estamos padronizando os códigos. Confiram se cada entrada gera saída no CD e avisem a gestão se houver divergência.</div>
   <button id="fechar-prensadao-update" aria-label="Fechar aviso" style="position:absolute;right:9px;top:8px;background:none;border:0;color:#aaa;font-size:1.3rem;cursor:pointer;line-height:1;">×</button>
 </div>
 <script>
   (function () {
     var aviso = document.getElementById('prensadao-update-notice');
     var fechar = document.getElementById('fechar-prensadao-update');
-    var chave = 'prensadao-aviso-melhorias-2026-09-23';
+    var chave = 'prensadao-aviso-atualizacao-codigos-2026-10-19';
     try {
       if (localStorage.getItem(chave) === 'lido') aviso.style.display = 'none';
       if (fechar) fechar.onclick = function () {
