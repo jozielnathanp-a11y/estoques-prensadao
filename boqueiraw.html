@@ -413,6 +413,8 @@
         </select>
         <label>Estoque mínimo</label>
         <input type="number" id="prod-min" placeholder="0" step="0.01" min="0" />
+        <label>Estoque máximo</label>
+        <input type="number" id="prod-max" placeholder="0 (sem máximo)" step="0.01" min="0" />
         <label>Qtd por PCT em kg (opcional)</label>
         <input type="number" id="prod-pct" placeholder="Ex: 2 (para 2kg por pacote)" step="0.001" min="0" />
         <button class="btn btn-red" onclick="salvarProduto()">💾 Salvar Produto</button>
@@ -440,7 +442,7 @@
   <div class="screen adm-only" id="tab-pedidos">
     <div class="card">
       <h3>🛒 Lista de Pedidos</h3>
-      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Produtos abaixo do estoque mínimo — o que precisa pedir.</p>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Produtos no mínimo ou abaixo; a reposição vai até o máximo definido.</p>
       <button class="btn btn-red" onclick="gerarPedidos()">🔄 Calcular Pedidos</button>
     </div>
     <div id="lista-pedidos"></div>
@@ -733,10 +735,12 @@ async function salvarProduto() {
     categoria: document.getElementById('prod-cat').value,
     unidade: document.getElementById('prod-unidade').value,
     estoque_min: parseFloat(document.getElementById('prod-min').value) || 0,
+    estoque_max: parseFloat(document.getElementById('prod-max').value) || 0,
     qtd_por_pct: parseFloat(document.getElementById('prod-pct').value) || 0,
     unidade_loja: unidadeLoja
   };
   if (!codigoDigitado || !nome) { showToast('Preencha código e nome!', 'error'); return; }
+  if (dados.estoque_min > 0 && dados.estoque_max > 0 && dados.estoque_max < dados.estoque_min) { showToast('O estoque máximo não pode ser menor que o mínimo.', 'error'); return; }
 
   try {
     let mensagem = '✅ Produto atualizado!';
@@ -800,7 +804,7 @@ function mostrarFormProduto() {
 }
 
 function limparFormProduto() {
-  ['prod-id','prod-codigo','prod-nome','prod-min','prod-pct'].forEach(id => document.getElementById(id).value = '');
+  ['prod-id','prod-codigo','prod-nome','prod-min','prod-max','prod-pct'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('form-produto').style.display = 'none';
   document.getElementById('btn-novo-produto').style.display = 'block';
 }
@@ -814,6 +818,7 @@ function editarProduto(cod) {
   document.getElementById('prod-cat').value = p.categoria;
   document.getElementById('prod-unidade').value = p.unidade;
   document.getElementById('prod-min').value = p.estoque_min || '';
+  document.getElementById('prod-max').value = p.estoque_max || '';
   document.getElementById('prod-pct').value = p.qtd_por_pct || '';
   mostrarFormProduto();
   showTab('produtos');
@@ -971,6 +976,7 @@ async function gerarRelatorio() {
     resultado[p.codigo] = {
       nome: p.nome, unidade: p.unidade, categoria: p.categoria,
       estoque_min: p.estoque_min || 0,
+      estoque_max: p.estoque_max || 0,
       entrada_anterior: 0,   // entradas do dia anterior
       contagem: null,        // última contagem do dia
       entrada_atual: 0,      // entradas do dia atual
@@ -1043,7 +1049,10 @@ async function gerarRelatorio() {
       // BRUTO: Entrada anterior | Contagem | Pedido sugerido
       html += `<span style="background:#1a2a3a;color:#90caf9;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—'}</b></span>`;
       html += `<span style="background:#2a1a3a;color:#ce93d8;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '—' : fmtQ(p.contagem ?? estAtual, p.unidade)}</b></span>`;
-      const pedido = p.estoque_min > 0 && estAtual !== null ? Math.max(0, p.estoque_min - (estAtual || 0)) : null;
+      const minPedido = parseFloat(p.estoque_min) || 0;
+      const maxPedido = parseFloat(p.estoque_max) || 0;
+      const metaPedido = maxPedido > 0 ? maxPedido : minPedido;
+      const pedido = minPedido > 0 && estAtual !== null && (estAtual || 0) <= minPedido ? Math.max(0, metaPedido - (estAtual || 0)) : null;
       if (pedido !== null && pedido > 0) html += `<span style="background:#fde8e8;padding:3px 8px;border-radius:6px;">🛒 Pedir: <b style="color:#b71c1c">${fmtQ(pedido, p.unidade)}</b></span>`;
     }
 
@@ -1443,7 +1452,7 @@ async function gerarPedidos(){
   var precisam=prods.filter(function(p){
     var min=parseFloat(p.estoque_min)||0;
     var est=parseFloat(p.estoque)||0;
-    return min>0&&est<min;
+    return min>0&&est<=min;
   });
   if(!precisam.length){el.innerHTML='<p style="color:#4caf50;text-align:center;padding:20px;">Tudo OK!</p>';return;}
   el.innerHTML=precisam.map(function(p){
