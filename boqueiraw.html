@@ -719,32 +719,78 @@ function popularSelectProdutos() {
 // ── SALVAR PRODUTO ──
 async function salvarProduto() {
   const id = document.getElementById('prod-id').value;
+  const codigoDigitado = document.getElementById('prod-codigo').value.trim();
+  const nome = document.getElementById('prod-nome').value.trim();
+  const unidadeLoja = UNIDADE_LOJA;
+  const codigoBase = codigoDigitado.replace(/_(boqueiraw|centro|delivery|cd)$/i, '');
+  const codigoCanonico = unidadeLoja === 'cd' ? codigoBase : codigoBase + '_' + unidadeLoja;
+  const original = id ? Object.values(produtosCache).find(p => String(p.id) === String(id)) : null;
+  const codigoFinal = original && codigoDigitado === original.codigo ? original.codigo : codigoCanonico;
   const dados = {
-    codigo: document.getElementById('prod-codigo').value.trim(),
-    nome: document.getElementById('prod-nome').value.trim(),
+    codigo: codigoFinal,
+    nome,
     categoria: document.getElementById('prod-cat').value,
     unidade: document.getElementById('prod-unidade').value,
     estoque_min: parseFloat(document.getElementById('prod-min').value) || 0,
     qtd_por_pct: parseFloat(document.getElementById('prod-pct').value) || 0,
+    unidade_loja: unidadeLoja
   };
-  if (!dados.codigo || !dados.nome) { showToast('Preencha código e nome!', 'error'); return; }
+  if (!codigoDigitado || !nome) { showToast('Preencha código e nome!', 'error'); return; }
 
-  if (id) {
-    await supa('PATCH', `produtos?id=eq.${id}`, dados);
-    showToast('✅ Produto atualizado!', 'success');
-  } else {
-    const existe = await supa('GET', 'produtos', null, `codigo=eq.${dados.codigo}&select=id`);
-    if (existe && existe.length > 0) {
-      await supa('PATCH', `produtos?codigo=eq.${dados.codigo}`, dados);
-      showToast('✅ Produto atualizado!', 'success');
+  try {
+    let mensagem = '✅ Produto atualizado!';
+    let codigoSalvo = codigoFinal;
+
+    if (id) {
+      if (original && codigoFinal !== original.codigo) {
+        const duplicado = await supa('GET', 'produtos', null,
+          `codigo=eq.${encodeURIComponent(codigoFinal)}&unidade_loja=eq.${encodeURIComponent(unidadeLoja)}&select=id`);
+        if (!Array.isArray(duplicado)) throw new Error('Falha ao conferir duplicidade');
+        if (duplicado.some(p => String(p.id) !== String(id))) {
+          showToast('Já existe um produto com esse código nesta unidade.', 'error');
+          return;
+        }
+      }
+      const ok = await supa('PATCH', 'produtos', dados,
+        `id=eq.${encodeURIComponent(id)}&unidade_loja=eq.${encodeURIComponent(unidadeLoja)}`);
+      if (!ok) throw new Error('A atualização foi recusada pela base');
     } else {
-      dados.estoque = 0;
-      await supa('POST', 'produtos', dados);
-      showToast('✅ Produto cadastrado!', 'success');
+      let existentes = await supa('GET', 'produtos', null,
+        `codigo=eq.${encodeURIComponent(codigoFinal)}&unidade_loja=eq.${encodeURIComponent(unidadeLoja)}&select=id,codigo`);
+      if (!Array.isArray(existentes)) throw new Error('Falha ao conferir duplicidade');
+
+      if (!existentes.length && codigoBase !== codigoFinal) {
+        const legados = await supa('GET', 'produtos', null,
+          `codigo=eq.${encodeURIComponent(codigoBase)}&unidade_loja=eq.${encodeURIComponent(unidadeLoja)}&select=id,codigo`);
+        if (!Array.isArray(legados)) throw new Error('Falha ao conferir código legado');
+        if (legados.length) existentes = legados;
+      }
+
+      if (existentes.length) {
+        codigoSalvo = existentes[0].codigo;
+        dados.codigo = codigoSalvo;
+        const ok = await supa('PATCH', 'produtos', dados,
+          `id=eq.${encodeURIComponent(existentes[0].id)}&unidade_loja=eq.${encodeURIComponent(unidadeLoja)}`);
+        if (!ok) throw new Error('A atualização foi recusada pela base');
+      } else {
+        dados.estoque = 0;
+        const ok = await supa('POST', 'produtos', dados);
+        if (!ok) throw new Error('A inclusão foi recusada pela base');
+        mensagem = '✅ Produto cadastrado!';
+      }
     }
+
+    await carregarProdutos();
+    const salvo = Object.values(produtosCache).some(p =>
+      p.unidade_loja === unidadeLoja && (id ? String(p.id) === String(id) : p.codigo === codigoSalvo));
+    if (!salvo) throw new Error('O produto não apareceu na lista da unidade após salvar');
+
+    limparFormProduto();
+    showToast(mensagem, 'success');
+  } catch (e) {
+    console.error('Erro ao salvar produto:', e);
+    showToast('Não consegui salvar o produto nesta unidade. Confira o código e tente de novo.', 'error');
   }
-  limparFormProduto();
-  carregarProdutos();
 }
 
 function mostrarFormProduto() {
@@ -1467,10 +1513,8 @@ function renderLancamentos() {
   if (btn) btn.style.display = 'block';
   el.innerHTML = _lancamentos.map(function(l, i) {
     var tl  = l.tipo === 'contagem' ? '📊' : '📥';
-    var cat = (l.categoria || '').toLowerCase();
-    var isEmb = cat === 'embalagem' || cat === 'embalagens';
     var dest = l.tipo === 'entrada'
-      ? '<span style="font-size:0.65rem;margin-left:4px;color:' + (isEmb ? '#f9a825' : '#64b5f6') + ';">→ ' + (isEmb ? 'Almox' : 'CD') + '</span>'
+      ? '<span style="font-size:0.65rem;margin-left:4px;color:#64b5f6;">→ CD</span>'
       : '';
     return '<div style="padding:8px 0;border-bottom:1px solid #1e1e1e;">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;">'
@@ -1534,51 +1578,24 @@ async function salvarLancamentos() {
       if (l.tipo === 'entrada') {
         try {
           const codBase = l.cod.replace(/_centro$|_delivery$|_boqueiraw$/, '');
-          const cat = (l.categoria || p.categoria || '').toLowerCase();
-          const isEmbalagem = cat === 'embalagem' || cat === 'embalagens' || cat === 'limpeza';
-
-          if (isEmbalagem) {
-            // Embalagem → desconta do Almoxarifado pelo código base
-            const codAlmox = codBase + '_almoxarifado';
-            const almoxRes = await fetch(
-              `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codAlmox}&unidade_loja=eq.almoxarifado&select=codigo,estoque`,
-              { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
-            ).then(function(r){ return r.json(); });
-            if (almoxRes && almoxRes.length > 0) {
-              const almoxEstAnt = parseFloat(almoxRes[0].estoque || 0);
-              const novoAlmox = Math.max(0, almoxEstAnt - l.qtd);
-              await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codAlmox}&unidade_loja=eq.almoxarifado`, {
-                method: 'PATCH',
-                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ estoque: novoAlmox })
-              });
-              await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
-                method: 'POST',
-                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ codigo: codAlmox, nome: l.nome, tipo: 'saida', qtd: l.qtd, unidade: l.unidade, colaborador: UNIDADE_LOJA.toUpperCase(), obs: 'Saída → ' + UNIDADE_LOJA.toUpperCase(), unidade_loja: 'almoxarifado', estoque_anterior: almoxEstAnt, novo_estoque: novoAlmox, status: 'confirmado' })
-              });
-            }
-          } else {
-            // Processado / Bruto / outros → desconta do CD pelo código base
-            const codCD = codBase + '_cd';
-            const cdRes = await fetch(
-              `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd&select=codigo,estoque`,
-              { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
-            ).then(function(r){ return r.json(); });
-            if (cdRes && cdRes.length > 0) {
-              const cdEstAnt = parseFloat(cdRes[0].estoque || 0);
-              const novoCD = Math.max(0, cdEstAnt - l.qtd);
-              await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
-                method: 'PATCH',
-                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ estoque: novoCD })
-              });
-              await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
-                method: 'POST',
-                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ codigo: codCD, nome: l.nome, tipo: 'saida', qtd: l.qtd, unidade: l.unidade, colaborador: UNIDADE_LOJA.toUpperCase(), obs: 'Saída → ' + UNIDADE_LOJA.toUpperCase(), unidade_loja: 'cd', estoque_anterior: cdEstAnt, novo_estoque: novoCD, status: 'confirmado' })
-              });
-            }
+          const codCD = codBase + '_cd';
+          const cdRes = await fetch(
+            `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd&select=codigo,estoque`,
+            { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+          ).then(function(r){ return r.json(); });
+          if (cdRes && cdRes.length > 0) {
+            const cdEstAnt = parseFloat(cdRes[0].estoque || 0);
+            const novoCD = Math.max(0, cdEstAnt - l.qtd);
+            await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
+              method: 'PATCH',
+              headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ estoque: novoCD })
+            });
+            await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
+              method: 'POST',
+              headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ codigo: codCD, nome: l.nome, tipo: 'saida', qtd: l.qtd, unidade: l.unidade, colaborador: UNIDADE_LOJA.toUpperCase(), obs: 'Saída → ' + UNIDADE_LOJA.toUpperCase(), unidade_loja: 'cd', estoque_anterior: cdEstAnt, novo_estoque: novoCD, status: 'confirmado' })
+            });
           }
         } catch(e) { console.warn('Smart Desconto:', e); }
       }

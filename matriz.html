@@ -90,6 +90,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Prensadão" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
 </head>
 <body>
 
@@ -127,7 +128,6 @@
     <div class="tab" onclick="showTab('pedidos')">🛒 COMPRAS</div>
     <div class="tab" onclick="showTab('minimos')">⚙️ LIMITES</div>
     <div class="tab" onclick="showTab('hist-cd')">📤 SAÍDAS CD</div>
-    <div class="tab" onclick="showTab('almox-chefao')">📦 ALMOXARIFADO</div>
     <div class="tab" onclick="showTab('cadastro')">➕ CADASTRAR</div>
     <div class="tab" onclick="showTab('descarte')">🗑️ DESCARTE</div>
   </div>
@@ -158,13 +158,18 @@
         <option value="cd">🏭 CD</option>
         <option value="centro">🏪 Centro</option>
         <option value="delivery">🚗 Delivery</option>
-          <option value="boqueiraw">🏪 Boqueirão</option>
+        <option value="boqueiraw">🏪 Boqueirão</option>
       </select>
       <select id="filtro-cat" onchange="renderEstoque()" style="margin:0;flex:1;">
         <option value="">Todas cats.</option>
       </select>
     </div>
     <input type="text" id="busca-estoque" placeholder="🔍 Buscar produto..." oninput="renderEstoque()" style="margin-bottom:8px;" />
+    <div id="exportar-estoque-hint" style="font-size:.78rem;color:#888;margin:-2px 0 8px;text-align:center;">Escolha uma unidade para imprimir ou baixar o relatório.</div>
+    <div id="exportar-estoque-acoes" style="display:none;gap:8px;margin:0 0 8px;">
+      <button class="btn btn-gray" onclick="imprimirRelatorioEstoqueUnidade()" style="flex:1;min-width:0;margin:0;">🖨️ Imprimir / PDF</button>
+      <button class="btn btn-blue" onclick="baixarExcelEstoqueUnidade()" style="flex:1;min-width:0;margin:0;">📊 Baixar Excel</button>
+    </div>
     <button class="btn btn-gold" onclick="carregarTudo()">🔄 ATUALIZA AÍ</button>
     <div id="lista-estoque"></div>
   </div>
@@ -187,10 +192,12 @@
 
       <!-- PASSO 1: Tipo -->
       <label style="font-size:0.95rem;font-weight:700;color:#37474f;">1️⃣ Tipo de lançamento</label>
-      <div style="display:flex;gap:8px;margin:8px 0 16px;">
-        <button id="btn-tipo-entrada" onclick="selecionarTipo('entrada')" class="btn btn-red" style="flex:1;margin:0;padding:14px;">📥 Entrada</button>
-        <button id="btn-tipo-contagem" onclick="selecionarTipo('contagem')" class="btn btn-gray" style="flex:1;margin:0;padding:14px;">📊 Contagem</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 8px;">
+        <button id="btn-tipo-entrada" onclick="selecionarTipo('entrada')" class="btn btn-red" style="flex:1;min-width:105px;margin:0;padding:12px 8px;">📥 Entrada na unidade</button>
+        <button id="btn-tipo-contagem" onclick="selecionarTipo('contagem')" class="btn btn-gray" style="flex:1;min-width:105px;margin:0;padding:12px 8px;">📊 Contagem</button>
+        <button id="btn-tipo-recebimento" onclick="selecionarTipo('recebimento_cd')" class="btn btn-gray" style="flex:1;min-width:105px;margin:0;padding:12px 8px;">📦 Receber compra no CD</button>
       </div>
+      <div id="lanc-instrucoes" style="font-size:.76rem;color:#888;margin:0 0 12px;">Entrada na unidade soma no destino e desconta a mesma quantidade do CD. Recebimento no CD soma as compras ao estoque central; contagem define o saldo contado.</div>
       <input type="hidden" id="lanc-tipo" value="entrada" />
 
       <!-- PASSO 2: Produto -->
@@ -231,7 +238,7 @@
       <!-- Total calculado -->
       <div style="display:flex;align-items:center;gap:10px;margin:4px 0 8px;">
         <label style="font-size:0.95rem;font-weight:700;color:#37474f;margin:0;">Total:</label>
-        <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="margin:0;flex:1;" oninput="calcTotal()" />
+        <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0" style="margin:0;flex:1;" oninput="calcTotal()" />
         <span id="lanc-total" style="font-weight:700;color:#ffffff;min-width:50px;text-align:right;"></span>
       </div>
       <button class="btn btn-red" onclick="adicionarAoLote()">✅ Confirmar</button>
@@ -922,18 +929,16 @@ function exportarRelBebCSV() {
     }
   </script>
 
-  <div id="prensadao-update-notice" role="status" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);width:min(92%,540px);background:#171717;color:#fff;border:1px solid #ff9800;border-left:5px solid #ff9800;border-radius:12px;padding:13px 42px 13px 15px;box-shadow:0 8px 28px #000b;z-index:10000;font-family:'Rajdhani',sans-serif;font-size:0.86rem;line-height:1.4;">
-  <div style="font-weight:700;color:#ffcc80;margin-bottom:4px;">🔧 MELHORIAS NO SISTEMA</div>
-  <div>Estamos preparando atualizações. Durante esse período, o sistema pode ficar um pouco lento, mas continua funcionando normalmente.</div>
-  <div style="color:#ddd;font-size:0.8rem;margin-top:5px;">Assim que estiver tudo pronto, avisaremos por aqui.</div>
-  <div style="color:#aaa;font-size:0.76rem;margin-top:5px;">Tem uma sugestão, percebeu falta de algum produto ou algo que pode melhorar? Acesse o robozinho de ajuda e envie sua mensagem.</div>
-  <button id="fechar-prensadao-update" aria-label="Fechar aviso" style="position:absolute;right:9px;top:8px;background:none;border:0;color:#aaa;font-size:1.3rem;cursor:pointer;line-height:1;">×</button>
+  <div id="prensadao-cd-maintenance-notice" role="status" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);width:min(92%,540px);background:#171717;color:#fff;border:1px solid #ff9800;border-left:5px solid #ff9800;border-radius:12px;padding:13px 42px 13px 15px;box-shadow:0 8px 28px #000b;z-index:10000;font-family:'Rajdhani',sans-serif;font-size:0.86rem;line-height:1.4;">
+  <div style="font-weight:700;color:#ffcc80;margin-bottom:4px;">🔧 SISTEMA DO CD EM MANUTENÇÃO</div>
+  <div>O sistema do CD está em manutenção e atualização. Avisaremos por aqui quando a atualização for concluída.</div>
+  <button id="fechar-prensadao-cd-maintenance" aria-label="Fechar aviso de manutenção" style="position:absolute;right:9px;top:8px;background:none;border:0;color:#aaa;font-size:1.3rem;cursor:pointer;line-height:1;">×</button>
 </div>
 <script>
   (function () {
-    var aviso = document.getElementById('prensadao-update-notice');
-    var fechar = document.getElementById('fechar-prensadao-update');
-    var chave = 'prensadao-aviso-melhorias-2026-09-23';
+    var aviso = document.getElementById('prensadao-cd-maintenance-notice');
+    var fechar = document.getElementById('fechar-prensadao-cd-maintenance');
+    var chave = 'prensadao-aviso-cd-manutencao-2026-10-02';
     try {
       if (localStorage.getItem(chave) === 'lido') aviso.style.display = 'none';
       if (fechar) fechar.onclick = function () {
@@ -1016,7 +1021,6 @@ function exportarRelBebCSV() {
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <select id="min-unidade" onchange="renderMinimos()" style="margin:0;flex:1;">
           <option value="cd">🏭 CD</option>
-          <option value="almoxarifado">📦 Almoxarifado</option>
           <option value="centro">🔵 Centro</option>
           <option value="delivery">🔴 Delivery</option>
           <option value="boqueiraw">🟡 Boqueirão</option>
@@ -1039,7 +1043,6 @@ function exportarRelBebCSV() {
 </div>
 
   <!-- HISTÓRICO SAÍDAS CD -->
-  <!-- ALMOXARIFADO CHEFÃO -->
   <!-- CADASTRO DE PRODUTO -->
   <div class="screen" id="tab-cadastro">
     <div class="card">
@@ -1072,7 +1075,6 @@ function exportarRelBebCSV() {
       <label style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:#b8860b;">1. ONDE FICA O ESTOQUE CENTRAL?</label>
       <div style="display:flex;gap:8px;margin:8px 0 16px;">
         <button id="cad-orig-cd" onclick="selecionarOrigem('cd')" class="btn btn-gold" style="flex:1;margin:0;">🏭 CD</button>
-        <button id="cad-orig-almox" onclick="selecionarOrigem('almoxarifado')" class="btn btn-gray" style="flex:1;margin:0;">📦 Almoxarifado</button>
       </div>
 
       <!-- Unidades que recebem -->
@@ -1094,21 +1096,6 @@ function exportarRelBebCSV() {
 
       <button class="btn btn-green" onclick="cadastrarProduto()" style="width:100%;font-size:1rem;">✅ CADASTRAR PRODUTO</button>
     </div>
-  </div>
-
-  <div class="screen" id="tab-almox-chefao">
-    <div class="card">
-      <h3>📦 Almoxarifado de Embalagens</h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-        <button onclick="filtrarAlmoxChefao('todos')" id="abtn-todos" class="btn btn-gold" style="flex:1;margin:0;font-size:0.78rem;">📦 Todos</button>
-        <button onclick="filtrarAlmoxChefao('ok')" id="abtn-ok" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">✅ OK</button>
-        <button onclick="filtrarAlmoxChefao('comprar')" id="abtn-comprar" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🛒 Comprar</button>
-        <button onclick="filtrarAlmoxChefao('zerado')" id="abtn-zerado" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🔴 Zerado</button>
-      </div>
-      <input type="text" id="almox-chefao-busca" placeholder="🔍 Buscar embalagem..." oninput="renderAlmoxChefao()" style="margin:0;" />
-    </div>
-    <div id="almox-chefao-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;"></div>
-    <div id="almox-chefao-lista"></div>
   </div>
 
   <div class="screen" id="tab-hist-cd">
@@ -1184,9 +1171,10 @@ function exportarRelBebCSV() {
 <script>
 const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
 const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
+const UNIDADES_TRAMPO = ['cd', 'centro', 'delivery', 'boqueiraw'];
 const UNIDADES = ['cd', 'centro', 'delivery', 'boqueiraw'];
-const UNIDADE_LABEL = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery', boqueiraw: '🏪 Boqueirão' };
-const UNIDADE_COR = { cd: 'unidade-cd', centro: 'unidade-centro', delivery: 'unidade-delivery', boqueiraw: 'unidade-centro' };
+const UNIDADE_LABEL = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery', boqueiraw: '🏪 Boqueirão', almoxarifado_cd: '📦 Embalagens Cozinha', almoxarifado: '🏬 Almoxarifado' };
+const UNIDADE_COR = { cd: 'unidade-cd', centro: 'unidade-centro', delivery: 'unidade-delivery', boqueiraw: 'unidade-centro', almoxarifado_cd: 'unidade-cd', almoxarifado: 'unidade-cd' };
 
 let todosEstoques = [];
 let modalCodigo = null;
@@ -1292,7 +1280,6 @@ function sair() {
 }
 
 let _histCdMovs = [];
-let _almoxChefaoFiltro = 'todos';
 
 // ── CADASTRO ──
 let _cadOrigem = 'cd';
@@ -1330,7 +1317,6 @@ function initCadastro() {
 function selecionarOrigem(origem) {
   _cadOrigem = origem;
   document.getElementById('cad-orig-cd').className = origem === 'cd' ? 'btn btn-gold' : 'btn btn-gray';
-  document.getElementById('cad-orig-almox').className = origem === 'almoxarifado' ? 'btn btn-gold' : 'btn btn-gray';
   atualizarResumoCad();
 }
 
@@ -1374,7 +1360,7 @@ function atualizarResumoCad() {
   const el = document.getElementById('cad-resumo');
   const unidSel = [..._cadUnidades].filter(u => u !== 'todas');
   if (!nome && !_cadCategoria && !unidSel.length) { el.style.display = 'none'; return; }
-  const origemLabel = _cadOrigem === 'cd' ? '🏭 CD' : '📦 Almoxarifado';
+  const origemLabel = '🏭 CD';
   const unidLabel = unidSel.length ? unidSel.map(u => u === 'boqueiraw' ? 'Boqueirão' : u.charAt(0).toUpperCase()+u.slice(1)).join(', ') : '—';
   el.style.display = 'block';
   el.innerHTML = `<strong>📋 RESUMO</strong><br>
@@ -1398,13 +1384,10 @@ async function cadastrarProduto() {
   // Gerar código base único se não informado
   const codBase = codigoBase || ('PROD' + Date.now().toString().slice(-6));
 
-  // Definir quais unidades criar (+ a de origem do estoque central se não estiver)
+  // Criar também o registro do estoque central correto.
   const todasUnidades = new Set(unidSel);
-  if (_cadOrigem === 'almoxarifado' && _cadCategoria === 'Embalagens') {
-    todasUnidades.add('almoxarifado'); // garantir criação no almoxarifado
-  } else {
-    todasUnidades.add(_cadOrigem); // garantir criação no CD
-  }
+  const origemUnidade = 'cd';
+  todasUnidades.add(origemUnidade);
 
   let criados = 0;
   for (const u of todasUnidades) {
@@ -1432,119 +1415,6 @@ async function cadastrarProduto() {
     showToast('Erro ao cadastrar. Tenta de novo!', 'error');
   }
 }
-
-async function carregarAlmoxChefao() {
-  const res = await supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado_cd&select=*&order=nome.asc');
-  if (Array.isArray(res)) {
-    // Atualiza todosEstoques com almoxarifado
-    todosEstoques = todosEstoques.filter(p => p.unidade_loja !== 'almoxarifado_cd').concat(res);
-  }
-  renderAlmoxChefao();
-}
-
-function filtrarAlmoxChefao(filtro) {
-  _almoxChefaoFiltro = filtro;
-  document.querySelectorAll('[id^="abtn-"]').forEach(b => b.className = 'btn btn-gray');
-  document.getElementById('abtn-' + filtro).className = 'btn btn-gold';
-  renderAlmoxChefao();
-}
-
-function renderAlmoxChefao() {
-  const busca = (document.getElementById('almox-chefao-busca').value || '').toLowerCase();
-  const prods = todosEstoques.filter(p => p.unidade_loja === 'almoxarifado_cd');
-
-  // Stats
-  const total = prods.length;
-  const zerados = prods.filter(p => (parseFloat(p.estoque)||0) === 0).length;
-  const comprar = prods.filter(p => {
-    const est = parseFloat(p.estoque)||0;
-    const min = parseFloat(p.estoque_min)||0;
-    return min > 0 && est <= min;
-  }).length;
-  const ok = total - zerados - comprar;
-
-  document.getElementById('almox-chefao-stats').innerHTML = `
-    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:1.4rem;font-weight:700;color:#f9a825;">${total}</div>
-      <div style="font-size:0.7rem;color:#888;">TOTAL</div>
-    </div>
-    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:1.4rem;font-weight:700;color:#2e7d32;">${ok}</div>
-      <div style="font-size:0.7rem;color:#888;">OK</div>
-    </div>
-    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:1.4rem;font-weight:700;color:#ff9800;">${comprar}</div>
-      <div style="font-size:0.7rem;color:#888;">COMPRAR</div>
-    </div>
-    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:1.4rem;font-weight:700;color:#b71c1c;">${zerados}</div>
-      <div style="font-size:0.7rem;color:#888;">ZERADO</div>
-    </div>`;
-
-  let lista = prods.filter(p => {
-    const est = parseFloat(p.estoque)||0;
-    const min = parseFloat(p.estoque_min)||0;
-    const buscarOk = !busca || p.nome.toLowerCase().includes(busca);
-    if (!buscarOk) return false;
-    if (_almoxChefaoFiltro === 'zerado') return est === 0;
-    if (_almoxChefaoFiltro === 'comprar') return min > 0 && est <= min && est > 0;
-    if (_almoxChefaoFiltro === 'ok') return est > 0 && !(min > 0 && est <= min);
-    return true;
-  });
-
-  const el = document.getElementById('almox-chefao-lista');
-  if (!lista.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>'; return; }
-
-  // Ordenar: zerados primeiro, depois abaixo do min, depois ok
-  lista.sort((a,b) => {
-    const estA = parseFloat(a.estoque)||0, estB = parseFloat(b.estoque)||0;
-    const minA = parseFloat(a.estoque_min)||0, minB = parseFloat(b.estoque_min)||0;
-    const prioA = estA === 0 ? 0 : (minA > 0 && estA <= minA ? 1 : 2);
-    const prioB = estB === 0 ? 0 : (minB > 0 && estB <= minB ? 1 : 2);
-    return prioA - prioB || a.nome.localeCompare(b.nome);
-  });
-
-  el.innerHTML = lista.map(p => {
-    const est = parseFloat(p.estoque)||0;
-    const min = parseFloat(p.estoque_min)||0;
-    const max = parseFloat(p.estoque_max)||0;
-    const zerado = est === 0;
-    const abaixo = min > 0 && est <= min;
-    const cor = zerado ? '#b71c1c' : abaixo ? '#ff9800' : '#2e7d32';
-    const badge = zerado
-      ? '<span style="background:#b71c1c;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">🔴 ZERADO</span>'
-      : abaixo
-        ? '<span style="background:#ff9800;color:#000;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">🛒 COMPRAR</span>'
-        : '<span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">✅ OK</span>';
-
-    // Sugestão de compra: quanto falta para chegar no máximo (ou min*2 se não tiver max)
-    let sugestao = '';
-    if (zerado || abaixo) {
-      const meta = max > 0 ? max : (min > 0 ? min * 2 : 0);
-      if (meta > 0) {
-        const falta = meta - est;
-        sugestao = '<div style="font-size:0.72rem;color:#ff9800;margin-top:2px;">🛒 Comprar: <strong>' + fmtQ(falta, p.unidade) + '</strong></div>';
-      }
-    }
-
-    const pct = parseFloat(p.qtd_por_pct)||0;
-    return '<div style="background:#161616;border-left:4px solid ' + cor + ';border-radius:8px;padding:12px;margin-bottom:6px;">'
-      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
-      + '<div style="flex:1;">'
-      + '<div style="font-weight:700;font-size:0.9rem;margin-bottom:4px;">' + p.nome + ' ' + badge + '</div>'
-      + (pct > 1 ? '<div style="font-size:0.72rem;color:#555;">PCT: ' + pct + ' un</div>' : '')
-      + sugestao
-      + '</div>'
-      + '<div style="text-align:right;margin-left:12px;">'
-      + '<div style="font-size:1.3rem;font-weight:700;color:' + cor + ';">' + fmtQ(est, p.unidade) + '</div>'
-      + (min > 0 ? '<div style="font-size:0.68rem;color:#555;">Mín: ' + fmtQ(min, p.unidade) + '</div>' : '')
-      + (max > 0 ? '<div style="font-size:0.68rem;color:#555;">Máx: ' + fmtQ(max, p.unidade) + '</div>' : '')
-      + '</div>'
-      + '</div>'
-      + '</div>';
-  }).join('');
-}
-let _histCdFiltro = 'todos';
 
 async function carregarHistCD() {
   const data = document.getElementById('hist-cd-data').value;
@@ -1644,19 +1514,7 @@ function showTab(name) {
   if (name === 'entradas') carregarEntradas();
   if (name === 'contagens') carregarContagens();
   if (name === 'pedidos') carregarPedidos();
-  if (name === 'minimos') {
-    const temAlmox = todosEstoques.some(p => p.unidade_loja === 'almoxarifado_cd');
-    if (!temAlmox) {
-      supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado_cd&select=*&order=nome.asc').then(res => {
-        if (Array.isArray(res)) todosEstoques = todosEstoques.concat(res);
-        renderMinimos();
-        if (name === 'descarte') popularDescarteChefao();
-});
-    } else {
-      renderMinimos();
-    }
-  }
-  if (name === 'almox-chefao') carregarAlmoxChefao();
+  if (name === 'minimos') renderMinimos();
   if (name === 'cadastro') initCadastro();
 }
 
@@ -1669,7 +1527,7 @@ function filtrarUnidade(u) {
 async function carregarTudo() {
   showToast('Atualizando...', '');
   todosEstoques = await supa('GET', 'produtos', 'select=*&order=nome.asc');
-  UNIDADES.forEach(u => {
+  UNIDADES_TRAMPO.forEach(u => {
     const prods = todosEstoques.filter(p => p.unidade_loja === u);
     const zerados = prods.filter(p => parseFloat(p.estoque)||0 === 0).length;
     document.getElementById('stat-' + u).textContent = prods.length + ' prod.';
@@ -1687,7 +1545,7 @@ function atualizarCats() {
   // Pegar categorias da unidade selecionada com contagem e estoque total
   const prods = filtroU
     ? todosEstoques.filter(p => p.unidade_loja === filtroU)
-    : todosEstoques;
+    : todosEstoques.filter(p => UNIDADES_TRAMPO.includes(p.unidade_loja));
 
   const cats = {};
   prods.forEach(p => {
@@ -1711,7 +1569,7 @@ function renderEstoque() {
   const filtroC = document.getElementById('filtro-cat').value;
   const busca = (document.getElementById('busca-estoque').value || '').toLowerCase();
   const el = document.getElementById('lista-estoque');
-  const unidades = filtroU ? [filtroU] : UNIDADES;
+  const unidades = filtroU ? [filtroU] : UNIDADES_TRAMPO;
   let html = '';
   unidades.forEach(u => {
     let prods = todosEstoques.filter(p =>
@@ -1746,6 +1604,121 @@ function renderEstoque() {
     });
   });
   el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>';
+  atualizarExportacoesEstoque();
+}
+
+// ── RELATÓRIOS DO TRAMPO GERAL ──
+function atualizarExportacoesEstoque() {
+  const unidade = document.getElementById('filtro-unidade').value;
+  const acoes = document.getElementById('exportar-estoque-acoes');
+  const dica = document.getElementById('exportar-estoque-hint');
+  if (acoes) acoes.style.display = unidade ? 'flex' : 'none';
+  if (dica) dica.style.display = unidade ? 'none' : 'block';
+}
+
+function dadosRelatorioEstoqueSelecionado() {
+  const unidade = document.getElementById('filtro-unidade').value;
+  if (!unidade) {
+    showToast('Escolha uma unidade antes de gerar o relatório.', 'error');
+    return null;
+  }
+  const categoria = document.getElementById('filtro-cat').value;
+  const busca = String(document.getElementById('busca-estoque').value || '').trim().toLocaleLowerCase('pt-BR');
+  const produtos = todosEstoques.filter(p =>
+    p.unidade_loja === unidade &&
+    (!categoria || p.categoria === categoria) &&
+    (!busca || String(p.nome || '').toLocaleLowerCase('pt-BR').includes(busca))
+  ).slice().sort((a, b) =>
+    String(a.categoria || '').localeCompare(String(b.categoria || ''), 'pt-BR') ||
+    String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR')
+  );
+  if (!produtos.length) {
+    showToast('Não há produtos para exportar com esses filtros.', 'error');
+    return null;
+  }
+  return { unidade, categoria, busca, produtos };
+}
+
+function rotuloRelatorioUnidade(unidade) {
+  const nomes = { cd: 'CD', centro: 'Centro', delivery: 'Delivery', boqueiraw: 'Boqueirão' };
+  return nomes[unidade] || unidade;
+}
+
+function statusRelatorioEstoque(p) {
+  const estoque = parseFloat(p.estoque) || 0;
+  const minimo = parseFloat(p.estoque_min) || 0;
+  const maximo = parseFloat(p.estoque_max) || 0;
+  if (estoque === 0) return 'Zerado';
+  if (minimo > 0 && estoque <= minimo) return 'Abaixo do mínimo';
+  if (maximo > 0 && estoque >= maximo) return 'No máximo';
+  return 'Normal';
+}
+
+function numeroRelatorioEstoque(valor) {
+  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(parseFloat(valor) || 0);
+}
+
+function escaparHtmlRelatorio(valor) {
+  return String(valor == null ? '' : valor).replace(/[&<>\"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function imprimirRelatorioEstoqueUnidade() {
+  const dados = dadosRelatorioEstoqueSelecionado();
+  if (!dados) return;
+  const nomeUnidade = rotuloRelatorioUnidade(dados.unidade);
+  const agora = new Date().toLocaleString('pt-BR');
+  const linhas = dados.produtos.map(p => {
+    const estoque = parseFloat(p.estoque) || 0;
+    const minimo = parseFloat(p.estoque_min) || 0;
+    const maximo = parseFloat(p.estoque_max) || 0;
+    return `<tr><td>${escaparHtmlRelatorio(p.nome)}</td><td>${escaparHtmlRelatorio(p.categoria)}</td><td class="num">${numeroRelatorioEstoque(estoque)}</td><td>${escaparHtmlRelatorio(p.unidade || '')}</td><td class="num">${numeroRelatorioEstoque(minimo)}</td><td class="num">${numeroRelatorioEstoque(maximo)}</td><td>${escaparHtmlRelatorio(statusRelatorioEstoque(p))}</td></tr>`;
+  }).join('');
+  const filtros = [dados.categoria ? `Categoria: ${escaparHtmlRelatorio(dados.categoria)}` : 'Todas as categorias', dados.busca ? `Busca: ${escaparHtmlRelatorio(dados.busca)}` : 'Sem busca'].join(' · ');
+  const janela = window.open('', '_blank');
+  if (!janela) {
+    showToast('O navegador bloqueou a janela. Permita pop-ups para imprimir.', 'error');
+    return;
+  }
+  janela.document.open();
+  janela.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Estoque — ${escaparHtmlRelatorio(nomeUnidade)}</title><style>
+    @page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#222;margin:0}h1{font-size:20px;margin:0 0 6px}p{margin:4px 0;color:#555}.topo{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}.acao{background:#222;color:#fff;border:0;padding:9px 14px;border-radius:6px;font-size:13px;cursor:pointer}table{border-collapse:collapse;width:100%;margin-top:12px}th,td{border:1px solid #777;padding:6px 7px;text-align:left}th{background:#eee}tbody tr:nth-child(even){background:#f7f7f7}.num{text-align:right;white-space:nowrap}.rodape{margin-top:10px;font-size:10px;color:#666}@media print{.acao{display:none}thead{display:table-header-group}tr{break-inside:avoid}}
+  </style></head><body><div class="topo"><div><h1>Relatório de Estoque — ${escaparHtmlRelatorio(nomeUnidade)}</h1><p>Gerado em ${escaparHtmlRelatorio(agora)}</p><p>${filtros}</p></div><button class="acao" onclick="window.print()">Imprimir / Salvar como PDF</button></div><p><strong>${dados.produtos.length}</strong> produto(s)</p><table><thead><tr><th>Produto</th><th>Categoria</th><th>Estoque atual</th><th>Unidade</th><th>Estoque mínimo</th><th>Estoque máximo</th><th>Situação</th></tr></thead><tbody>${linhas}</tbody></table><div class="rodape">Chefão — Prensadão</div><script>window.onload=function(){setTimeout(function(){window.focus();window.print();},300);};<\/script></body></html>`);
+  janela.document.close();
+}
+
+function baixarExcelEstoqueUnidade() {
+  const dados = dadosRelatorioEstoqueSelecionado();
+  if (!dados) return;
+  if (!window.XLSX) {
+    showToast('O módulo Excel não carregou. Atualize a página e tente novamente.', 'error');
+    return;
+  }
+  const nomeUnidade = rotuloRelatorioUnidade(dados.unidade);
+  const dataLocal = new Date();
+  const hoje = `${dataLocal.getFullYear()}-${String(dataLocal.getMonth() + 1).padStart(2, '0')}-${String(dataLocal.getDate()).padStart(2, '0')}`;
+  const linhas = [
+    ['RELATÓRIO DE ESTOQUE'],
+    ['Unidade', nomeUnidade],
+    ['Gerado em', new Date().toLocaleString('pt-BR')],
+    ['Categoria', dados.categoria || 'Todas'],
+    ['Busca', dados.busca || 'Todas'],
+    [],
+    ['Produto', 'Categoria', 'Estoque atual', 'Unidade', 'Estoque mínimo', 'Estoque máximo', 'Situação'],
+    ...dados.produtos.map(p => [
+      p.nome || '', p.categoria || '', parseFloat(p.estoque) || 0, p.unidade || '',
+      parseFloat(p.estoque_min) || 0, parseFloat(p.estoque_max) || 0, statusRelatorioEstoque(p)
+    ])
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(linhas);
+  ws['!cols'] = [{ wch: 34 }, { wch: 20 }, { wch: 16 }, { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 20 }];
+  ws['!autofilter'] = { ref: `A7:G${7 + dados.produtos.length}` };
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Estoque');
+  const slug = dados.unidade.replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  XLSX.writeFile(wb, `relatorio_estoque_${slug}_${hoje}.xlsx`);
+  showToast('✅ Relatório Excel baixado!', 'success');
 }
 
 // ── EDITAR PRODUTO ──
@@ -1971,7 +1944,7 @@ function renderEntradas() {
   const filtroU = document.getElementById('ent-unidade').value;
   const busca = (document.getElementById('busca-entradas').value || '').toLowerCase();
   if (!_movEntradas.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma entrada</p>'; return; }
-  const unidades = filtroU ? [filtroU] : UNIDADES;
+  const unidades = filtroU ? [filtroU] : [...UNIDADES];
   let html = '';
   unidades.forEach(u => {
     const lista = _movEntradas.filter(m => m.unidade_loja === u && (!busca || m.nome.toLowerCase().includes(busca)));
@@ -2028,7 +2001,7 @@ function renderContagens() {
   const filtroU = document.getElementById('cont-unidade').value;
   const busca = (document.getElementById('busca-contagens').value || '').toLowerCase();
   if (!_movContagens.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma contagem</p>'; return; }
-  const unidades = filtroU ? [filtroU] : UNIDADES;
+  const unidades = filtroU ? [filtroU] : [...UNIDADES];
   let html = '';
   unidades.forEach(u => {
     const lista = _movContagens.filter(m => m.unidade_loja === u && (!busca || m.nome.toLowerCase().includes(busca)));
@@ -2055,7 +2028,7 @@ function textoSeguroPedido(valor) {
   });
 }
 function unidadePedidoLabel(u) {
-  return ({cd:'CD',centro:'Centro',delivery:'Delivery',boqueiraw:'Boqueirão'})[u] || u;
+  return ({cd:'CD',centro:'Centro',delivery:'Delivery',boqueiraw:'Boqueirão',almoxarifado_cd:'Embalagens Cozinha',almoxarifado:'Almoxarifado'})[u] || u;
 }
 function dataPedidoNome() {
   var d = new Date();
@@ -2079,7 +2052,7 @@ function renderPedidos() {
   const filtroU = (document.getElementById('ped-unidade') || {}).value || '';
   const busca = ((document.getElementById('busca-pedidos') || {}).value || '').trim().toLocaleLowerCase('pt-BR');
   const filtroCat = (document.getElementById('compras-cat-filter') || {}).value || 'prioridades';
-  const unidades = filtroU ? [filtroU] : UNIDADES;
+  const unidades = filtroU ? [filtroU] : [...UNIDADES];
   const categoriasPrioritarias = ['embalagens','limpeza'];
   const porProduto = {};
   const zeradosSemMinimo = {};
@@ -2315,27 +2288,231 @@ let mtzBarcodeDetector = null;
 
 let _mtzListaCompleta = [];
 
-function popularSelectProdutos() {
-  // Atualiza o select de produtos na aba lançar com o produtosCache atual
-  const sel = document.getElementById('lanc-produto') || document.getElementById('mtz-lanc-produto');
-  if (!sel) return;
-  const lista = Object.values(produtosCache).sort((a,b) => a.nome.localeCompare(b.nome));
-  sel.innerHTML = '<option value="">-- Selecione o produto --</option>' +
-    lista.map(p => `<option value="${p.codigo}">${p.nome} (${fmtQ(p.estoque, p.unidade)})</option>`).join('');
+let _lancProductGroups = {};
+let _lancamentos = [];
+
+function normalizarTextoEstoque(valor) {
+  return String(valor || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+function codigoBaseEstoque(codigo) {
+  return String(codigo || '').replace(/_(?:almoxarifado_cd|almoxarifado|boqueiraw|delivery|centro|cd)$/i, '');
+}
 
-function mtzSetUnidade(u) {
-  document.getElementById('mtz-lanc-unidade').value = u;
+function montarGruposProdutosLancamento(linhas) {
+  _lancProductGroups = {};
+  const unidadesValidas = ['cd','centro','delivery','boqueiraw'];
+  (Array.isArray(linhas) ? linhas : []).forEach(p => {
+    if (!p || !unidadesValidas.includes(p.unidade_loja)) return;
+    const base = codigoBaseEstoque(p.codigo);
+    if (!base) return;
+    if (!_lancProductGroups[base]) _lancProductGroups[base] = { base, porUnidade: {}, produto: p };
+    const grupo = _lancProductGroups[base];
+    grupo.porUnidade[p.unidade_loja] = p;
+    if (p.unidade_loja === _mtzUnidade || (!grupo.produto && p)) grupo.produto = p;
+  });
+  Object.values(_lancProductGroups).forEach(grupo => {
+    grupo.produto = grupo.porUnidade[_mtzUnidade] || grupo.porUnidade.cd || grupo.produto;
+  });
+}
+
+function renderLancarProdutos() {
+  const sel = document.getElementById('lanc-produto');
+  if (!sel) return;
+  const selecionado = sel.value;
+  sel.innerHTML = '';
+  const inicial = document.createElement('option');
+  inicial.value = '';
+  inicial.textContent = _mtzUnidade ? '-- Selecione --' : '-- Selecione a unidade primeiro --';
+  sel.appendChild(inicial);
+  const tipo = document.getElementById('lanc-tipo').value;
+  const itens = Object.values(_lancProductGroups).filter(g => {
+    const p = g.produto || {};
+    return tipo === 'recebimento_cd' || g.porUnidade[_mtzUnidade] || g.porUnidade.cd;
+  }).sort((a,b) => String(a.produto.nome || '').localeCompare(String(b.produto.nome || ''), 'pt-BR'));
+  itens.forEach(g => {
+    const p = g.produto || {};
+    const opt = document.createElement('option');
+    opt.value = g.base;
+    const cd = g.porUnidade.cd;
+    if (tipo === 'recebimento_cd') {
+      opt.textContent = String(p.nome || g.base) + ' (CD: ' + (cd ? fmtQ(cd.estoque, p.unidade) : 'novo') + ')';
+    } else {
+      const saldoDestino = g.porUnidade[_mtzUnidade];
+      opt.textContent = String(p.nome || g.base) + ' (' + (saldoDestino ? fmtQ(saldoDestino.estoque, p.unidade) : 'novo na unidade') + ')';
+    }
+    sel.appendChild(opt);
+  });
+  if (selecionado && _lancProductGroups[selecionado]) sel.value = selecionado;
+  atualizarLabelAberto();
+}
+
+function popularSelectProdutos() { renderLancarProdutos(); }
+
+async function mtzSetUnidade(u) {
+  if (_lancamentos.length && _mtzUnidade && _mtzUnidade !== u) {
+    showToast('Confirme ou limpe os lançamentos antes de trocar de unidade.', 'error');
+    return;
+  }
+  _mtzUnidade = u;
   _mtzUnidadeAtual = u;
-  // destacar botão selecionado
   ['cd','centro','delivery','boqueiraw'].forEach(function(x) {
-    var btn = document.getElementById('mtz-u-' + x);
+    const btn = document.getElementById('mtz-u-' + x);
     if (btn) btn.className = x === u ? 'btn btn-gold' : 'btn btn-gray';
   });
-  mtzCarregarProdutos(u);
-  showToast('Unidade: ' + u.toUpperCase(), 'success');
+  const sel = document.getElementById('lanc-produto');
+  if (sel) sel.value = '';
+  const linhas = await supa('GET', 'produtos', 'select=*&order=nome.asc');
+  if (!Array.isArray(linhas)) { showToast('Não consegui carregar os produtos.', 'error'); return; }
+  todosEstoques = linhas;
+  montarGruposProdutosLancamento(linhas);
+  renderLancarProdutos();
+  showToast('Unidade: ' + ({cd:'CD',centro:'Centro',delivery:'Delivery',boqueiraw:'Boqueirão'}[u] || u), 'success');
 }
+
+function selecionarTipo(tipo) {
+  if (_lancamentos.length && _lancamentos.some(x => x.tipo !== tipo)) {
+    showToast('Salve ou limpe os lançamentos antes de trocar o tipo.', 'error');
+    return;
+  }
+  if (tipo === 'recebimento_cd' && _mtzUnidade !== 'cd') {
+    showToast('Para receber uma compra, selecione o CD primeiro.', 'error');
+    return;
+  }
+  document.getElementById('lanc-tipo').value = tipo;
+  document.getElementById('btn-tipo-entrada').className = 'btn ' + (tipo === 'entrada' ? 'btn-red' : 'btn-gray');
+  document.getElementById('btn-tipo-contagem').className = 'btn ' + (tipo === 'contagem' ? 'btn-blue' : 'btn-gray');
+  const recebimento = document.getElementById('btn-tipo-recebimento');
+  if (recebimento) recebimento.className = 'btn ' + (tipo === 'recebimento_cd' ? 'btn-gold' : 'btn-gray');
+  document.getElementById('bloco-aberto').style.display = tipo === 'contagem' ? 'block' : 'none';
+  const textos = {
+    entrada: 'Entrada na unidade soma no destino e desconta a mesma quantidade do CD.',
+    contagem: 'Contagem substitui o saldo da unidade pelo total contado e não desconta do estoque central.',
+    recebimento_cd: 'Recebimento de compra soma no estoque central do CD.'
+  };
+  document.getElementById('lanc-instrucoes').textContent = textos[tipo] || '';
+  renderLancarProdutos();
+}
+
+function atualizarLabelAberto() {
+  const info = document.getElementById('lanc-info');
+  const codigo = document.getElementById('lanc-produto').value;
+  const grupo = _lancProductGroups[codigo];
+  if (!info || !grupo) { if (info) info.style.display = 'none'; return; }
+  const tipo = document.getElementById('lanc-tipo').value;
+  const produto = grupo.produto || {};
+  const destino = grupo.porUnidade[_mtzUnidade];
+  const cd = grupo.porUnidade.cd;
+  let texto = '';
+  if (tipo === 'contagem') {
+    texto = 'Contagem: o total informado substituirá o saldo atual da unidade.';
+  } else if (tipo === 'recebimento_cd') {
+    texto = 'Destino: CD' + (cd ? ' · saldo atual ' + fmtQ(cd.estoque, produto.unidade) : ' · será criado ao receber');
+  } else {
+    const fonte = cd;
+    const nomeFonte = 'CD';
+    texto = 'Destino: ' + (_mtzUnidade || '—') + ' · saldo atual ' + fmtQ(destino ? destino.estoque : 0, produto.unidade) + ' · origem: ' + nomeFonte + (fonte ? ' (' + fmtQ(fonte.estoque, produto.unidade) + ')' : ' (registro não encontrado)');
+  }
+  info.textContent = texto;
+  info.style.display = 'block';
+}
+
+function calcTotal() {
+  const tipo = document.getElementById('lanc-tipo').value;
+  const pacotes = parseFloat(document.getElementById('lanc-pct').value) || 0;
+  const fator = parseFloat(document.getElementById('lanc-fator').value) || 0;
+  const aberto = tipo === 'contagem' ? (parseFloat(document.getElementById('lanc-aberto').value) || 0) : 0;
+  const qtdEl = document.getElementById('lanc-qtd');
+  const totalEl = document.getElementById('lanc-total');
+  const grupo = _lancProductGroups[document.getElementById('lanc-produto').value];
+  const unidade = grupo && grupo.produto ? grupo.produto.unidade : '';
+  if (pacotes > 0 && fator > 0) {
+    const total = Math.round((pacotes * fator + aberto) * 1000) / 1000;
+    qtdEl.value = total;
+    totalEl.textContent = fmtQ(total, unidade);
+  } else if (tipo === 'contagem' && aberto > 0) {
+    qtdEl.value = aberto;
+    totalEl.textContent = fmtQ(aberto, unidade);
+  } else {
+    const qtd = parseFloat(qtdEl.value);
+    totalEl.textContent = qtd >= 0 ? fmtQ(qtd, unidade) : '—';
+  }
+}
+
+function buscarPorCodigo() {
+  const campo = document.getElementById('scan-input');
+  const termo = normalizarTextoEstoque(campo.value.trim());
+  if (!termo) return;
+  const grupo = Object.values(_lancProductGroups).find(g => g.base.toLowerCase() === termo || Object.values(g.porUnidade).some(p => String(p.codigo || '').toLowerCase() === termo || normalizarTextoEstoque(p.nome) === termo));
+  if (!grupo) { showToast('Produto não encontrado. Escolha-o na lista.', 'error'); return; }
+  const sel = document.getElementById('lanc-produto');
+  sel.value = grupo.base;
+  atualizarLabelAberto();
+  campo.value = '';
+}
+
+function adicionarAoLote() {
+  const tipo = document.getElementById('lanc-tipo').value;
+  const base = document.getElementById('lanc-produto').value;
+  const grupo = _lancProductGroups[base];
+  const qtd = parseFloat(document.getElementById('lanc-qtd').value);
+  if (!_mtzUnidade) { showToast('Selecione a unidade primeiro.', 'error'); return; }
+  if (tipo === 'recebimento_cd' && _mtzUnidade !== 'cd') { showToast('Recebimento de compra precisa ser lançado com o CD selecionado.', 'error'); return; }
+  if (!grupo) { showToast('Selecione um produto.', 'error'); return; }
+  if (!Number.isFinite(qtd) || (tipo === 'contagem' ? qtd < 0 : qtd <= 0)) { showToast('Informe uma quantidade válida.', 'error'); return; }
+  const p = grupo.produto || {};
+  const idx = _lancamentos.findIndex(x => x.cod === base && x.tipo === tipo);
+  if (idx >= 0) _lancamentos[idx].qtd = tipo === 'contagem' ? qtd : Math.round((_lancamentos[idx].qtd + qtd) * 1000) / 1000;
+  else _lancamentos.push({ cod: base, nome: p.nome || base, tipo, qtd, unidade: p.unidade || 'und', categoria: p.categoria || '', qtd_por_pct: parseFloat(p.qtd_por_pct) || 0 });
+  renderLote();
+  document.getElementById('lanc-qtd').value = '';
+  document.getElementById('lanc-pct').value = '';
+  document.getElementById('lanc-fator').value = '';
+  document.getElementById('lanc-aberto').value = '';
+  document.getElementById('lanc-total').textContent = '';
+  showToast('Item adicionado aos pendentes.', 'success');
+}
+
+function renderLote() {
+  const lista = document.getElementById('lista-lancamentos-itens');
+  const badge = document.getElementById('lanc-count');
+  const botao = document.getElementById('btn-salvar-estoque');
+  if (badge) badge.textContent = _lancamentos.length;
+  if (botao) botao.style.display = _lancamentos.length ? 'block' : 'none';
+  if (!lista) return;
+  lista.innerHTML = '';
+  if (!_lancamentos.length) {
+    const vazio = document.createElement('p');
+    vazio.style.cssText = 'color:#555;text-align:center;font-size:0.78rem;padding:10px;';
+    vazio.textContent = 'Nenhum item ainda. Confirme um lançamento acima.';
+    lista.appendChild(vazio);
+    return;
+  }
+  _lancamentos.forEach((item, i) => {
+    const linha = document.createElement('div');
+    linha.style.cssText = 'display:flex;align-items:center;gap:8px;background:#161616;border-radius:6px;padding:10px;margin-bottom:6px;';
+    const texto = document.createElement('div');
+    texto.style.flex = '1';
+    const nome = document.createElement('div');
+    nome.style.cssText = 'font-weight:700;font-size:.88rem;';
+    nome.textContent = item.nome;
+    const detalhe = document.createElement('div');
+    detalhe.style.cssText = 'font-size:.75rem;color:#aaa;';
+    const tipos = { entrada: 'Entrada na unidade', contagem: 'Contagem', recebimento_cd: 'Recebimento de compra no CD' };
+    detalhe.textContent = tipos[item.tipo] + ' · ' + item.qtd + ' ' + item.unidade;
+    texto.append(nome, detalhe);
+    const remover = document.createElement('button');
+    remover.type = 'button';
+    remover.textContent = '🗑️';
+    remover.style.cssText = 'background:#b71c1c;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;';
+    remover.onclick = () => removerLancamento(i);
+    linha.append(texto, remover);
+    lista.appendChild(linha);
+  });
+}
+
+function removerLancamento(i) { _lancamentos.splice(i, 1); renderLote(); }
+function limparLancamentos() { _lancamentos = []; renderLote(); showToast('Pendentes limpos.', ''); }
 async function mtzCarregarProdutos(uOverride) {
   const u = uOverride || document.getElementById('mtz-lanc-unidade').value;
   const sel = document.getElementById('mtz-lanc-produto');
@@ -2589,12 +2766,12 @@ function mtzConfirmarManual() {
 }
 
 async function mtzAbrirCamera() {
-  if (!('BarcodeDetector' in window)) { showToast('Câmera não suportada. Use o campo de texto.', 'error'); return; }
+  if (!('BarcodeDetector' in window) || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast('Câmera não suportada. Use o campo de texto.', 'error'); return; }
   try {
     mtzCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    const video = document.getElementById('mtz-camera-video');
+    const video = document.getElementById('camera-video');
     video.srcObject = mtzCameraStream;
-    document.getElementById('mtz-camera-area').style.display = 'block';
+    document.getElementById('camera-area').style.display = 'block';
     mtzBarcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code'] });
     mtzScanLoop = setInterval(async () => {
       try {
@@ -2602,8 +2779,8 @@ async function mtzAbrirCamera() {
         if (barcodes.length > 0) {
           const cod = barcodes[0].rawValue;
           mtzFecharCamera();
-          document.getElementById('mtz-scan-input').value = cod;
-          mtzBuscarPorCodigo();
+          document.getElementById('scan-input').value = cod;
+          buscarPorCodigo();
         }
       } catch(e) {}
     }, 500);
@@ -2613,8 +2790,11 @@ async function mtzAbrirCamera() {
 function mtzFecharCamera() {
   if (mtzScanLoop) { clearInterval(mtzScanLoop); mtzScanLoop = null; }
   if (mtzCameraStream) { mtzCameraStream.getTracks().forEach(t => t.stop()); mtzCameraStream = null; }
-  document.getElementById('mtz-camera-area').style.display = 'none';
+  const area = document.getElementById('camera-area');
+  if (area) area.style.display = 'none';
 }
+function abrirCamera() { return mtzAbrirCamera(); }
+function fecharCamera() { return mtzFecharCamera(); }
 // ── PEDIDOS DE COMPRA (CHEFÃO) ──
 async function gerarPedidos() {
   const el = document.getElementById('lista-pedidos');
@@ -2700,7 +2880,7 @@ async function criarPedidoCompra(base, nome, unidade, qtd) {
   </div>
 </div>
 <script>
-var _TUT_CHEFAO=[["\ud83d\udce6 TRAMPO GERAL", "Aqui voc\u00ea v\u00ea o estoque de TODAS as unidades de uma vez.<br><br>Filtra por unidade (Centro, Delivery, Boqueir\u00e3o, CD) ou por categoria.<br>\ud83d\udd34 Vermelho = zerado \u00b7 \ud83d\udfe1 Amarelo = abaixo do m\u00ednimo<br><br>Toca no \u270f\ufe0f pra corrigir estoque de qualquer unidade."], ["\u2795 LAN\u00c7AR", "Aqui o Chef\u00e3o pode lan\u00e7ar entradas e contagens em qualquer unidade diretamente.<br><br>Escolhe a unidade \u2192 o tipo \u2192 o produto \u2192 quantidade \u2192 CONFIRMAR.<br><br>\u26a0\ufe0f Isso substitui o lan\u00e7amento do operador \u2014 use s\u00f3 quando necess\u00e1rio."], ["\ud83d\udce5 ENTRADAS & \ud83d\udcca CONTAGENS", "Hist\u00f3rico de entradas e contagens de todas as unidades.<br><br>Seleciona a data e v\u00ea tudo que foi movimentado no dia.<br>\u00datil pra auditoria e confer\u00eancia de operadores."], ["\ud83d\uded2 PRECIS\u00c3O", "Sistema de pedido inteligente!<br><br>Calcula automaticamente o que precisa comprar com base no estoque m\u00ednimo de cada unidade.<br>Voc\u00ea ajusta as quantidades e exporta pro WhatsApp pra fazer o pedido."], ["\u2699\ufe0f LIMITES", "Define o estoque M\u00ednimo e M\u00e1ximo de cada produto em cada unidade.<br><br>Seleciona a unidade e a categoria \u2192 define os valores \u2192 \ud83d\udcbe Salvar.<br><br>\u26a0\ufe0f Importante: sem m\u00ednimo definido, o sistema n\u00e3o consegue alertar quando t\u00e1 baixo."], ["\ud83d\udce6 ALMOXARIFADO", "Estoque central de embalagens \u2014 separado do CD.<br><br>Mostra o que tem dispon\u00edvel, o que precisa comprar e o que t\u00e1 zerado.<br>Filtra por: \u2705 OK \u00b7 \ud83d\uded2 Comprar \u00b7 \ud83d\udd34 Zerado<br><br>A sugest\u00e3o de compra aparece automaticamente quando est\u00e1 abaixo do m\u00ednimo."], ["\ud83d\udce4 SA\u00cdDAS CD", "Hist\u00f3rico de tudo que o CD enviou para as unidades.<br><br>Seleciona a data e filtra por unidade (Centro, Delivery, Boqueir\u00e3o).<br>Mostra os totais do dia por produto."], ["\u2795 CADASTRAR", "Cadastra produtos novos no sistema para uma ou mais unidades de uma vez.<br><br>1\ufe0f\u20e3 Nome + c\u00f3digo de barras + unidade de medida + PCT<br>2\ufe0f\u20e3 Onde fica o estoque central (CD ou Almoxarifado)<br>3\ufe0f\u20e3 Quais unidades recebem esse item<br>4\ufe0f\u20e3 Categoria<br>5\ufe0f\u20e3 CADASTRAR PRODUTO"], ["\ud83d\udd25 DICAS FINAIS", "Voc\u00ea tem controle total do sistema \u2014 use com cuidado!<br><br>\u2705 Configure os limites (m\u00edn/m\u00e1x) antes de cobrar alertas dos operadores<br>\ud83d\udcca Use Entradas e Contagens pra auditar os operadores<br>\ud83d\uded2 Use a Precis\u00e3o toda semana pra montar o pedido<br>\ud83d\udce6 Confira o Almoxarifado antes de pedir embalagens<br>\u2753 Algo errado? Fala com a Zapia!"]];
+var _TUT_CHEFAO=[["📦 TRAMPO GERAL", "Aqui você vê o estoque de todas as unidades.<br><br>Filtra por Centro, Delivery, Boqueirão ou CD. O CD é o estoque central."], ["➕ LANÇAR", "Escolhe a unidade, o tipo, o produto e a quantidade.<br><br>Uma entrada na unidade reduz o mesmo produto no CD; recebimento de compra aumenta o estoque do CD."], ["📥 ENTRADAS & 📊 CONTAGENS", "Histórico de entradas e contagens das unidades para auditoria e conferência."], ["🛒 PRECISÃO", "Mostra o que precisa comprar com base nos limites de estoque configurados."], ["⚙️ LIMITES", "Define o mínimo e o máximo de cada produto por unidade."], ["📤 SAÍDAS CD", "Histórico das transferências do CD para Centro, Delivery e Boqueirão."], ["➕ CADASTRAR", "Cadastra produtos e unidades. O estoque central de todos os produtos fica no CD."], ["🔥 DICAS FINAIS", "Confira os saldos no CD antes de receber compras e use o histórico para conferir transferências."]];
 var _tStep=0;
 function abrirTutorial(){_tStep=0;document.getElementById('tut-ov').style.display='flex';_rTut();}
 function fecharTut(){document.getElementById('tut-ov').style.display='none';localStorage.setItem('tut_ok_chefao','1');}
@@ -2980,7 +3160,7 @@ async function carregarHistorico() {
     grupos[u].push(m);
   }
 
-  var NOMES_UNI = { cd:'CD', almoxarifado:'Almoxarifado', centro:'Centro', delivery:'Delivery', boqueiraw:'Boqueirao' };
+  var NOMES_UNI = { cd:'CD', almoxarifado:'Almoxarifado', almoxarifado_cd:'Embalagens Cozinha', centro:'Centro', delivery:'Delivery', boqueiraw:'Boqueirao' };
   var TIPO_COR  = { entrada:'#388e3c', contagem:'#1565c0', saida:'#c62828', saída:'#c62828', descarte:'#7b1fa2' };
   var TIPO_IC   = { entrada:'📥', contagem:'📊', saida:'📤', saída:'📤', descarte:'🗑️' };
 
@@ -3036,59 +3216,163 @@ async function _mtzRecarregarProdutos(u) {
   // NÃO chamar renderEstoque aqui para não bagunçar o trampo geral
 }
 
-// Interceptar salvarLancamentos para usar a unidade do chefão
-var _origSalvarLancamentos = typeof salvarLancamentos === 'function' ? salvarLancamentos : null;
-async function salvarLancamentosChefao() {
-  if (!_mtzUnidade) { showToast('Selecione a unidade primeiro!', 'error'); return; }
-  // Temporariamente substituir UNIDADE_LOJA
-  var btnSalvar = document.getElementById('btn-salvar-estoque');
-  if (btnSalvar) btnSalvar.disabled = true;
+function buscarLinhaEstoque(linhas, base, unidade) {
+  return (Array.isArray(linhas) ? linhas : []).find(p => p.unidade_loja === unidade && codigoBaseEstoque(p.codigo) === base) || null;
+}
 
-  for (var i = 0; i < _lancamentos.length; i++) {
-    var l = _lancamentos[i];
-    var codUnidade = l.cod.includes('_') ? l.cod : l.cod + '_' + _mtzUnidade;
-    var est = 0;
-    var r = await supa('GET', 'produtos', null, 'codigo=eq.' + codUnidade + '&select=estoque');
-    if (Array.isArray(r) && r.length) est = parseFloat(r[0].estoque) || 0;
-    var novoEst = l.tipo === 'contagem' ? l.qtd : est + l.qtd;
-    await supa('PATCH', 'produtos', null, { estoque: novoEst }, 'codigo=eq.' + codUnidade);
-    await supa('POST', 'movimentacoes', null, {
-      codigo: codUnidade, nome: l.nome, tipo: l.tipo, qtd: l.qtd,
-      unidade: l.unidade, unidade_loja: _mtzUnidade,
-      colaborador: (usuarioLogado && usuarioLogado.usuario) || 'chefao',
-      obs: l.tipo === 'contagem' ? 'Contagem Chefão' : 'Entrada Chefão',
-      estoque_anterior: est, novo_estoque: novoEst, status: 'confirmado'
-    });
-    // ── SMART CD: descontar do CD ao registrar entrada no Chefão ──
-    if (l.tipo === 'entrada' && l.qtd > 0 && codUnidade) {
-      try {
-        var codBase = codUnidade.replace(/_centro$|_delivery$|_boqueiraw$/, '');
-        var codCD = codBase + '_cd';
-        var cdRes = await supa('GET', 'produtos', null, 'codigo=eq.' + codCD + '&unidade_loja=eq.cd&select=codigo,estoque');
-        if (Array.isArray(cdRes) && cdRes.length > 0) {
-          var cdEst = parseFloat(cdRes[0].estoque) || 0;
-          var novoCD = Math.max(0, cdEst - l.qtd);
-          await supa('PATCH', 'produtos', null, { estoque: novoCD }, 'codigo=eq.' + codCD + '&unidade_loja=eq.cd');
-          // Registrar saída no CD
-          await supa('POST', 'movimentacoes', null, {
-            codigo: codCD, nome: l.nome, tipo: 'saida', qtd: l.qtd,
-            unidade: l.unidade, unidade_loja: 'cd',
-            colaborador: _mtzUnidade.toUpperCase(),
-            obs: 'Saída → ' + _mtzUnidade.toUpperCase() + ' (Chefão)',
-            estoque_anterior: cdEst, novo_estoque: novoCD, status: 'confirmado'
-          });
-          console.log('Smart CD (Chefão): descontou ' + l.qtd + ' do CD (' + codCD + ') → novo estoque: ' + novoCD);
-        }
-      } catch(e) { console.warn('Smart CD erro (Chefão):', e); }
+function novoRegistroEstoque(base, unidade, modelo) {
+  return {
+    codigo: base + '_' + unidade,
+    nome: modelo.nome || base,
+    categoria: modelo.categoria || 'Sem categoria',
+    unidade: modelo.unidade || 'und',
+    estoque: 0,
+    estoque_min: 0,
+    estoque_max: 0,
+    qtd_por_pct: parseFloat(modelo.qtd_por_pct) || 0,
+    unidade_loja: unidade
+  };
+}
+
+async function garantirRegistroEstoque(linhas, base, unidade, modelo) {
+  let registro = buscarLinhaEstoque(linhas, base, unidade);
+  if (registro) return registro;
+  const novo = novoRegistroEstoque(base, unidade, modelo || {});
+  const criado = await supa('POST', 'produtos', '', novo);
+  if (!criado) {
+    const existente = await supa('GET', 'produtos', `codigo=eq.${encodeURIComponent(novo.codigo)}&unidade_loja=eq.${encodeURIComponent(unidade)}&select=*`);
+    if (Array.isArray(existente) && existente.length) {
+      linhas.push(existente[0]);
+      return existente[0];
     }
-    // ── FIM SMART CD ──
+    return null;
   }
-  _lancamentos = [];
+  linhas.push(novo);
+  return novo;
+}
+
+async function atualizarSaldoRegistro(registro, saldo) {
+  const filtro = `codigo=eq.${encodeURIComponent(registro.codigo)}&unidade_loja=eq.${encodeURIComponent(registro.unidade_loja)}`;
+  return await supa('PATCH', 'produtos', filtro, { estoque: saldo });
+}
+
+function colaboradorLancamento() {
+  const digitado = (document.getElementById('nome-lancador').value || '').trim();
+  const logado = (document.getElementById('topbar-usuario').textContent || '').trim();
+  return digitado || logado || 'Chefão';
+}
+
+async function registrarMovimentoEstoque(dados) {
+  return await supa('POST', 'movimentacoes', dados);
+}
+
+async function processarLancamentoChefao(item, linhas) {
+  const base = item.cod;
+  const unidadeDestino = _mtzUnidade;
+  const quantidade = parseFloat(item.qtd) || 0;
+  const cd = buscarLinhaEstoque(linhas, base, 'cd');
+  const modelo = cd || buscarLinhaEstoque(linhas, base, unidadeDestino) || item;
+  const colaborador = colaboradorLancamento();
+
+  if (item.tipo === 'recebimento_cd') {
+    if (unidadeDestino !== 'cd') return { ok: false, retrySafe: true, erro: 'Selecione o CD para receber uma compra.' };
+    const destino = await garantirRegistroEstoque(linhas, base, 'cd', modelo);
+    if (!destino) return { ok: false, retrySafe: true, erro: 'Não foi possível preparar o registro central no CD.' };
+    const anterior = parseFloat(destino.estoque) || 0;
+    const novo = Math.round((anterior + quantidade) * 1000) / 1000;
+    if (!await atualizarSaldoRegistro(destino, novo)) return { ok: false, retrySafe: true, erro: 'O saldo do CD não foi atualizado.' };
+    destino.estoque = novo;
+    const historico = await registrarMovimentoEstoque({
+      codigo: destino.codigo, nome: item.nome, tipo: 'entrada', qtd: quantidade,
+      unidade: item.unidade, unidade_loja: 'cd', colaborador,
+      obs: 'Recebimento de compra no CD (Chefão)',
+      estoque_anterior: anterior, novo_estoque: novo, status: 'confirmado'
+    });
+    return { ok: true, avisoHistorico: !historico };
+  }
+
+  if (item.tipo === 'contagem') {
+    const destino = await garantirRegistroEstoque(linhas, base, unidadeDestino, modelo);
+    if (!destino) return { ok: false, retrySafe: true, erro: 'Não foi possível preparar o produto na unidade.' };
+    const anterior = parseFloat(destino.estoque) || 0;
+    const novo = Math.round(quantidade * 1000) / 1000;
+    if (!await atualizarSaldoRegistro(destino, novo)) return { ok: false, retrySafe: true, erro: 'A contagem não foi atualizada.' };
+    destino.estoque = novo;
+    const historico = await registrarMovimentoEstoque({
+      codigo: destino.codigo, nome: item.nome, tipo: 'contagem', qtd: quantidade,
+      unidade: item.unidade, unidade_loja: unidadeDestino, colaborador,
+      obs: 'Contagem Chefão', estoque_anterior: anterior, novo_estoque: novo, status: 'confirmado'
+    });
+    return { ok: true, avisoHistorico: !historico };
+  }
+
+  if (!cd) return { ok: false, retrySafe: true, erro: 'Não há cadastro desse produto no CD. Receba a compra no CD antes da transferência.' };
+  if (unidadeDestino === 'cd') return { ok: false, retrySafe: true, erro: 'Para adicionar uma compra ao CD, use “Receber compra no CD”.' };
+  const estoqueOrigem = parseFloat(cd.estoque) || 0;
+  if (estoqueOrigem < quantidade) return { ok: false, retrySafe: true, erro: `Saldo insuficiente no CD para ${item.nome}.` };
+  const destino = await garantirRegistroEstoque(linhas, base, unidadeDestino, modelo);
+  if (!destino) return { ok: false, retrySafe: true, erro: 'Não foi possível preparar o produto na unidade de destino.' };
+  const estoqueDestino = parseFloat(destino.estoque) || 0;
+  const novoOrigem = Math.round((estoqueOrigem - quantidade) * 1000) / 1000;
+  const novoDestino = Math.round((estoqueDestino + quantidade) * 1000) / 1000;
+  if (!await atualizarSaldoRegistro(cd, novoOrigem)) return { ok: false, retrySafe: true, erro: 'Não foi possível atualizar o estoque de origem no CD.' };
+  if (!await atualizarSaldoRegistro(destino, novoDestino)) {
+    const restaurado = await atualizarSaldoRegistro(cd, estoqueOrigem);
+    return { ok: false, retrySafe: restaurado, erro: restaurado ? 'A transferência foi cancelada; o saldo do CD foi restaurado.' : 'Falha ao concluir a transferência e ao restaurar o CD. Confira os saldos antes de tentar novamente.' };
+  }
+  cd.estoque = novoOrigem;
+  destino.estoque = novoDestino;
+  const destinoLog = await registrarMovimentoEstoque({
+    codigo: destino.codigo, nome: item.nome, tipo: 'entrada', qtd: quantidade,
+    unidade: item.unidade, unidade_loja: unidadeDestino, colaborador,
+    obs: `Transferência do CD para ${UNIDADE_LABEL[unidadeDestino] || unidadeDestino} (Chefão)`,
+    estoque_anterior: estoqueDestino, novo_estoque: novoDestino, status: 'confirmado'
+  });
+  const origemLog = await registrarMovimentoEstoque({
+    codigo: cd.codigo, nome: item.nome, tipo: 'saida', qtd: quantidade,
+    unidade: item.unidade, unidade_loja: 'cd', colaborador,
+    obs: `Transferência para ${UNIDADE_LABEL[unidadeDestino] || unidadeDestino} (Chefão)`,
+    estoque_anterior: estoqueOrigem, novo_estoque: novoOrigem, status: 'confirmado'
+  });
+  return { ok: true, avisoHistorico: !destinoLog || !origemLog };
+}
+
+async function salvarLancamentosChefao() {
+  if (!_mtzUnidade) { showToast('Selecione a unidade primeiro.', 'error'); return; }
+  if (!_lancamentos.length) { showToast('Não há lançamentos pendentes.', 'error'); return; }
+  if (_lancamentos.some(x => x.tipo === 'recebimento_cd') && _mtzUnidade !== 'cd') { showToast('Recebimento de compra precisa ser lançado com o CD selecionado.', 'error'); return; }
+  const btn = document.getElementById('btn-salvar-estoque');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Atualizando estoque...'; }
+  const linhas = await supa('GET', 'produtos', 'select=*&order=nome.asc');
+  if (!Array.isArray(linhas)) {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 CONFIRMAR E ENVIAR AO ESTOQUE'; }
+    showToast('Não consegui carregar os saldos para conferir a transferência.', 'error');
+    return;
+  }
+  let concluidos = 0;
+  let avisosHistorico = 0;
+  const restantes = [];
+  const erros = [];
+  for (const item of _lancamentos) {
+    const resultado = await processarLancamentoChefao(item, linhas);
+    if (resultado.ok) {
+      concluidos++;
+      if (resultado.avisoHistorico) avisosHistorico++;
+    } else {
+      erros.push(item.nome + ': ' + resultado.erro);
+      if (resultado.retrySafe) restantes.push(item);
+    }
+  }
+  _lancamentos = restantes;
+  todosEstoques = linhas;
+  montarGruposProdutosLancamento(linhas);
+  renderLancarProdutos();
   renderLote();
-  var btn2 = document.getElementById('btn-salvar-estoque');
-  if (btn2) { btn2.style.display = 'none'; btn2.disabled = false; }
-  showToast('✅ Lançado na unidade ' + _mtzUnidade.toUpperCase() + '!', 'success');
-  _mtzRecarregarProdutos(_mtzUnidade);
+  if (btn) { btn.disabled = false; btn.textContent = '💾 CONFIRMAR E ENVIAR AO ESTOQUE'; }
+  renderEstoque();
+  if (avisosHistorico) showToast('Saldos atualizados, mas algum registro do histórico falhou. Confira o Histórico.', 'error');
+  else if (erros.length) showToast(concluidos ? 'Parte concluída. Confira os itens pendentes.' : erros[0], 'error');
+  else showToast('✅ Lançamento concluído; origem e unidade atualizadas.', 'success');
 }
 
 // Override da função de salvar quando estiver no chefão
@@ -3229,7 +3513,6 @@ async function carregarDescartesHojeChefao() {
         <select id="hist-unidade" style="flex:1;margin:0;">
           <option value="">Todas unidades</option>
           <option value="cd">CD</option>
-          <option value="almoxarifado">Almoxarifado</option>
           <option value="centro">Centro</option>
           <option value="delivery">Delivery</option>
           <option value="boqueiraw">Boqueirao</option>
