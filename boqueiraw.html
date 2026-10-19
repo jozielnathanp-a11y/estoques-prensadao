@@ -2302,7 +2302,7 @@ async function abrirPedido() {
     _pedidoProdutos = (todos||[]).filter(function(p) {
       var min = parseFloat(p.estoque_min) || 0;
       var est = parseFloat(p.estoque)     || 0;
-      return est < min;
+      return min > 0 && est <= min;
     });
   } catch(e) { showToast('Erro ao carregar produtos','error'); return; }
 
@@ -2322,7 +2322,8 @@ async function abrirPedido() {
     var est   = parseFloat(p.estoque)     || 0;
     var min   = parseFloat(p.estoque_min) || 0;
     var max   = parseFloat(p.estoque_max) || 0;
-    var sugerido = max > est ? (max - est) : 0;
+    var meta = max > 0 ? max : min;
+    var sugerido = Math.max(0, meta - est);
     // Formatar valor sugerido
     var sugeridoFmt = isKg
       ? String(Math.ceil(sugerido))
