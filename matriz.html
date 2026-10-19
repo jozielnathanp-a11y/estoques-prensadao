@@ -1029,7 +1029,6 @@ function exportarRelBebCSV() {
           <option value="">📦 Todas categorias</option>
           <option value="Bebidas">🍺 Bebidas</option>
           <option value="Embalagens">📦 Embalagens</option>
-          <option value="Embalagem">📦 Embalagem</option>
           <option value="Processado">🥩 Processado</option>
           <option value="Bruto">🌿 Bruto</option>
           <option value="Limpeza">🧹 Limpeza</option>
@@ -1554,7 +1553,7 @@ function atualizarCats() {
     if ((parseFloat(p.estoque) || 0) === 0) cats[p.categoria].zerados++;
   });
 
-  const emojis = { 'Bebidas': '🍺', 'Embalagens': '📦', 'Embalagem': '📦', 'Processado': '🥩', 'Bruto': '🌿', 'Limpeza': '🧹', 'Temperos': '🧂' };
+  const emojis = { 'Bebidas': '🍺', 'Embalagens': '📦', 'Processado': '🥩', 'Bruto': '🌿', 'Limpeza': '🧹', 'Temperos': '🧂' };
 
   sel.innerHTML = '<option value="">📦 Todas (' + prods.length + ' produtos)</option>' +
     Object.entries(cats).sort((a,b) => a[0].localeCompare(b[0])).map(([c, info]) => {
