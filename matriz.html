@@ -1028,6 +1028,7 @@ function exportarRelBebCSV() {
         <select id="min-categoria" onchange="renderMinimos()" style="margin:0;flex:1;">
           <option value="">📦 Todas categorias</option>
           <option value="Bebidas">🍺 Bebidas</option>
+          <option value="Carnes">🥩 Carnes</option>
           <option value="Embalagens">📦 Embalagens</option>
           <option value="Processado">🥩 Processado</option>
           <option value="Bruto">🌿 Bruto</option>
@@ -1127,8 +1128,10 @@ function exportarRelBebCSV() {
     <select id="modal-edit-cat" style="margin-bottom:8px;">
       <option value="Bebidas">🥤 Bebidas</option>
       <option value="Bruto">🥩 Bruto</option>
+      <option value="Carnes">🥩 Carnes</option>
       <option value="Processado">🍗 Processado</option>
       <option value="Embalagens">📦 Embalagens</option>
+      <option value="Temperos">🧂 Temperos</option>
       <option value="Limpeza">🧹 Limpeza</option>
     </select>
     <label>Unidade de Medida</label>
@@ -1288,8 +1291,10 @@ let _cadCategoria = '';
 const CATEGORIAS_DISPONIVEIS = [
   { id: 'Bebidas',    icon: '🥤' },
   { id: 'Bruto',      icon: '🥩' },
+  { id: 'Carnes',     icon: '🥩' },
   { id: 'Processado', icon: '🍗' },
   { id: 'Embalagens', icon: '📦' },
+  { id: 'Temperos',   icon: '🧂' },
   { id: 'Limpeza',    icon: '🧹' },
 ];
 
@@ -1553,7 +1558,7 @@ function atualizarCats() {
     if ((parseFloat(p.estoque) || 0) === 0) cats[p.categoria].zerados++;
   });
 
-  const emojis = { 'Bebidas': '🍺', 'Embalagens': '📦', 'Processado': '🥩', 'Bruto': '🌿', 'Limpeza': '🧹', 'Temperos': '🧂' };
+  const emojis = { 'Bebidas': '🍺', 'Carnes': '🥩', 'Embalagens': '📦', 'Processado': '🥩', 'Bruto': '🌿', 'Limpeza': '🧹', 'Temperos': '🧂' };
 
   sel.innerHTML = '<option value="">📦 Todas (' + prods.length + ' produtos)</option>' +
     Object.entries(cats).sort((a,b) => a[0].localeCompare(b[0])).map(([c, info]) => {
